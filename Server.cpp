@@ -208,7 +208,7 @@ namespace Apostol {
 #endif
         }
         //--------------------------------------------------------------------------------------------------------------
-
+#endif
         void CServerProcess::SetTimerInterval(int Value) {
             if (m_TimerInterval != Value) {
                 m_TimerInterval = Value;
@@ -294,7 +294,7 @@ namespace Apostol {
             m_PQServer.Active(false);
         }
         //--------------------------------------------------------------------------------------------------------------
-#endif
+
         CPQPollQuery *CServerProcess::GetQuery(CPollConnection *AConnection) {
             CPQPollQuery *LQuery = nullptr;
 
