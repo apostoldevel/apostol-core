@@ -524,7 +524,7 @@ namespace Apostol {
                     OnIniFileParseError(Sender, lpszSectionName, lpszKeyName, lpszValue, lpszDefault, Line);
                 });
 #else
-                F.OnIniFileParseError(std::bind(&CConfig::OnIniFileParseError, this, _1, _2, _3, _4, _5, _6));
+                m_pIniFile->OnIniFileParseError(std::bind(&CConfig::OnIniFileParseError, this, _1, _2, _3, _4, _5, _6));
 #endif
                 for (int i = 0; i < Count(); ++i) {
                     C = Commands(i);
