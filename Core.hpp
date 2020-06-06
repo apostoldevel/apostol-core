@@ -39,6 +39,7 @@ class CGlobalComponent: public CLogComponent, public CConfigComponent {
 public:
 
     CGlobalComponent(): CLogComponent(), CConfigComponent() {
+
     };
 
     static CConfig *Config() { return GConfig; };
@@ -54,6 +55,7 @@ public:
 #include "Workers.hpp"
 #include "Helpers.hpp"
 #include "Application.hpp"
+#include "Processes.hpp"
 //----------------------------------------------------------------------------------------------------------------------
 
 #endif //APOSTOL_CORE_HPP
