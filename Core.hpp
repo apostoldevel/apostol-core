@@ -52,8 +52,7 @@ public:
 #include "Process.hpp"
 #include "Server.hpp"
 #include "Module.hpp"
-#include "Workers.hpp"
-#include "Helpers.hpp"
+#include "Modules.hpp"
 #include "Application.hpp"
 #include "Processes.hpp"
 //----------------------------------------------------------------------------------------------------------------------
