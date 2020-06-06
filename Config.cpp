@@ -168,7 +168,6 @@ namespace Apostol {
             m_uErrorCount = 0;
 
             m_nWorkers = 1;
-            m_nHelpers = 0;
 
             m_nWorkerPort = 0;
             m_nHelperPort = 0;
@@ -179,6 +178,7 @@ namespace Apostol {
             m_nLimitNoFile = static_cast<uint32_t>(-1);
 
             m_fMaster = false;
+            m_fHelper = false;
             m_fDaemon = false;
 
             m_fPostgresConnect = false;
@@ -384,7 +384,6 @@ namespace Apostol {
             m_uErrorCount = 0;
 
             m_nWorkers = 1;
-            m_nHelpers = 0;
 
             m_nWorkerPort = 4977;
             m_nHelperPort = 40977;
@@ -393,6 +392,7 @@ namespace Apostol {
             m_nConnectTimeOut = 5;
 
             m_fMaster = true;
+            m_fHelper = false;
             m_fDaemon = true;
 
             m_fPostgresConnect = false;
@@ -433,9 +433,9 @@ namespace Apostol {
             Add(new CConfigCommand(_T("main"), _T("limitnofile"), &m_nLimitNoFile));
 
             Add(new CConfigCommand(_T("main"), _T("workers"), &m_nWorkers));
-            Add(new CConfigCommand(_T("main"), _T("helpers"), &m_nHelpers));
 
             Add(new CConfigCommand(_T("main"), _T("master"), &m_fMaster));
+            Add(new CConfigCommand(_T("main"), _T("helper"), &m_fHelper));
             Add(new CConfigCommand(_T("main"), _T("locale"), m_sLocale.c_str(), [this](auto && AValue) { SetLocale(AValue); }));
 
             Add(new CConfigCommand(_T("daemon"), _T("daemon"), &m_fDaemon));

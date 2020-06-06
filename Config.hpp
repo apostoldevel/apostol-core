@@ -272,7 +272,6 @@ namespace Apostol {
             uint32_t m_uErrorCount;
 
             uint32_t m_nWorkers;
-            uint32_t m_nHelpers;
 
             uint32_t m_nWorkerPort;
             uint32_t m_nHelperPort;
@@ -283,6 +282,7 @@ namespace Apostol {
             uint32_t m_nLimitNoFile;
 
             bool m_fMaster;
+            bool m_fHelper;
             bool m_fDaemon;
 
             bool m_fPostgresConnect;
@@ -366,9 +366,9 @@ namespace Apostol {
             uint32_t ErrorCount() const { return m_uErrorCount; };
 
             uint32_t Workers() const { return m_nWorkers; };
-            uint32_t Helpers() const { return m_nHelpers; };
 
             bool Master() const { return m_fMaster; };
+            bool Helper() const { return m_fHelper; };
             bool Daemon() const { return m_fDaemon; };
 
             uint32_t WorkerPort() const { return m_nWorkerPort; };

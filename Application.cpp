@@ -504,7 +504,7 @@ namespace Apostol {
         CProcessSingle::CProcessSingle(CCustomProcess *AParent, CApplication *AApplication):
                 inherited(AParent, AApplication, ptSingle, "single"), CModuleProcess() {
 
-            if (Config()->Helpers() > 0) {
+            if (Config()->Helper()) {
                 CreateHelpers(this);
                 InitializeHelperServer(AApplication->Title());
             } else {
@@ -639,7 +639,7 @@ namespace Apostol {
                     }
                     break;
                 case ptHelper:
-                    for (int I = 0; I < Config()->Helpers(); ++I) {
+                    if (Config()->Helper()) {
                         SwapProcess(Type, Flag);
                     }
                     break;
