@@ -467,9 +467,9 @@ namespace Apostol {
             Add(new CConfigCommand(_T("main"), _T("limitnofile"), &m_nLimitNoFile));
 
             Add(new CConfigCommand(_T("main"), _T("workers"), &m_nWorkers));
-            Add(new CConfigCommand(_T("main"), _T("helpers"), &m_nHelpers));
 
             Add(new CConfigCommand(_T("main"), _T("master"), &m_fMaster));
+            Add(new CConfigCommand(_T("main"), _T("helper"), &m_fHelper));
             Add(new CConfigCommand(_T("main"), _T("locale"), m_sLocale.c_str(), std::bind(&CConfig::SetLocale, this, _1)));
 
             Add(new CConfigCommand(_T("daemon"), _T("daemon"), &m_fDaemon));
