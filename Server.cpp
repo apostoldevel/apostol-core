@@ -249,14 +249,16 @@ namespace Apostol {
         void CServerProcess::InitializeHelperServer(const CString &Title) {
             m_Server.ServerName() = Title;
 
-            m_Server.DefaultIP() = Config()->Listen();
-            m_Server.DefaultPort(Config()->HelperPort());
+            if (Config()->HelperPort() != 0) {
+                m_Server.DefaultIP() = Config()->Listen();
+                m_Server.DefaultPort(Config()->HelperPort());
 
-            LoadSites(m_Server.Sites());
-            LoadAuthParams(m_Server.AuthParams());
+                LoadSites(m_Server.Sites());
+                LoadAuthParams(m_Server.AuthParams());
 
-            m_Server.InitializeBindings();
-            m_Server.ActiveLevel(alBinding);
+                m_Server.InitializeBindings();
+                m_Server.ActiveLevel(alBinding);
+            }
         }
         //--------------------------------------------------------------------------------------------------------------
 #ifdef WITH_POSTGRESQL
