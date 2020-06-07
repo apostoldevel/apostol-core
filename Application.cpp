@@ -723,6 +723,7 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CProcessMaster::SignalToProcesses(int SigNo) {
+            SignalToProcess(ptCustom, SigNo);
             SignalToProcess(ptHelper, SigNo);
             SignalToProcess(ptWorker, SigNo);
         }
