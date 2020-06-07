@@ -365,6 +365,7 @@ namespace Apostol {
 
             if (!FileExists(LResource.c_str())) {
                 AConnection->SendStockReply(CReply::not_found, SendNow);
+                Log()->Error(APP_LOG_WARN, 0, _T("[HTTP] File not found: %s"), LResource.c_str());
                 return;
             }
 
