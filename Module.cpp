@@ -521,7 +521,7 @@ namespace Apostol {
 
         bool CApostolModule::StartQuery(CHTTPServerConnection *AConnection, const CStringList& SQL) {
 
-            auto LQuery = m_Version == 1 ? GetQuery(AConnection) : GetQuery(nullptr);
+            auto LQuery = m_Version == 2 ? GetQuery(nullptr) : GetQuery(AConnection);
 
             if (LQuery == nullptr)
                 throw Delphi::Exception::Exception(_T("StartQuery: GetQuery() failed!"));
