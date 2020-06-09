@@ -551,11 +551,14 @@ namespace Apostol {
 #ifdef WITH_POSTGRESQL
             PQServerStart();
 #endif
+            Initialization();
+
             SetTimerInterval(1000);
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CProcessSingle::AfterRun() {
+            Finalization();
 #ifdef WITH_POSTGRESQL
             PQServerStop();
 #endif
@@ -1051,12 +1054,14 @@ namespace Apostol {
 
             SetLimitNoFile(Config()->LimitNoFile());
 
-            SetUser(Config()->User(), Config()->Group());
-
             ServerStart();
 #ifdef WITH_POSTGRESQL
             PQServerStart();
 #endif
+            Initialization();
+
+            SetUser(Config()->User(), Config()->Group());
+
             SigProcMask(SIG_UNBLOCK, SigAddSet(&set));
 
             SetTimerInterval(1000);
@@ -1064,6 +1069,7 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CProcessWorker::AfterRun() {
+            Finalization();
 #ifdef WITH_POSTGRESQL
             PQServerStop();
 #endif
@@ -1151,12 +1157,14 @@ namespace Apostol {
 
             SetLimitNoFile(Config()->LimitNoFile());
 
-            SetUser(Config()->User(), Config()->Group());
-
             ServerStart();
 #ifdef WITH_POSTGRESQL
             PQServerStart();
 #endif
+            Initialization();
+
+            //SetUser(Config()->User(), Config()->Group());
+
             SigProcMask(SIG_UNBLOCK, SigAddSet(&set));
 
             SetTimerInterval(1000);
@@ -1164,6 +1172,7 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CProcessHelper::AfterRun() {
+            Finalization();
 #ifdef WITH_POSTGRESQL
             PQServerStop();
 #endif

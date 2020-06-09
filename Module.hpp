@@ -204,8 +204,11 @@ namespace Apostol {
             virtual bool IsEnabled() abstract;
             virtual bool CheckUserAgent(const CString& Value) abstract;
 
-            virtual void BeforeExecute(Pointer Data);
-            virtual void AfterExecute(Pointer Data);
+            virtual void Initialization(CModuleProcess *AProcess) {};
+            virtual void Finalization(CModuleProcess *AProcess) {};
+
+            virtual void BeforeExecute(CModuleProcess *AProcess) {};
+            virtual void AfterExecute(CModuleProcess *AProcess) {};
 
             virtual void Heartbeat();
             virtual void Execute(CHTTPServerConnection *AConnection);
@@ -261,6 +264,9 @@ namespace Apostol {
 
         protected:
 
+            virtual void DoInitialization(CApostolModule *AModule) abstract;
+            virtual void DoFinalization(CApostolModule *AModule) abstract;
+
             virtual void DoBeforeExecuteModule(CApostolModule *AModule) abstract;
             virtual void DoAfterExecuteModule(CApostolModule *AModule) abstract;
 
@@ -271,6 +277,9 @@ namespace Apostol {
             };
 
             CString ModulesNames();
+
+            void Initialization();
+            void Finalization();
 
             void HeartbeatModules();
 
@@ -291,6 +300,9 @@ namespace Apostol {
 
         class CModuleProcess: public CServerProcess, public CModuleManager {
         protected:
+
+            void DoInitialization(CApostolModule *AModule) override;
+            void DoFinalization(CApostolModule *AModule) override;
 
             void DoBeforeExecuteModule(CApostolModule *AModule) override;
             void DoAfterExecuteModule(CApostolModule *AModule) override;

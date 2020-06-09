@@ -598,16 +598,6 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 #endif
 
-        void CApostolModule::BeforeExecute(Pointer Data) {
-
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
-        void CApostolModule::AfterExecute(Pointer Data) {
-
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
         void CApostolModule::Execute(CHTTPServerConnection *AConnection) {
             auto LServer = dynamic_cast<CHTTPServer *> (AConnection->Server());
             auto LRequest = AConnection->Request();
@@ -701,6 +691,16 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
+        void CModuleProcess::DoInitialization(CApostolModule *AModule) {
+            AModule->Initialization(this);
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CModuleProcess::DoFinalization(CApostolModule *AModule) {
+            AModule->Finalization(this);
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
         void CModuleProcess::DoBeforeExecuteModule(CApostolModule *AModule) {
             AModule->BeforeExecute(this);
         }
@@ -766,6 +766,24 @@ namespace Apostol {
 
         //-- CModuleManager --------------------------------------------------------------------------------------------
 
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CModuleManager::Initialization() {
+            for (int i = 0; i < ModuleCount(); i++) {
+                auto Module = Modules(i);
+                if (Module->IsEnabled())
+                    DoInitialization(Module);
+            }
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CModuleManager::Finalization() {
+            for (int i = 0; i < ModuleCount(); i++) {
+                auto Module = Modules(i);
+                if (Module->IsEnabled())
+                    DoFinalization(Module);
+            }
+        }
         //--------------------------------------------------------------------------------------------------------------
 
         CString CModuleManager::ModulesNames() {
