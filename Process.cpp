@@ -169,7 +169,7 @@ namespace Apostol {
 
                 CSignalProcess *LProcess = this;
                 for (i = 0; i < m_pProcessManager->ProcessCount(); ++i) {
-                    LProcess = m_pProcessManager->Process(i);
+                    LProcess = m_pProcessManager->Processes(i);
                     if (LProcess->Pid() == pid) {
                         LProcess->Status(status);
                         LProcess->Exited(true);
@@ -497,7 +497,7 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CProcessManager::Stop(int Index) {
-            Process(Index)->Terminate();
+            Processes(Index)->Terminate();
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -511,7 +511,7 @@ namespace Apostol {
             CSignalProcess *Item;
 
             for (int I = 0; I < Count(); I++) {
-                Item = Process(I);
+                Item = Processes(I);
                 if (Item->Pid() == Pid)
                     return Item;
             }

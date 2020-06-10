@@ -167,7 +167,7 @@ namespace Apostol {
             for (int i = 0; i < CProcessManager::Count(); i++) {
                 if (i > 0)
                     Names << ", ";
-                Names << CProcessManager::Process(i)->ProcessName();
+                Names << CProcessManager::Processes(i)->ProcessName();
             }
             return Names;
         }
@@ -271,7 +271,16 @@ namespace Apostol {
                 }
             }
 
-            Start(CApplicationProcess::Create(SignalProcess(), this, m_ProcessType));
+            if (m_ProcessType == ptCustom) {
+                int Index = 0;
+                while (Index < ProcessCount() && Processes(Index)->Type() != m_ProcessType)
+                    Index++;
+                if (Index == ProcessCount())
+                    throw ExceptionFrm("Not found custom process.");
+                Start(Processes(Index));
+            } else {
+                Start(CApplicationProcess::Create(SignalProcess(), this, m_ProcessType));
+            }
 
             Log()->Debug(0, MSG_PROCESS_STOP, GetProcessName());
         }
@@ -380,7 +389,7 @@ namespace Apostol {
             CSignalProcess *LProcess;
 
             if (Flag >= 0) {
-                LProcess = Application()->Process(Flag);
+                LProcess = Application()->Processes(Flag);
             } else {
                 LProcess = CApplicationProcess::Create(this, m_pApplication, Type);
                 LProcess->Data(Data);
@@ -663,7 +672,7 @@ namespace Apostol {
         void CProcessMaster::StartCustomProcesses() {
             CCustomProcess *LProcess;
             for (int i = 0; i < Application()->ProcessCount(); ++i) {
-                LProcess = Application()->Process(i);
+                LProcess = Application()->Processes(i);
                 if (LProcess->Type() == ptCustom)
                     StartProcess(ptCustom, i);
             }
@@ -675,7 +684,7 @@ namespace Apostol {
             CCustomProcess *LProcess;
 
             for (int i = 0; i < Application()->ProcessCount(); ++i) {
-                LProcess = Application()->Process(i);
+                LProcess = Application()->Processes(i);
 
                 if (LProcess->Type() != Type)
                     continue;
@@ -746,7 +755,7 @@ namespace Apostol {
 
             for (int i = 0; i < Application()->ProcessCount(); ++i) {
 
-                LProcess = Application()->Process(i);
+                LProcess = Application()->Processes(i);
 
                 if (LProcess->Type() == ptMain)
                     continue;
@@ -822,7 +831,7 @@ namespace Apostol {
 
             CSignalProcess *LProcess;
             for (int i = 0; i < Application()->ProcessCount(); ++i) {
-                LProcess = Application()->Process(i);
+                LProcess = Application()->Processes(i);
 
                 log_debug9(APP_LOG_DEBUG_EVENT, Log(), 0,
                            "process (%s)\t: %P - %i %P e:%d t:%d d:%d r:%d j:%d",

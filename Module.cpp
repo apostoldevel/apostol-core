@@ -507,11 +507,12 @@ namespace Apostol {
 
         void CApostolModule::QueryToResults(CPQPollQuery *APollQuery, CPQueryResults& AResults) {
             CPQResult *LResult = nullptr;
+            int Index;
             for (int i = 0; i < APollQuery->ResultCount(); ++i) {
                 LResult = APollQuery->Results(i);
                 if (LResult->ExecStatus() == PGRES_TUPLES_OK || LResult->ExecStatus() == PGRES_SINGLE_TUPLE) {
-                    AResults.Add(CPQueryResult());
-                    EnumQuery(LResult, AResults[i]);
+                    Index = AResults.Add(CPQueryResult());
+                    EnumQuery(LResult, AResults[Index]);
                 } else {
                     throw Delphi::Exception::EDBError(LResult->GetErrorMessage());
                 }

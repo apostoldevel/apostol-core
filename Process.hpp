@@ -130,8 +130,8 @@ namespace Apostol {
 
             CSignalProcess *FindProcessById(pid_t Pid);
 
-            CSignalProcess *Process(int Index) { return (CSignalProcess *) inherited::GetItem(Index); }
-            void Process(int Index, CSignalProcess *Value) { inherited::SetItem(Index, (CCollectionItem *) Value); }
+            CSignalProcess *Processes(int Index) { return (CSignalProcess *) inherited::GetItem(Index); }
+            void Processes(int Index, CSignalProcess *Value) { inherited::SetItem(Index, (CCollectionItem *) Value); }
         };
 
     }
