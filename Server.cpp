@@ -408,6 +408,8 @@ namespace Apostol {
         void CServerProcess::DoPQResult(CPQResult *AResult, ExecStatusType AExecStatus) {
 #ifdef _DEBUG
             if (AExecStatus == PGRES_TUPLES_OK || AExecStatus == PGRES_SINGLE_TUPLE) {
+                DebugMessage(_T("Tuples: %d\n"), AResult->nTuples());
+/*
                 CString Print;
 
                 Print = "(";
@@ -454,6 +456,7 @@ namespace Apostol {
                 Print += ")";
 
                 Log()->Postgres(APP_LOG_DEBUG, "%s", Print.c_str());
+*/
             } else {
                 Log()->Postgres(APP_LOG_EMERG, AResult->GetErrorMessage());
             }
