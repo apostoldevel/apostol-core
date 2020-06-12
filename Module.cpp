@@ -340,6 +340,26 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
+        void CApostolModule::ListToJson(const CStringList &List, CString &Json, bool IsArray) {
+            IsArray = IsArray || List.Count() > 1;
+
+            if (IsArray)
+                Json = _T("[");
+
+            for (int i = 0; i < List.Count(); ++i) {
+                const auto& Line = List[i];
+                if (!Line.IsEmpty()) {
+                    if (i > 0)
+                        Json += _T(",");
+                    Json += Line;
+                }
+            }
+
+            if (IsArray)
+                Json += _T("]");
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
         void CApostolModule::Redirect(CHTTPServerConnection *AConnection, const CString& Location, bool SendNow) {
             auto LReply = AConnection->Reply();
 
@@ -481,6 +501,37 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 #ifdef WITH_POSTGRESQL
+        void CApostolModule::PQResultToList(CPQResult *Result, CStringList &List) {
+            for (int Row = 0; Row < Result->nTuples(); ++Row) {
+                List.Add(Result->GetValue(Row, 0));
+            }
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CApostolModule::PQResultToJson(CPQResult *Result, CString &Json, bool IsArray) {
+            IsArray = IsArray || Result->nTuples() > 1;
+
+            if (Result->nTuples() == 0) {
+                Json = IsArray ? _T("[]") : _T("{}");
+                return;
+            }
+
+            if (IsArray)
+                Json = _T("[");
+
+            for (int Row = 0; Row < Result->nTuples(); ++Row) {
+                if (!Result->GetIsNull(Row, 0)) {
+                    if (Row > 0)
+                        Json += _T(",");
+                    Json += Result->GetValue(Row, 0);
+                }
+            }
+
+            if (IsArray)
+                Json += _T("]");
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
         void CApostolModule::EnumQuery(CPQResult *APQResult, CPQueryResult& AResult) {
             CStringList LFields;
 

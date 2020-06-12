@@ -201,6 +201,11 @@ namespace Apostol {
 
             CHTTPClient *GetClient(const CString &Host, uint16_t Port);
 
+            CString& ModuleName() { return m_ModuleName; }
+            const CString& ModuleName() const { return m_ModuleName; }
+
+            CModuleStatus ModuleStatus() { return m_ModuleStatus; }
+
             virtual bool IsEnabled() abstract;
             virtual bool CheckUserAgent(const CString& Value) abstract;
 
@@ -213,14 +218,11 @@ namespace Apostol {
             virtual void Heartbeat();
             virtual void Execute(CHTTPServerConnection *AConnection);
 
-            static void ContentToJson(CRequest *ARequest, CJSON& Json);
-
             static CString GetUserAgent(CHTTPServerConnection *AConnection);
             static CString GetOrigin(CHTTPServerConnection *AConnection);
             static CString GetHost(CHTTPServerConnection *AConnection);
 
             const CString& GetRoot(const CString &Host) const;
-
 #ifdef WITH_POSTGRESQL
             CPQPollQuery *GetQuery(CPollConnection *AConnection);
 
@@ -232,7 +234,13 @@ namespace Apostol {
             bool ExecSQL(const CStringList &SQL, CPollConnection *AConnection = nullptr,
                          COnPQPollQueryExecutedEvent && OnExecuted = nullptr,
                          COnPQPollQueryExceptionEvent && OnException = nullptr);
+
+            static void PQResultToList(CPQResult *Result, CStringList &List);
+            static void PQResultToJson(CPQResult *Result, CString &Json, bool IsArray = false);
 #endif
+            static void ContentToJson(CRequest *ARequest, CJSON& Json);
+            static void ListToJson(const CStringList &List, CString &Json, bool IsArray = false);
+
             static void ExceptionToJson(int ErrorCode, const std::exception &e, CString& Json);
 
             static void DebugRequest(CRequest *ARequest);
@@ -245,11 +253,6 @@ namespace Apostol {
             static void Redirect(CHTTPServerConnection *AConnection, const CString& Location, bool SendNow = false);
 
             void SendResource(CHTTPServerConnection *AConnection, const CString &Path, LPCTSTR AContentType = nullptr, bool SendNow = false) const;
-
-            CString& ModuleName() { return m_ModuleName; }
-            const CString& ModuleName() const { return m_ModuleName; }
-
-            CModuleStatus ModuleStatus() { return m_ModuleStatus; }
 
         };
 
