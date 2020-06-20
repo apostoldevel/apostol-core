@@ -335,7 +335,11 @@ namespace Apostol {
                 Json << ARequest->Content;
 
             } else {
-                throw Delphi::Exception::Exception("Invalid content type.");
+
+                auto& jsonObject = Json.Object();
+                for (int i = 0; i < ARequest->Params.Count(); ++i) {
+                    jsonObject.AddPair(ARequest->Params.Names(i), ARequest->Params.ValueFromIndex(i));
+                }
             }
         }
         //--------------------------------------------------------------------------------------------------------------
@@ -363,10 +367,12 @@ namespace Apostol {
         void CApostolModule::Redirect(CHTTPServerConnection *AConnection, const CString& Location, bool SendNow) {
             auto LReply = AConnection->Reply();
 
+            LReply->Content.Clear();
             LReply->AddHeader(_T("Location"), Location);
-            Log()->Message("Redirected to %s.", Location.c_str());
 
             AConnection->SendStockReply(CReply::moved_temporarily, SendNow);
+
+            Log()->Message("Redirected to %s.", Location.c_str());
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -384,8 +390,17 @@ namespace Apostol {
             }
 
             if (!FileExists(LResource.c_str())) {
-                AConnection->SendStockReply(CReply::not_found, SendNow);
-                Log()->Error(APP_LOG_WARN, 0, _T("[HTTP] File not found: %s"), LResource.c_str());
+                //AConnection->SendStockReply(CReply::not_found, SendNow);
+                CString error;
+                error.Format("File not found: %s", LResource.c_str());
+
+                CString errorLocation("/404");
+                errorLocation << "?error=not_found";
+                errorLocation << "&error_description=" + base64_encode(error);
+
+                Redirect(AConnection, errorLocation, SendNow);
+
+                Log()->Error(APP_LOG_WARN, 0, error.c_str());
                 return;
             }
 
@@ -657,7 +672,6 @@ namespace Apostol {
 
             if (m_Roots.Count() == 0)
                 InitRoots(LServer->Sites());
-
 #ifdef _DEBUG
             DebugConnection(AConnection);
 #endif
