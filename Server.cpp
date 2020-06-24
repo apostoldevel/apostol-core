@@ -408,55 +408,53 @@ namespace Apostol {
         void CServerProcess::DoPQResult(CPQResult *AResult, ExecStatusType AExecStatus) {
 #ifdef _DEBUG
             if (AExecStatus == PGRES_TUPLES_OK || AExecStatus == PGRES_SINGLE_TUPLE) {
-                DebugMessage(_T("Tuples: %d\n"), AResult->nTuples());
-/*
-                CString Print;
+                if (AResult->nTuples() > 0) {
 
-                Print = "(";
-                Print += AResult->fName(0);
-                for (int I = 1; I < AResult->nFields(); ++I) {
-                    Print += ",";
-                    Print += AResult->fName(I);
-                }
-                Print += ")";
+                    CString Print;
 
-                Log()->Postgres(APP_LOG_DEBUG, "%s", Print.c_str());
-
-                Print = "(";
-                for (int Row = 0; Row < AResult->nTuples(); ++Row) {
-
-                    if (AResult->GetIsNull(Row, 0)) {
-                        Print += "<null>";
-                    } else {
-                        if (AResult->fFormat(0) == 0) {
-                            Print += AResult->GetValue(Row, 0);
-                        } else {
-                            Print += "<binary>";
-                        }
-                    }
-
-                    for (int Col = 1; Col < AResult->nFields(); ++Col) {
+                    Print = "(";
+                    Print += AResult->fName(0);
+                    for (int I = 1; I < AResult->nFields(); ++I) {
                         Print += ",";
-                        if (AResult->GetIsNull(Row, Col)) {
+                        Print += AResult->fName(I);
+                    }
+                    Print += ")";
+
+                    Log()->Postgres(APP_LOG_DEBUG, "%s", Print.c_str());
+
+                    Print = "(";
+                    for (int Row = 0; Row < AResult->nTuples(); ++Row) {
+
+                        if (AResult->GetIsNull(Row, 0)) {
                             Print += "<null>";
                         } else {
-                            if (AResult->fFormat(Col) == 0) {
-                                Print += AResult->GetValue(Row, Col);
+                            if (AResult->fFormat(0) == 0) {
+                                Print += AResult->GetValue(Row, 0);
                             } else {
                                 Print += "<binary>";
                             }
                         }
-                    }
 
-                    if (Row > 3) {
+                        for (int Col = 1; Col < AResult->nFields(); ++Col) {
+                            Print += ",";
+                            if (AResult->GetIsNull(Row, Col)) {
+                                Print += "<null>";
+                            } else {
+                                if (AResult->fFormat(Col) == 0) {
+                                    Print += AResult->GetValue(Row, Col);
+                                } else {
+                                    Print += "<binary>";
+                                }
+                            }
+                        }
+
                         break;
                     }
+
+                    Print += ")";
+
+                    Log()->Postgres(APP_LOG_DEBUG, "%s", Print.c_str());
                 }
-
-                Print += ")";
-
-                Log()->Postgres(APP_LOG_DEBUG, "%s", Print.c_str());
-*/
             } else {
                 Log()->Postgres(APP_LOG_EMERG, AResult->GetErrorMessage());
             }
@@ -749,7 +747,12 @@ namespace Apostol {
             if (defaultAuth.Name().IsEmpty()) {
                 defaultAuth.Name() = _T("default");
                 auto& Params = defaultAuth.Value().Params.Object();
+                Params.AddPair(_T("issuers"), CJSONArray("apostol-web-service.ru"));
+                Params.AddPair(_T("audience"), _T("apostol-web-service.ru"));
+                Params.AddPair(_T("algorithm"), _T("HS256"));
                 Params.AddPair(_T("auth_uri"), _T("/oauth2/auth"));
+                Params.AddPair(_T("token_uri"), _T("/oauth2/token"));
+                Params.AddPair(_T("redirect_uri"), CJSONArray("http://localhost:4977/oauth2/code"));
             }
         }
         //--------------------------------------------------------------------------------------------------------------

@@ -300,6 +300,7 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CApostolModule::ExceptionToJson(int ErrorCode, const std::exception &e, CString& Json) {
+            Json.Clear();
             Json.Format(R"({"error": {"code": %u, "message": "%s"}})", ErrorCode, Delphi::Json::EncodeJsonString(e.what()).c_str());
         }
         //--------------------------------------------------------------------------------------------------------------
@@ -338,7 +339,7 @@ namespace Apostol {
 
                 auto& jsonObject = Json.Object();
                 for (int i = 0; i < ARequest->Params.Count(); ++i) {
-                    jsonObject.AddPair(ARequest->Params.Names(i), ARequest->Params.ValueFromIndex(i));
+                    jsonObject.AddPair(ARequest->Params.Names(i), CHTTPServer::URLDecode(ARequest->Params.ValueFromIndex(i)));
                 }
             }
         }
@@ -370,6 +371,9 @@ namespace Apostol {
             LReply->Content.Clear();
             LReply->AddHeader(_T("Location"), Location);
 
+            AConnection->Data().Values("redirect", CString());
+            AConnection->Data().Values("redirect_error", CString());
+
             AConnection->SendStockReply(CReply::moved_temporarily, SendNow);
 
             Log()->Message("Redirected to %s.", Location.c_str());
@@ -382,33 +386,41 @@ namespace Apostol {
             auto LRequest = AConnection->Request();
             auto LReply = AConnection->Reply();
 
-            CString LResource(GetRoot(LRequest->Location.Host()));
+            const auto &Root = GetRoot(LRequest->Location.Host());
+
+            CString LResource(Root);
             LResource += Path;
 
             if (LResource.back() == '/') {
                 LResource += "index.html";
             }
 
-            if (!FileExists(LResource.c_str())) {
-                //AConnection->SendStockReply(CReply::not_found, SendNow);
-                CString error;
-                error.Format("File not found: %s", LResource.c_str());
-
-                CString errorLocation("/404");
-                errorLocation << "?error=not_found";
-                errorLocation << "&error_description=" + base64_encode(error);
-
-                Redirect(AConnection, errorLocation, SendNow);
-
-                Log()->Error(APP_LOG_WARN, 0, error.c_str());
-                return;
-            }
-
             TCHAR szBuffer[MAX_BUFFER_SIZE + 1] = {0};
 
             if (AContentType == nullptr) {
-                auto fileExt = ExtractFileExt(szBuffer, LResource.c_str());
-                AContentType = Mapping::ExtToType(fileExt);
+                CString fileExt = ExtractFileExt(szBuffer, LResource.c_str());
+                if (fileExt == LResource) {
+                    fileExt = _T(".html");
+                    LResource += fileExt;
+                }
+                AContentType = Mapping::ExtToType(fileExt.c_str());
+            }
+
+            if (!FileExists(LResource.c_str())) {
+                CString NotFound;
+                NotFound.Format("File not found: %s", LResource.c_str());
+
+                CString errorLocation("/error/404");
+                if (FileExists(CString(Root + errorLocation + ".html").c_str())) {
+                    errorLocation << "?error=not_found";
+                    errorLocation << "&error_description=" + base64_encode(Path);
+                    Redirect(AConnection, errorLocation);
+                } else {
+                    AConnection->SendStockReply(CReply::not_found);
+                }
+
+                Log()->Error(APP_LOG_WARN, 0, NotFound.c_str());
+                return;
             }
 
             auto lastModified = StrWebTime(FileAge(LResource.c_str()), szBuffer, sizeof(szBuffer));
