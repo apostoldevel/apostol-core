@@ -156,7 +156,7 @@ namespace Apostol {
             MkDir(Prefix + _T("logs/"));
             MkDir(Prefix + _T("sites/"));
             MkDir(Prefix + _T("certs/"));
-            MkDir(Prefix + _T("auth/"));
+            MkDir(Prefix + _T("oauth2/"));
             MkDir(Config()->ConfPrefix());
             MkDir(Config()->CachePrefix());
         }

@@ -145,7 +145,7 @@ namespace Apostol {
             int TimerInterval() const { return m_TimerInterval; }
             void TimerInterval(int Value) { SetTimerInterval(Value); }
 
-            static void LoadAuthParams(CAuthParams &AuthParams);
+            static void LoadOAuth2Params(CAuthParams &AuthParams);
             static void LoadSites(CSites &Sites);
 
         };

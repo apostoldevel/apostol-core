@@ -239,7 +239,7 @@ namespace Apostol {
             m_Server.DefaultPort(Config()->WorkerPort());
 
             LoadSites(m_Server.Sites());
-            LoadAuthParams(m_Server.AuthParams());
+            LoadOAuth2Params(m_Server.AuthParams());
 
             m_Server.InitializeBindings();
             m_Server.ActiveLevel(alBinding);
@@ -254,7 +254,7 @@ namespace Apostol {
                 m_Server.DefaultPort(Config()->HelperPort());
 
                 LoadSites(m_Server.Sites());
-                LoadAuthParams(m_Server.AuthParams());
+                LoadOAuth2Params(m_Server.AuthParams());
 
                 m_Server.InitializeBindings();
                 m_Server.ActiveLevel(alBinding);
@@ -684,9 +684,9 @@ namespace Apostol {
 
         }
 
-        void CServerProcess::LoadAuthParams(CAuthParams &AuthParams) {
+        void CServerProcess::LoadOAuth2Params(CAuthParams &AuthParams) {
 
-            const CString FileName(Config()->ConfPrefix() + "auth.conf");
+            const CString FileName(Config()->ConfPrefix() + "oauth2.conf");
 
             auto OnIniFileParseError = [&FileName](Pointer Sender, LPCTSTR lpszSectionName, LPCTSTR lpszKeyName,
                                                    LPCTSTR lpszValue, LPCTSTR lpszDefault, int Line)
@@ -707,7 +707,7 @@ namespace Apostol {
             AuthParams.Clear();
 
             if (FileExists(FileName.c_str())) {
-                const auto& pathAuth = Config()->Prefix() + "auth/";
+                const auto& pathOAuth2 = Config()->Prefix() + "oauth2/";
                 const auto& pathCerts = Config()->Prefix() + "certs/";
 
                 CIniFile AuthFile(FileName.c_str());
@@ -722,7 +722,7 @@ namespace Apostol {
 
                     configFile = configFiles.ValueFromIndex(i);
                     if (!path_separator(configFile.front())) {
-                        configFile = pathAuth + configFile;
+                        configFile = pathOAuth2 + configFile;
                     }
 
                     if (FileExists(configFile.c_str())) {
@@ -747,12 +747,12 @@ namespace Apostol {
             if (defaultAuth.Name().IsEmpty()) {
                 defaultAuth.Name() = _T("default");
                 auto& Params = defaultAuth.Value().Params.Object();
-                Params.AddPair(_T("issuers"), CJSONArray("apostol-web-service.ru"));
-                Params.AddPair(_T("audience"), _T("apostol-web-service.ru"));
+                Params.AddPair(_T("issuers"), CJSONArray("accounts.apostol-web-service.ru"));
+                Params.AddPair(_T("client_id"), _T("apostol-web-service.ru"));
                 Params.AddPair(_T("algorithm"), _T("HS256"));
                 Params.AddPair(_T("auth_uri"), _T("/oauth2/auth"));
                 Params.AddPair(_T("token_uri"), _T("/oauth2/token"));
-                Params.AddPair(_T("redirect_uri"), CJSONArray("http://localhost:4977/oauth2/code"));
+                Params.AddPair(_T("redirect_uris"), CJSONArray(CString().Format("http://localhost:%d/oauth2/code", Config()->WorkerPort())));
             }
         }
         //--------------------------------------------------------------------------------------------------------------
