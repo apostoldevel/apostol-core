@@ -551,6 +551,8 @@ namespace Apostol {
                     if (Row > 0)
                         Json += _T(",");
                     Json += Result->GetValue(Row, 0);
+                } else {
+                    Json = IsArray ? _T("[]") : _T("{}");
                 }
             }
 
