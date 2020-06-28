@@ -220,6 +220,7 @@ namespace Apostol {
 
             static CString GetUserAgent(CHTTPServerConnection *AConnection);
             static CString GetOrigin(CHTTPServerConnection *AConnection);
+            static CString GetProtocol(CHTTPServerConnection *AConnection);
             static CString GetHost(CHTTPServerConnection *AConnection);
 
             const CString& GetRoot(const CString &Host) const;

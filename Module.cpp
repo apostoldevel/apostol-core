@@ -281,6 +281,13 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
+        CString CApostolModule::GetProtocol(CHTTPServerConnection *AConnection) {
+            auto LRequest = AConnection->Request();
+            const auto& LProtocol = LRequest->Headers.Values(_T("X-Forwarded-Proto"));
+            return LProtocol.IsEmpty() ? LRequest->Location.protocol : LProtocol;
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
         CString CApostolModule::GetHost(CHTTPServerConnection *AConnection) {
             auto LRequest = AConnection->Request();
             CString Host;
