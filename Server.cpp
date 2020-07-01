@@ -239,7 +239,7 @@ namespace Apostol {
             m_Server.DefaultPort(Config()->WorkerPort());
 
             LoadSites(m_Server.Sites());
-            LoadOAuth2Params(m_Server.AuthParams());
+            LoadProviders(m_Server.Providers());
 
             m_Server.InitializeBindings();
             m_Server.ActiveLevel(alBinding);
@@ -254,7 +254,7 @@ namespace Apostol {
                 m_Server.DefaultPort(Config()->HelperPort());
 
                 LoadSites(m_Server.Sites());
-                LoadOAuth2Params(m_Server.AuthParams());
+                LoadProviders(m_Server.Providers());
 
                 m_Server.InitializeBindings();
                 m_Server.ActiveLevel(alBinding);
@@ -683,8 +683,9 @@ namespace Apostol {
         void CServerProcess::DoConnect(CCommand *ACommand) {
 
         }
+        //--------------------------------------------------------------------------------------------------------------
 
-        void CServerProcess::LoadOAuth2Params(CAuthParams &AuthParams) {
+        void CServerProcess::LoadProviders(CProviders &Providers) {
 
             const CString FileName(Config()->ConfPrefix() + "oauth2.conf");
 
@@ -704,7 +705,7 @@ namespace Apostol {
                 }
             };
 
-            AuthParams.Clear();
+            Providers.Clear();
 
             if (FileExists(FileName.c_str())) {
                 const auto& pathOAuth2 = Config()->Prefix() + "oauth2/";
@@ -726,15 +727,15 @@ namespace Apostol {
                     }
 
                     if (FileExists(configFile.c_str())) {
-                        int Index = AuthParams.AddPair(providerName, CAuthParam());
-                        auto& Param = AuthParams[Index].Value();
-                        Param.Provider = providerName;
-                        Param.Params.LoadFromFile(configFile.c_str());
+                        int Index = Providers.AddPair(providerName, CProvider());
+                        auto& Provider = Providers[Index].Value();
+                        Provider.Name = providerName;
+                        Provider.Params.LoadFromFile(configFile.c_str());
                         const auto& certsFile = pathCerts + providerName;
                         if (FileExists(certsFile.c_str()))
-                            Param.Keys.LoadFromFile(certsFile.c_str());
+                            Provider.Keys.LoadFromFile(certsFile.c_str());
                         if (providerName == "default")
-                            AuthParams.Default() = AuthParams[Index];
+                            Providers.Default() = Providers[Index];
                     } else {
                         Log()->Error(APP_LOG_EMERG, 0, APP_FILE_NOT_FOUND, configFile.c_str());
                     }
@@ -743,16 +744,21 @@ namespace Apostol {
                 Log()->Error(APP_LOG_EMERG, 0, APP_FILE_NOT_FOUND, FileName.c_str());
             }
 
-            auto& defaultAuth = AuthParams.Default();
-            if (defaultAuth.Name().IsEmpty()) {
-                defaultAuth.Name() = _T("default");
-                auto& Params = defaultAuth.Value().Params.Object();
-                Params.AddPair(_T("issuers"), CJSONArray("accounts.apostol-web-service.ru"));
-                Params.AddPair(_T("client_id"), _T("apostol-web-service.ru"));
-                Params.AddPair(_T("algorithm"), _T("HS256"));
-                Params.AddPair(_T("auth_uri"), _T("/oauth2/auth"));
-                Params.AddPair(_T("token_uri"), _T("/oauth2/token"));
-                Params.AddPair(_T("redirect_uris"), CJSONArray(CString().Format("http://localhost:%d/oauth2/code", Config()->WorkerPort())));
+            auto& defaultProvider = Providers.Default();
+            if (defaultProvider.Name().IsEmpty()) {
+                defaultProvider.Name() = _T("default");
+
+                CJSONObject web;
+                web.AddPair(_T("issuers"), CJSONArray("accounts.apostol-web-service.ru"));
+                web.AddPair(_T("client_id"), _T("apostol-web-service.ru"));
+                web.AddPair(_T("client_secret"), _T("apostol-web-service.ru"));
+                web.AddPair(_T("algorithm"), _T("HS256"));
+                web.AddPair(_T("auth_uri"), _T("/oauth2/authorize"));
+                web.AddPair(_T("token_uri"), _T("/oauth2/token"));
+                web.AddPair(_T("redirect_uris"), CJSONArray(CString().Format("http://localhost:%d/oauth2/code", Config()->WorkerPort())));
+
+                auto& apps = defaultProvider.Value().Params.Object();
+                apps.AddPair("web", web);
             }
         }
         //--------------------------------------------------------------------------------------------------------------
