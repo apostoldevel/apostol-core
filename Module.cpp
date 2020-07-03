@@ -316,9 +316,6 @@ namespace Apostol {
 
             const auto& ContentType = ARequest->Headers.Values(_T("Content-Type")).Lower();
 
-            if (ContentType.IsEmpty())
-                return;
-
             if (ContentType.Find("application/x-www-form-urlencoded") != CString::npos) {
 
                 const CStringList &formData = ARequest->FormData;
