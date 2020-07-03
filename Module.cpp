@@ -382,8 +382,6 @@ namespace Apostol {
             AConnection->Data().Values("redirect_error", CString());
 
             AConnection->SendStockReply(CReply::moved_temporarily, SendNow);
-
-            Log()->Message("Redirected to %s.", Location.c_str());
         }
         //--------------------------------------------------------------------------------------------------------------
 
