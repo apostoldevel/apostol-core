@@ -749,13 +749,13 @@ namespace Apostol {
                 defaultProvider.Name() = _T("default");
 
                 CJSONObject web;
-                web.AddPair(_T("issuers"), CJSONArray("accounts.apostol-web-service.ru"));
+                web.AddPair(_T("issuers"), CJSONArray("[\"accounts.apostol-web-service.ru\"]"));
                 web.AddPair(_T("client_id"), _T("apostol-web-service.ru"));
                 web.AddPair(_T("client_secret"), _T("apostol-web-service.ru"));
                 web.AddPair(_T("algorithm"), _T("HS256"));
                 web.AddPair(_T("auth_uri"), _T("/oauth2/authorize"));
                 web.AddPair(_T("token_uri"), _T("/oauth2/token"));
-                web.AddPair(_T("redirect_uris"), CJSONArray(CString().Format("http://localhost:%d/oauth2/code", Config()->WorkerPort())));
+                web.AddPair(_T("redirect_uris"), CJSONArray(CString().Format("[\"http://localhost:%d/oauth2/code\"]", Config()->WorkerPort())));
 
                 auto& apps = defaultProvider.Value().Params.Object();
                 apps.AddPair("web", web);
