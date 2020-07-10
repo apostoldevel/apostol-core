@@ -397,10 +397,11 @@ namespace Apostol {
                 LResource += "index.html";
             }
 
+            CString fileExt;
             TCHAR szBuffer[MAX_BUFFER_SIZE + 1] = {0};
 
             if (AContentType == nullptr) {
-                CString fileExt = ExtractFileExt(szBuffer, LResource.c_str());
+                fileExt = ExtractFileExt(szBuffer, LResource.c_str());
                 if (fileExt == LResource) {
                     fileExt = _T(".html");
                     LResource += fileExt;
@@ -408,29 +409,35 @@ namespace Apostol {
                 AContentType = Mapping::ExtToType(fileExt.c_str());
             }
 
-            if (!FileExists(LResource.c_str())) {
+            if (FileExists(LResource.c_str())) {
+
+                auto lastModified = StrWebTime(FileAge(LResource.c_str()), szBuffer, sizeof(szBuffer));
+                if (lastModified != nullptr) {
+                    LReply->AddHeader(_T("Last-Modified"), lastModified);
+                }
+
+                LReply->Content.LoadFromFile(LResource.c_str());
+                AConnection->SendReply(CReply::ok, AContentType, SendNow);
+
+            } else {
+
                 CString NotFound;
                 NotFound.Format("File not found: %s", LResource.c_str());
 
-                CString errorLocation("/error/404");
-                if (FileExists(CString(Root + errorLocation + ".html").c_str())) {
-                    errorLocation << "?error=not_found";
-                    errorLocation << "&error_description=" + base64_encode(Path);
-                    Redirect(AConnection, errorLocation);
-                } else {
-                    AConnection->SendStockReply(CReply::not_found);
+                if (fileExt == _T(".html")) {
+                    CString errorLocation("/error/404");
+                    if (FileExists(CString(Root + errorLocation + fileExt).c_str())) {
+                        errorLocation << "?error=not_found";
+                        errorLocation << "&error_description=" + CHTTPServer::URLEncode(Path);
+                        Redirect(AConnection, errorLocation, SendNow);
+                        return;
+                    }
                 }
 
+                AConnection->SendStockReply(CReply::not_found, SendNow);
                 Log()->Error(APP_LOG_WARN, 0, NotFound.c_str());
                 return;
             }
-
-            auto lastModified = StrWebTime(FileAge(LResource.c_str()), szBuffer, sizeof(szBuffer));
-            if (lastModified != nullptr)
-                LReply->AddHeader(_T("Last-Modified"), lastModified);
-
-            LReply->Content.LoadFromFile(LResource.c_str());
-            AConnection->SendReply(CReply::ok, AContentType, SendNow);
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -719,6 +726,91 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
+        void CApostolModule::WSDebugRequest(CWebSocket *ARequest) {
+
+            size_t Delta = 0;
+            size_t Size = ARequest->Size();
+
+            if (Size > MaxFormatStringLength) {
+                Delta = Size - MaxFormatStringLength;
+                Size = MaxFormatStringLength;
+            }
+
+            CString Payload((LPCTSTR) ARequest->Payload()->Memory() + Delta, Size);
+
+            DebugMessage("[FIN: %#x; OP: %#x; MASK: %#x] [%d] [%d] Request:\n%s\n",
+                    ARequest->Frame().FIN, ARequest->Frame().Opcode, ARequest->Frame().Mask,
+                    ARequest->Size(), ARequest->Payload()->Size(), Payload.c_str()
+            );
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CApostolModule::WSDebugReply(CWebSocket *AReply) {
+
+            size_t Delta = 0;
+            size_t Size = AReply->Size();
+
+            if (Size > MaxFormatStringLength) {
+                Delta = Size - MaxFormatStringLength;
+                Size = MaxFormatStringLength;
+            }
+
+            CString Payload((LPCTSTR) AReply->Payload()->Memory() + Delta, Size);
+
+            DebugMessage("[FIN: %#x; OP: %#x; MASK: %#x] [%d] [%d] Request:\n%s\n",
+                    AReply->Frame().FIN, AReply->Frame().Opcode, AReply->Frame().Mask,
+                    AReply->Size(), AReply->Payload()->Size(), Payload.c_str()
+            );
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CApostolModule::WSDebugConnection(CHTTPServerConnection *AConnection) {
+
+            DebugMessage(_T("\n[%p] [%s:%d] [%d] [WebSocket] "), AConnection, AConnection->Socket()->Binding()->PeerIP(),
+                         AConnection->Socket()->Binding()->PeerPort(), AConnection->Socket()->Binding()->Handle());
+
+            WSDebugRequest(AConnection->WSRequest());
+
+            static auto OnRequest = [](CObject *Sender) {
+                auto LConnection = dynamic_cast<CHTTPServerConnection *> (Sender);
+                if (LConnection->Socket()->Connected()) {
+                    auto LBinding = LConnection->Socket()->Binding();
+                    DebugMessage(_T("\n[%p] [%s:%d] [%d] [WebSocket] [OnRequest] "), LConnection, LBinding->PeerIP(),
+                                 LBinding->PeerPort(), LBinding->Handle());
+                }
+
+                WSDebugRequest(LConnection->WSRequest());
+            };
+
+            static auto OnWaitRequest = [](CObject *Sender) {
+                auto LConnection = dynamic_cast<CHTTPServerConnection *> (Sender);
+                if (LConnection->Socket()->Connected()) {
+                    auto LBinding = LConnection->Socket()->Binding();
+                    DebugMessage(_T("\n[%p] [%s:%d] [%d] [WebSocket] [OnWaitRequest] "), LConnection,
+                                 LBinding->PeerIP(),
+                                 LBinding->PeerPort(), LBinding->Handle());
+                }
+
+                WSDebugRequest(LConnection->WSRequest());
+            };
+
+            static auto OnReply = [](CObject *Sender) {
+                auto LConnection = dynamic_cast<CHTTPServerConnection *> (Sender);
+                if (LConnection->Socket()->Connected()) {
+                    auto LBinding = LConnection->Socket()->Binding();
+                    DebugMessage(_T("\n[%p] [%s:%d] [%d] [WebSocket] [OnReply] "), LConnection, LBinding->PeerIP(),
+                                 LBinding->PeerPort(), LBinding->Handle());
+                }
+
+                WSDebugReply(LConnection->WSReply());
+            };
+
+            AConnection->OnWaitRequest(OnWaitRequest);
+            //AConnection->OnRequest(OnRequest);
+            AConnection->OnReply(OnReply);
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
         void CApostolModule::DebugRequest(CRequest *ARequest) {
             DebugMessage(_T("[%p] Request:\n%s %s HTTP/%d.%d\n"), ARequest, ARequest->Method.c_str(), ARequest->URI.c_str(), ARequest->VMajor, ARequest->VMinor);
 
@@ -742,6 +834,7 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CApostolModule::DebugConnection(CHTTPServerConnection *AConnection) {
+
             DebugMessage(_T("\n[%p] [%s:%d] [%d] "), AConnection, AConnection->Socket()->Binding()->PeerIP(),
                          AConnection->Socket()->Binding()->PeerPort(), AConnection->Socket()->Binding()->Handle());
 
@@ -749,11 +842,12 @@ namespace Apostol {
 
             static auto OnReply = [](CObject *Sender) {
                 auto LConnection = dynamic_cast<CHTTPServerConnection *> (Sender);
-                auto LBinding = LConnection->Socket()->Binding();
-
-                if (Assigned(LBinding)) {
-                    DebugMessage(_T("\n[%p] [%s:%d] [%d] "), LConnection, LBinding->PeerIP(),
-                                 LBinding->PeerPort(), LBinding->Handle());
+                if (LConnection->Socket()->Connected()) {
+                    auto LBinding = LConnection->Socket()->Binding();
+                    if (LBinding->HandleAllocated()) {
+                        DebugMessage(_T("\n[%p] [%s:%d] [%d] "), LConnection, LBinding->PeerIP(),
+                                     LBinding->PeerPort(), LBinding->Handle());
+                    }
                 }
 
                 DebugReply(LConnection->Reply());

@@ -244,8 +244,13 @@ namespace Apostol {
 
             static void ExceptionToJson(int ErrorCode, const std::exception &e, CString& Json);
 
+            static void WSDebugRequest(CWebSocket *ARequest);
+            static void WSDebugReply(CWebSocket *AReply);
+            static void WSDebugConnection(CHTTPServerConnection *AConnection);
+
             static void DebugRequest(CRequest *ARequest);
             static void DebugReply(CReply *AReply);
+
             static void DebugConnection(CHTTPServerConnection *AConnection);
 
             const CString& AllowedMethods() { return GetAllowedMethods(m_AllowedMethods); };
