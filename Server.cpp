@@ -572,8 +572,7 @@ namespace Apostol {
                     LPollQuery->PollConnection(nullptr);
                 }
 #endif
-                Log()->Message(_T("[%s:%d] Client closed connection."), LConnection->Socket()->Binding()->PeerIP(),
-                               LConnection->Socket()->Binding()->PeerPort());
+                Log()->Message(_T("Client disconnected."));
             }
         }
         //--------------------------------------------------------------------------------------------------------------
