@@ -468,7 +468,12 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CSignalProcess::Quit() {
+        void CSignalProcess::SignalReload() {
+            sig_reconfigure = 1;
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CSignalProcess::SignalQuit() {
             sig_quit = 1;
         }
 
@@ -497,20 +502,31 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CProcessManager::Stop(int Index) {
-            Processes(Index)->Terminate();
+            Delete(Index);
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CProcessManager::StopAll() {
-            for (int I = 0; I < Count(); I++)
+            for (int I = 1; I < ProcessCount(); I++)
                 Stop(I);
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CProcessManager::Terminate(int Index) {
+            Processes(Index)->Terminate();
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CProcessManager::TerminateAll() {
+            for (int I = 1; I < ProcessCount(); I++)
+                Terminate(I);
         }
         //--------------------------------------------------------------------------------------------------------------
 
         CSignalProcess *CProcessManager::FindProcessById(pid_t Pid) {
             CSignalProcess *Item;
 
-            for (int I = 0; I < Count(); I++) {
+            for (int I = 0; I < ProcessCount(); I++) {
                 Item = Processes(I);
                 if (Item->Pid() == Pid)
                     return Item;

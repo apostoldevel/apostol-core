@@ -495,8 +495,11 @@ namespace Apostol {
 
             AConnection->SendReply();
 #ifdef _DEBUG
+            if (LRequest->URI == _T("/reload"))
+                GApplication->SignalProcess()->SignalReload();
+
             if (LRequest->URI == _T("/quit"))
-                GApplication->SignalProcess()->Quit();
+                GApplication->SignalProcess()->SignalQuit();
 #endif
         }
         //--------------------------------------------------------------------------------------------------------------

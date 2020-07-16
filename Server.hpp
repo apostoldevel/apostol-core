@@ -116,6 +116,8 @@ namespace Apostol {
 
             CServerProcess();
 
+            ~CServerProcess() override = default;
+
             void ServerStart();
             void ServerStop();
             void ServerShutDown();

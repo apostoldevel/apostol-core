@@ -41,6 +41,8 @@ namespace Apostol {
             m_pTimer = nullptr;
             m_TimerInterval = 0;
 
+            m_PollStack.TimeOut(Config()->TimeOut());
+
             m_Server.PollStack(&m_PollStack);
             InitializeServerHandlers();
 #ifdef WITH_POSTGRESQL
@@ -211,8 +213,8 @@ namespace Apostol {
 #endif
         void CServerProcess::SetTimerInterval(int Value) {
             if (m_TimerInterval != Value) {
-                m_TimerInterval = Value;
                 UpdateTimer();
+                m_TimerInterval = Value;
             }
         }
         //--------------------------------------------------------------------------------------------------------------

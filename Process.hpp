@@ -99,7 +99,8 @@ namespace Apostol {
 
             void ExitSigAlarm(uint_t AMsec);
 
-            virtual void Quit();
+            virtual void SignalReload();
+            virtual void SignalQuit();
 
         };
 
@@ -124,6 +125,9 @@ namespace Apostol {
             void Start(CSignalProcess *AProcess);
             void Stop(int Index);
             void StopAll();
+
+            void Terminate(int Index);
+            void TerminateAll();
 
             int ProcessCount() { return inherited::Count(); };
             void DeleteProcess(int Index) { inherited::Delete(Index); };

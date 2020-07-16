@@ -282,6 +282,8 @@ namespace Apostol {
                 Start(CApplicationProcess::Create(SignalProcess(), this, m_ProcessType));
             }
 
+            StopAll();
+
             Log()->Debug(0, MSG_PROCESS_STOP, GetProcessName());
         }
         //--------------------------------------------------------------------------------------------------------------
@@ -536,12 +538,11 @@ namespace Apostol {
 
             SetLimitNoFile(Config()->LimitNoFile());
 
-            PollStack().TimeOut(Config()->TimeOut());
-
             ServerStart();
 #ifdef WITH_POSTGRESQL
             PQServerStart();
 #endif
+            SetTimerInterval(1000);
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -553,8 +554,6 @@ namespace Apostol {
             InitSignals();
 
             SetLimitNoFile(Config()->LimitNoFile());
-
-            PollStack().TimeOut(Config()->TimeOut());
 
             ServerStart();
 #ifdef WITH_POSTGRESQL
@@ -1038,7 +1037,7 @@ namespace Apostol {
             auto LParent = dynamic_cast<CServerProcess *>(AParent);
             if (LParent != nullptr) {
                 Server() = LParent->Server();
-                Log()->Error(APP_LOG_DEBUG, 0, "worker server assigned by parent");
+                Log()->Error(APP_LOG_DEBUG, 0, "worker process: http server assigned by parent");
             } else {
                 InitializeWorkerServer(AApplication->Title());
             }
@@ -1058,8 +1057,6 @@ namespace Apostol {
             InitSignals();
 
             Config()->Reload();
-
-            PollStack().TimeOut(Config()->TimeOut());
 
             SetLimitNoFile(Config()->LimitNoFile());
 
@@ -1081,8 +1078,11 @@ namespace Apostol {
             Finalization();
 #ifdef WITH_POSTGRESQL
             PQServerStop();
+            Log()->Error(APP_LOG_NOTICE, 0, "worker process: postgres server stopped");
 #endif
             ServerStop();
+            Log()->Error(APP_LOG_NOTICE, 0, "worker process: http server stopped");
+
             CApplicationProcess::AfterRun();
         }
         //--------------------------------------------------------------------------------------------------------------
@@ -1161,8 +1161,6 @@ namespace Apostol {
             InitSignals();
 
             Config()->Reload();
-
-            PollStack().TimeOut(Config()->TimeOut());
 
             SetLimitNoFile(Config()->LimitNoFile());
 
