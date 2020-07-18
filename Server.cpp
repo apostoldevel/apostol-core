@@ -213,8 +213,8 @@ namespace Apostol {
 #endif
         void CServerProcess::SetTimerInterval(int Value) {
             if (m_TimerInterval != Value) {
-                UpdateTimer();
                 m_TimerInterval = Value;
+                UpdateTimer();
             }
         }
         //--------------------------------------------------------------------------------------------------------------
