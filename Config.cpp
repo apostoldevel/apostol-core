@@ -472,11 +472,9 @@ namespace Apostol {
             Add(new CConfigCommand(_T("daemon"), _T("pid"), m_sPidFile.c_str(), std::bind(&CConfig::SetPidFile, this, _1)));
 
             Add(new CConfigCommand(_T("server"), _T("listen"), m_sListen.c_str(), std::bind(&CConfig::SetListen, this, _1)));
+            Add(new CConfigCommand(_T("server"), _T("port"), &m_nPort));
             Add(new CConfigCommand(_T("server"), _T("timeout"), &m_nTimeOut));
             Add(new CConfigCommand(_T("server"), _T("root"), m_sDocRoot.c_str(), std::bind(&CConfig::SetDocRoot, this, _1)));
-
-            Add(new CConfigCommand(_T("server/worker"), _T("port"), &m_nPort));
-            Add(new CConfigCommand(_T("server/helper"), _T("port"), &m_nHelperPort));
 
             Add(new CConfigCommand(_T("cache"), _T("prefix"), m_sCachePrefix.c_str(), std::bind(&CConfig::SetCachePrefix, this, _1)));
 
