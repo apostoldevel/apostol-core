@@ -58,8 +58,7 @@ namespace Apostol {
 
             void InitializeCommandHandlers(CCommandHandlers *AHandlers, bool ADisconnect = false);
 
-            void InitializeWorkerServer(const CString &Title);
-            void InitializeHelperServer(const CString &Title);
+            void InitializeServer(const CString &Title);
 #ifdef WITH_POSTGRESQL
             void InitializePQServer(const CString &Title);
 #endif

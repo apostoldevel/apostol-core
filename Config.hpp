@@ -273,8 +273,7 @@ namespace Apostol {
 
             uint32_t m_nWorkers;
 
-            uint32_t m_nWorkerPort;
-            uint32_t m_nHelperPort;
+            uint32_t m_nPort;
 
             uint32_t m_nTimeOut;
             uint32_t m_nConnectTimeOut;
@@ -371,8 +370,7 @@ namespace Apostol {
             bool Helper() const { return m_fHelper; };
             bool Daemon() const { return m_fDaemon; };
 
-            uint32_t WorkerPort() const { return m_nWorkerPort; };
-            uint32_t HelperPort() const { return m_nHelperPort; };
+            uint32_t Port() const { return m_nPort; };
 
             uint32_t TimeOut() const { return m_nTimeOut; };
 

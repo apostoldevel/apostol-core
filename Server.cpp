@@ -234,11 +234,11 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CServerProcess::InitializeWorkerServer(const CString &Title) {
+        void CServerProcess::InitializeServer(const CString &Title) {
             m_Server.ServerName() = Title;
 
             m_Server.DefaultIP() = Config()->Listen();
-            m_Server.DefaultPort(Config()->WorkerPort());
+            m_Server.DefaultPort(Config()->Port());
 
             LoadSites(m_Server.Sites());
             LoadProviders(m_Server.Providers());
@@ -248,21 +248,6 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CServerProcess::InitializeHelperServer(const CString &Title) {
-            m_Server.ServerName() = Title;
-
-            if (Config()->HelperPort() != 0) {
-                m_Server.DefaultIP() = Config()->Listen();
-                m_Server.DefaultPort(Config()->HelperPort());
-
-                LoadSites(m_Server.Sites());
-                LoadProviders(m_Server.Providers());
-
-                m_Server.InitializeBindings();
-                m_Server.ActiveLevel(alBinding);
-            }
-        }
-        //--------------------------------------------------------------------------------------------------------------
 #ifdef WITH_POSTGRESQL
         void CServerProcess::InitializePQServer(const CString &Title) {
             m_PQServer.ConnInfo().ApplicationName() = "'" + Title + "'"; //application_name;
@@ -756,7 +741,7 @@ namespace Apostol {
                 web.AddPair(_T("algorithm"), _T("HS256"));
                 web.AddPair(_T("auth_uri"), _T("/oauth2/authorize"));
                 web.AddPair(_T("token_uri"), _T("/oauth2/token"));
-                web.AddPair(_T("redirect_uris"), CJSONArray(CString().Format("[\"http://localhost:%d/oauth2/code\"]", Config()->WorkerPort())));
+                web.AddPair(_T("redirect_uris"), CJSONArray(CString().Format("[\"http://localhost:%d/oauth2/code\"]", Config()->Port())));
 
                 auto& apps = defaultProvider.Value().Params.Object();
                 apps.AddPair("web", web);
@@ -823,7 +808,7 @@ namespace Apostol {
                 defaultSite.Name() = _T("*");
                 auto& configJson = defaultSite.Value().Object();
                 configJson.AddPair(_T("hosts"), CJSONArray("[\"*\"]"));
-                configJson.AddPair(_T("listen"), (int) Config()->WorkerPort());
+                configJson.AddPair(_T("listen"), (int) Config()->Port());
                 configJson.AddPair(_T("root"), Config()->DocRoot());
             }
         }

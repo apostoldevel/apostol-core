@@ -169,8 +169,7 @@ namespace Apostol {
 
             m_nWorkers = 1;
 
-            m_nWorkerPort = 0;
-            m_nHelperPort = 0;
+            m_nPort = 0;
 
             m_nTimeOut = INFINITE;
             m_nConnectTimeOut = 0;
@@ -385,8 +384,7 @@ namespace Apostol {
 
             m_nWorkers = 1;
 
-            m_nWorkerPort = 4977;
-            m_nHelperPort = 40977;
+            m_nPort = 4977;
 
             m_nTimeOut = 5000;
             m_nConnectTimeOut = 5;
@@ -442,11 +440,9 @@ namespace Apostol {
             Add(new CConfigCommand(_T("daemon"), _T("pid"), m_sPidFile.c_str(), [this](auto && AValue) { SetPidFile(AValue); }));
 
             Add(new CConfigCommand(_T("server"), _T("listen"), m_sListen.c_str(), [this](auto && AValue) { SetListen(AValue); }));
+            Add(new CConfigCommand(_T("server"), _T("port"), &m_nPort));
             Add(new CConfigCommand(_T("server"), _T("timeout"), &m_nTimeOut));
             Add(new CConfigCommand(_T("server"), _T("root"), m_sDocRoot.c_str(), [this](auto && AValue) { SetDocRoot(AValue); }));
-
-            Add(new CConfigCommand(_T("server/worker"), _T("port"), &m_nWorkerPort));
-            Add(new CConfigCommand(_T("server/helper"), _T("port"), &m_nHelperPort));
 
             Add(new CConfigCommand(_T("cache"), _T("prefix"), m_sCachePrefix.c_str(), [this](auto && AValue) { SetCachePrefix(AValue); }));
 
@@ -479,7 +475,7 @@ namespace Apostol {
             Add(new CConfigCommand(_T("server"), _T("timeout"), &m_nTimeOut));
             Add(new CConfigCommand(_T("server"), _T("root"), m_sDocRoot.c_str(), std::bind(&CConfig::SetDocRoot, this, _1)));
 
-            Add(new CConfigCommand(_T("server/worker"), _T("port"), &m_nWorkerPort));
+            Add(new CConfigCommand(_T("server/worker"), _T("port"), &m_nPort));
             Add(new CConfigCommand(_T("server/helper"), _T("port"), &m_nHelperPort));
 
             Add(new CConfigCommand(_T("cache"), _T("prefix"), m_sCachePrefix.c_str(), std::bind(&CConfig::SetCachePrefix, this, _1)));

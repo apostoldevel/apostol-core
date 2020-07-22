@@ -517,11 +517,11 @@ namespace Apostol {
 
             if (Config()->Helper()) {
                 CreateHelpers(this);
-                InitializeHelperServer(AApplication->Title());
             } else {
                 CreateWorkers(this);
-                InitializeWorkerServer(AApplication->Title());
             }
+
+            InitializeServer(AApplication->Title());
 #ifdef WITH_POSTGRESQL
             InitializePQServer(AApplication->Title());
 #endif
@@ -624,7 +624,7 @@ namespace Apostol {
         CProcessMaster::CProcessMaster(CCustomProcess *AParent, CApplication *AApplication) :
                 inherited(AParent, AApplication, ptMaster, "master"), CModuleProcess() {
 
-            InitializeWorkerServer(AApplication->Title());
+            InitializeServer(AApplication->Title());
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -1039,7 +1039,7 @@ namespace Apostol {
                 Server() = LParent->Server();
                 Log()->Error(APP_LOG_DEBUG, 0, "worker process: http server assigned by parent");
             } else {
-                InitializeWorkerServer(AApplication->Title());
+                InitializeServer(AApplication->Title());
             }
 #ifdef WITH_POSTGRESQL
             InitializePQServer(AApplication->Title());
@@ -1139,7 +1139,13 @@ namespace Apostol {
         CProcessHelper::CProcessHelper(CCustomProcess *AParent, CApplication *AApplication) :
                 inherited(AParent, AApplication, ptHelper, "helper"), CHelperProcess() {
 
-            InitializeHelperServer(AApplication->Title());
+            auto LParent = dynamic_cast<CServerProcess *>(AParent);
+            if (LParent != nullptr) {
+                Server() = LParent->Server();
+                Log()->Error(APP_LOG_DEBUG, 0, "helper process: http server assigned by parent");
+            } else {
+                InitializeServer(AApplication->Title());
+            }
 #ifdef WITH_POSTGRESQL
             InitializePQServer(AApplication->Title());
 #endif
@@ -1164,7 +1170,7 @@ namespace Apostol {
 
             SetLimitNoFile(Config()->LimitNoFile());
 
-            ServerStart();
+            //ServerStart();
 #ifdef WITH_POSTGRESQL
             PQServerStart();
 #endif
@@ -1183,7 +1189,7 @@ namespace Apostol {
 #ifdef WITH_POSTGRESQL
             PQServerStop();
 #endif
-            ServerStop();
+            //ServerStop();
             CApplicationProcess::AfterRun();
         }
         //--------------------------------------------------------------------------------------------------------------
