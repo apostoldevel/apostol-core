@@ -393,51 +393,37 @@ namespace Apostol {
             CString LResource(Root);
             LResource += Path;
 
-            if (LResource.back() == '/') {
-                LResource += "index.html";
+            if (DirectoryExists(LResource.c_str()) && LResource.back() != '/') {
+                LResource += '/';
             }
 
-            CString fileExt;
-            TCHAR szBuffer[MAX_BUFFER_SIZE + 1] = {0};
-
-            if (AContentType == nullptr) {
-                fileExt = ExtractFileExt(szBuffer, LResource.c_str());
-                if (fileExt == LResource) {
-                    fileExt = _T(".html");
-                    LResource += fileExt;
-                }
-                AContentType = Mapping::ExtToType(fileExt.c_str());
+            if (LResource.back() == '/') {
+                LResource += _T("index.html");
             }
 
             if (FileExists(LResource.c_str())) {
 
-                auto lastModified = StrWebTime(FileAge(LResource.c_str()), szBuffer, sizeof(szBuffer));
-                if (lastModified != nullptr) {
-                    LReply->AddHeader(_T("Last-Modified"), lastModified);
+                CString LFileExt;
+                TCHAR szBuffer[MAX_BUFFER_SIZE + 1] = {0};
+
+                LFileExt = ExtractFileExt(szBuffer, LResource.c_str());
+
+                if (AContentType == nullptr) {
+                    AContentType = Mapping::ExtToType(LFileExt.c_str());
+                }
+
+                auto LModified = StrWebTime(FileAge(LResource.c_str()), szBuffer, sizeof(szBuffer));
+                if (LModified != nullptr) {
+                    LReply->AddHeader(_T("Last-Modified"), LModified);
                 }
 
                 LReply->Content.LoadFromFile(LResource.c_str());
                 AConnection->SendReply(CReply::ok, AContentType, SendNow);
 
-            } else {
-
-                CString NotFound;
-                NotFound.Format("File not found: %s", LResource.c_str());
-
-                if (fileExt == _T(".html")) {
-                    CString errorLocation("/error/404");
-                    if (FileExists(CString(Root + errorLocation + fileExt).c_str())) {
-                        errorLocation << "?error=not_found";
-                        errorLocation << "&error_description=" + CHTTPServer::URLEncode(Path);
-                        Redirect(AConnection, errorLocation, SendNow);
-                        return;
-                    }
-                }
-
-                AConnection->SendStockReply(CReply::not_found, SendNow);
-                Log()->Error(APP_LOG_WARN, 0, NotFound.c_str());
                 return;
             }
+
+            AConnection->SendStockReply(CReply::not_found, SendNow);
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -476,9 +462,9 @@ namespace Apostol {
             auto fileSize = FileSize(LResource.c_str());
             LReply->AddHeader(_T("Content-Length"), IntToStr((int) fileSize, szBuffer, sizeof(szBuffer)));
 
-            auto lastModified = StrWebTime(FileAge(LResource.c_str()), szBuffer, sizeof(szBuffer));
-            if (lastModified != nullptr)
-                LReply->AddHeader(_T("Last-Modified"), lastModified);
+            auto LModified = StrWebTime(FileAge(LResource.c_str()), szBuffer, sizeof(szBuffer));
+            if (LModified != nullptr)
+                LReply->AddHeader(_T("Last-Modified"), LModified);
 
             AConnection->SendReply(CReply::no_content);
         }
