@@ -504,7 +504,7 @@ namespace Apostol {
 
             LClient->ClientName() = m_Server.ServerName();
 
-            LClient->PollStack(m_Server.PollStack());
+            LClient->PollStack(&m_PollStack);
 #if defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE >= 9)
             LClient->OnVerbose([this](auto && Sender, auto && AConnection, auto && AFormat, auto && args) { DoVerbose(Sender, AConnection, AFormat, args); });
             LClient->OnException([this](auto && AConnection, auto && AException) { DoServerException(AConnection, AException); });
