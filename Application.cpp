@@ -540,7 +540,11 @@ namespace Apostol {
 
             ServerStart();
 #ifdef WITH_POSTGRESQL
-            PQServerStart();
+            if (Config()->Helper()) {
+                PQServerStart("helper");
+            } else {
+                PQServerStart("worker");
+            }
 #endif
             SetTimerInterval(1000);
         }
@@ -557,7 +561,11 @@ namespace Apostol {
 
             ServerStart();
 #ifdef WITH_POSTGRESQL
-            PQServerStart();
+            if (Config()->Helper()) {
+                PQServerStart("helper");
+            } else {
+                PQServerStart("worker");
+            }
 #endif
             Initialization();
 
@@ -1062,7 +1070,7 @@ namespace Apostol {
 
             ServerStart();
 #ifdef WITH_POSTGRESQL
-            PQServerStart();
+            PQServerStart("worker");
 #endif
             Initialization();
 
@@ -1172,7 +1180,7 @@ namespace Apostol {
 
             //ServerStart();
 #ifdef WITH_POSTGRESQL
-            PQServerStart();
+            PQServerStart("helper");
 #endif
             Initialization();
 

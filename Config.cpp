@@ -559,9 +559,21 @@ namespace Apostol {
                     LoadLogFilesDefault();
 
                 m_PostgresConnInfo.Clear();
-                m_pIniFile->ReadSectionValues(_T("postgres/conninfo"), &m_PostgresConnInfo);
 
-                if (m_PostgresConnInfo.Count() == 0) {
+                m_PostgresConnInfo.AddPair("worker", CStringList());
+                m_PostgresConnInfo.AddPair("helper", CStringList());
+
+                auto &worker = m_PostgresConnInfo["worker"].Value();
+                auto &helper = m_PostgresConnInfo["helper"].Value();
+
+                m_pIniFile->ReadSectionValues(_T("postgres/worker"), &worker);
+                m_pIniFile->ReadSectionValues(_T("postgres/helper"), &helper);
+
+                if (worker.Count() == 0) {
+                    m_pIniFile->ReadSectionValues(_T("postgres/conninfo"), &worker);
+                }
+
+                if (worker.Count() == 0) {
                     m_fPostgresConnect = false;
                 }
             }

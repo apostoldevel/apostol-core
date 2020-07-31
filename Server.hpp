@@ -124,7 +124,7 @@ namespace Apostol {
             CHTTPServer &Server() { return m_Server; };
             const CHTTPServer &Server() const { return m_Server; };
 #ifdef WITH_POSTGRESQL
-            void PQServerStart();
+            void PQServerStart(const CString &Name);
             void PQServerStop();
 
             CPQServer &PQServer() { return m_PQServer; };
