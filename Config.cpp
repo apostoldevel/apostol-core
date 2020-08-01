@@ -571,6 +571,7 @@ namespace Apostol {
 
                 if (worker.Count() == 0) {
                     m_pIniFile->ReadSectionValues(_T("postgres/conninfo"), &worker);
+                    helper = worker;
                 }
 
                 if (worker.Count() == 0) {
