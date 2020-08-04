@@ -150,7 +150,7 @@ namespace Apostol {
 
             CModuleProcess *m_pModuleProcess;
 
-            CStringPairs m_Roots;
+            CStringPairs m_Sites;
 
             CString m_AllowedMethods;
             CString m_AllowedHeaders;
@@ -170,7 +170,7 @@ namespace Apostol {
 
             CModuleStatus m_ModuleStatus;
 
-            void InitRoots(const CSites &Sites);
+            void InitSites(const CSites &Sites);
 
             virtual void CORS(CHTTPServerConnection *AConnection);
 
@@ -224,6 +224,7 @@ namespace Apostol {
             static CString GetHost(CHTTPServerConnection *AConnection);
 
             const CString& GetRoot(const CString &Host) const;
+            const CStringList& GetSiteConfig(const CString &Host) const;
 #ifdef WITH_POSTGRESQL
             CPQPollQuery *GetQuery(CPollConnection *AConnection);
 

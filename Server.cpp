@@ -793,7 +793,7 @@ namespace Apostol {
                         int Index = Sites.AddPair(siteName, CJSON());
                         auto& Config = Sites[Index].Value();
                         Config.LoadFromFile(configFile.c_str());
-                        if (siteName == "default")
+                        if (siteName == "default" || siteName == "*")
                             Sites.Default() = Sites[Index];
                     } else {
                         Log()->Error(APP_LOG_EMERG, 0, APP_FILE_NOT_FOUND, configFile.c_str());
@@ -806,7 +806,9 @@ namespace Apostol {
             auto& defaultSite = Sites.Default();
             if (defaultSite.Name().IsEmpty()) {
                 defaultSite.Name() = _T("*");
+
                 auto& configJson = defaultSite.Value().Object();
+
                 configJson.AddPair(_T("hosts"), CJSONArray("[\"*\"]"));
                 configJson.AddPair(_T("listen"), (int) Config()->Port());
                 configJson.AddPair(_T("root"), Config()->DocRoot());

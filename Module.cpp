@@ -237,32 +237,55 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CApostolModule::InitRoots(const CSites &Sites) {
+        void CApostolModule::InitSites(const CSites &Sites) {
+
+            auto InitConfig = [](const CJSON &Config, CStringList &Data) {
+                Data.AddPair("root", Config["root"].AsString());
+                Data.AddPair("listen", Config["listen"].AsString());
+
+                const auto& Identifier = Config["oauth2"]["identifier"].AsString();
+                Data.AddPair("oauth2.identifier", Identifier.IsEmpty() ? "/oauth/identifier" : Identifier);
+
+                const auto& Callback = Config["oauth2"]["callback"].AsString();
+                Data.AddPair("oauth2.callback", Callback.IsEmpty() ? "/oauth/callback" : Callback);
+
+                const auto& Error = Config["oauth2"]["error"].AsString();
+                Data.AddPair("oauth2.error", Error.IsEmpty() ? "/oauth/error" : Error);
+            };
+
+            int Index;
             for (int i = 0; i < Sites.Count(); ++i) {
-                const auto& Site = Sites[i];
-                if (Site.Name() != "default") {
-                    const auto& Hosts = Site.Value()["hosts"];
-                    const auto& Root = Site.Value()["root"].AsString();
+                const auto& Config = Sites[i].Value();
+                const auto& Root = Config["root"].AsString();
+                if (!Root.IsEmpty()) {
+                    const auto& Hosts = Config["hosts"];
                     if (!Hosts.IsNull()) {
-                        for (int l = 0; l < Hosts.Count(); ++l)
-                            m_Roots.AddPair(Hosts[l].AsString(), Root);
+                        for (int l = 0; l < Hosts.Count(); ++l) {
+                            Index = m_Sites.AddPair(Hosts[l].AsString(), Root);
+                            InitConfig(Config, m_Sites[Index].Data());
+                        }
                     } else {
-                        m_Roots.AddPair(Site.Name(), Root);
+                        Index = m_Sites.AddPair(Sites[i].Name(), Root);
+                        InitConfig(Config, m_Sites[Index].Data());
                     }
                 }
-            }
-
-            if (Sites.Default().Value().IsObject()) {
-                m_Roots.AddPair("*", Sites.Default().Value()["root"].AsString());
             }
         }
         //--------------------------------------------------------------------------------------------------------------
 
         const CString &CApostolModule::GetRoot(const CString &Host) const {
-            auto Index = m_Roots.IndexOfName(Host);
+            auto Index = m_Sites.IndexOfName(Host);
             if (Index == -1)
-                return m_Roots["*"].Value();
-            return m_Roots[Index].Value();
+                return m_Sites["*"].Value();
+            return m_Sites[Index].Value();
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        const CStringList &CApostolModule::GetSiteConfig(const CString &Host) const {
+            auto Index = m_Sites.IndexOfName(Host);
+            if (Index == -1)
+                return m_Sites["*"].Data();
+            return m_Sites[Index].Data();
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -682,8 +705,8 @@ namespace Apostol {
             auto LRequest = AConnection->Request();
             auto LReply = AConnection->Reply();
 
-            if (m_Roots.Count() == 0)
-                InitRoots(LServer->Sites());
+            if (m_Sites.Count() == 0)
+                InitSites(LServer->Sites());
 #ifdef _DEBUG
             DebugConnection(AConnection);
 #endif
