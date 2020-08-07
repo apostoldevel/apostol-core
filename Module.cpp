@@ -372,26 +372,6 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CApostolModule::ListToJson(const CStringList &List, CString &Json, bool IsArray) {
-            IsArray = IsArray || List.Count() > 1;
-
-            if (IsArray)
-                Json = _T("[");
-
-            for (int i = 0; i < List.Count(); ++i) {
-                const auto& Line = List[i];
-                if (!Line.IsEmpty()) {
-                    if (i > 0)
-                        Json += _T(",");
-                    Json += Line;
-                }
-            }
-
-            if (IsArray)
-                Json += _T("]");
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
         void CApostolModule::Redirect(CHTTPServerConnection *AConnection, const CString& Location, bool SendNow) {
             auto LReply = AConnection->Reply();
 
@@ -556,16 +536,56 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CApostolModule::PQResultToJson(CPQResult *Result, CString &Json, bool IsArray) {
-            IsArray = IsArray || Result->nTuples() > 1;
+        void CApostolModule::ListToJson(const CStringList &List, CString &Json, const CString &Format, const CString &Object) {
 
-            if (Result->nTuples() == 0) {
-                Json = IsArray ? _T("[]") : _T("{}");
+            const auto ResultObject = Format == "object" && !Object.IsEmpty();
+            const auto DataArray = Format == "array" || List.Count() > 1;
+            const auto EmptyData = DataArray ? _T("[]") : _T("{}");
+
+            if (List.Count() == 0) {
+                Json = ResultObject ? CString().Format("{\"%s\": %s}", Object.c_str(), EmptyData) : EmptyData;
                 return;
             }
 
-            if (IsArray)
-                Json = _T("[");
+            if (ResultObject)
+                Json.Format("{\"%s\": ", Object.c_str());
+
+            if (DataArray)
+                Json += _T("[");
+
+            for (int i = 0; i < List.Count(); ++i) {
+                const auto& Line = List[i];
+                if (!Line.IsEmpty()) {
+                    if (i > 0)
+                        Json += _T(",");
+                    Json += Line;
+                }
+            }
+
+            if (DataArray)
+                Json += _T("]");
+
+            if (ResultObject)
+                Json += _T("}");
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CApostolModule::PQResultToJson(CPQResult *Result, CString &Json, const CString &Format, const CString &Object) {
+
+            const auto ResultObject = Format == "object" && !Object.IsEmpty();
+            const auto DataArray = Format == "array" || Result->nTuples() > 1;
+            const auto EmptyData = DataArray ? _T("[]") : _T("{}");
+
+            if (Result->nTuples() == 0) {
+                Json = ResultObject ? CString().Format("{\"%s\": %s}", Object.c_str(), EmptyData) : EmptyData;
+                return;
+            }
+
+            if (ResultObject)
+                Json.Format("{\"%s\": ", Object.c_str());
+
+            if (DataArray)
+                Json += _T("[");
 
             for (int Row = 0; Row < Result->nTuples(); ++Row) {
                 if (!Result->GetIsNull(Row, 0)) {
@@ -573,12 +593,15 @@ namespace Apostol {
                         Json += _T(",");
                     Json += Result->GetValue(Row, 0);
                 } else {
-                    Json = IsArray ? _T("[]") : _T("{}");
+                    Json += _T("null");
                 }
             }
 
-            if (IsArray)
+            if (DataArray)
                 Json += _T("]");
+
+            if (ResultObject)
+                Json += _T("}");
         }
         //--------------------------------------------------------------------------------------------------------------
 

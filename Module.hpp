@@ -238,10 +238,10 @@ namespace Apostol {
                          COnPQPollQueryExceptionEvent && OnException = nullptr);
 
             static void PQResultToList(CPQResult *Result, CStringList &List);
-            static void PQResultToJson(CPQResult *Result, CString &Json, bool IsArray = false);
+            static void PQResultToJson(CPQResult *Result, CString &Json, const CString &Format = "auto", const CString &Object = "result");
 #endif
             static void ContentToJson(CRequest *ARequest, CJSON& Json);
-            static void ListToJson(const CStringList &List, CString &Json, bool IsArray = false);
+            static void ListToJson(const CStringList &List, CString &Json, const CString &Format = "auto", const CString &Object = "result");
 
             static void ExceptionToJson(int ErrorCode, const std::exception &e, CString& Json);
 
