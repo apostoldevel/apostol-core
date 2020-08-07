@@ -536,19 +536,20 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CApostolModule::ListToJson(const CStringList &List, CString &Json, const CString &Format, const CString &Object) {
+        void CApostolModule::ListToJson(const CStringList &List, CString &Json, bool DataArray, const CString &ObjectName) {
 
-            const auto ResultObject = Format == "object" && !Object.IsEmpty();
-            const auto DataArray = Format == "array" || List.Count() > 1;
+            DataArray = DataArray || List.Count() > 1;
+
+            const auto ResultObject = !ObjectName.IsEmpty();
             const auto EmptyData = DataArray ? _T("[]") : _T("{}");
 
             if (List.Count() == 0) {
-                Json = ResultObject ? CString().Format("{\"%s\": %s}", Object.c_str(), EmptyData) : EmptyData;
+                Json = ResultObject ? CString().Format("{\"%s\": %s}", ObjectName.c_str(), EmptyData) : EmptyData;
                 return;
             }
 
             if (ResultObject)
-                Json.Format("{\"%s\": ", Object.c_str());
+                Json.Format("{\"%s\": ", ObjectName.c_str());
 
             if (DataArray)
                 Json += _T("[");
@@ -570,19 +571,20 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CApostolModule::PQResultToJson(CPQResult *Result, CString &Json, const CString &Format, const CString &Object) {
+        void CApostolModule::PQResultToJson(CPQResult *Result, CString &Json, bool DataArray, const CString &ObjectName) {
 
-            const auto ResultObject = Format == "object" && !Object.IsEmpty();
-            const auto DataArray = Format == "array" || Result->nTuples() > 1;
+            DataArray = DataArray || Result->nTuples() > 1;
+
+            const auto ResultObject = !ObjectName.IsEmpty();
             const auto EmptyData = DataArray ? _T("[]") : _T("{}");
 
             if (Result->nTuples() == 0) {
-                Json = ResultObject ? CString().Format("{\"%s\": %s}", Object.c_str(), EmptyData) : EmptyData;
+                Json = ResultObject ? CString().Format("{\"%s\": %s}", ObjectName.c_str(), EmptyData) : EmptyData;
                 return;
             }
 
             if (ResultObject)
-                Json.Format("{\"%s\": ", Object.c_str());
+                Json.Format("{\"%s\": ", ObjectName.c_str());
 
             if (DataArray)
                 Json += _T("[");
