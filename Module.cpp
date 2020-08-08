@@ -595,7 +595,7 @@ namespace Apostol {
                         Json += _T(",");
                     Json += Result->GetValue(Row, 0);
                 } else {
-                    Json += _T("null");
+                    Json += DataArray ? _T("null") : _T("{}");
                 }
             }
 
