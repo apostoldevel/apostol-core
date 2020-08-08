@@ -372,6 +372,41 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
+        void CApostolModule::ListToJson(const CStringList &List, CString &Json, bool DataArray, const CString &ObjectName) {
+
+            DataArray = DataArray || List.Count() > 1;
+
+            const auto ResultObject = !ObjectName.IsEmpty();
+            const auto EmptyData = DataArray ? _T("[]") : _T("{}");
+
+            if (List.Count() == 0) {
+                Json = ResultObject ? CString().Format("{\"%s\": %s}", ObjectName.c_str(), EmptyData) : EmptyData;
+                return;
+            }
+
+            if (ResultObject)
+                Json.Format("{\"%s\": ", ObjectName.c_str());
+
+            if (DataArray)
+                Json += _T("[");
+
+            for (int i = 0; i < List.Count(); ++i) {
+                const auto& Line = List[i];
+                if (!Line.IsEmpty()) {
+                    if (i > 0)
+                        Json += _T(",");
+                    Json += Line;
+                }
+            }
+
+            if (DataArray)
+                Json += _T("]");
+
+            if (ResultObject)
+                Json += _T("}");
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
         void CApostolModule::Redirect(CHTTPServerConnection *AConnection, const CString& Location, bool SendNow) {
             auto LReply = AConnection->Reply();
 
@@ -533,41 +568,6 @@ namespace Apostol {
             for (int Row = 0; Row < Result->nTuples(); ++Row) {
                 List.Add(Result->GetValue(Row, 0));
             }
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
-        void CApostolModule::ListToJson(const CStringList &List, CString &Json, bool DataArray, const CString &ObjectName) {
-
-            DataArray = DataArray || List.Count() > 1;
-
-            const auto ResultObject = !ObjectName.IsEmpty();
-            const auto EmptyData = DataArray ? _T("[]") : _T("{}");
-
-            if (List.Count() == 0) {
-                Json = ResultObject ? CString().Format("{\"%s\": %s}", ObjectName.c_str(), EmptyData) : EmptyData;
-                return;
-            }
-
-            if (ResultObject)
-                Json.Format("{\"%s\": ", ObjectName.c_str());
-
-            if (DataArray)
-                Json += _T("[");
-
-            for (int i = 0; i < List.Count(); ++i) {
-                const auto& Line = List[i];
-                if (!Line.IsEmpty()) {
-                    if (i > 0)
-                        Json += _T(",");
-                    Json += Line;
-                }
-            }
-
-            if (DataArray)
-                Json += _T("]");
-
-            if (ResultObject)
-                Json += _T("}");
         }
         //--------------------------------------------------------------------------------------------------------------
 
