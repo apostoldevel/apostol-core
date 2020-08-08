@@ -152,11 +152,10 @@ namespace Apostol {
 
             CStringPairs m_Sites;
 
-            CString m_AllowedMethods;
-            CString m_AllowedHeaders;
+            mutable CString m_AllowedMethods;
+            mutable CString m_AllowedHeaders;
 
-            const CString& GetAllowedMethods(CString& AllowedMethods) const;
-            const CString& GetAllowedHeaders(CString& AllowedHeaders) const;
+            bool m_Sniffer;
 
         protected:
 
@@ -170,17 +169,20 @@ namespace Apostol {
 
             CModuleStatus m_ModuleStatus;
 
-            void InitSites(const CSites &Sites);
+            virtual void InitMethods() abstract;
 
-            virtual void CORS(CHTTPServerConnection *AConnection);
+            void InitSites(const CSites &Sites);
 
             virtual void DoHead(CHTTPServerConnection *AConnection);
             virtual void DoGet(CHTTPServerConnection *AConnection);
             virtual void DoOptions(CHTTPServerConnection *AConnection);
 
+            virtual void CORS(CHTTPServerConnection *AConnection);
+
             virtual void MethodNotAllowed(CHTTPServerConnection *AConnection);
 
-            virtual void InitMethods() abstract;
+            const CString& GetAllowedMethods() const;
+            const CString& GetAllowedHeaders() const;
 
 #ifdef WITH_POSTGRESQL
             virtual void DoPostgresQueryExecuted(CPQPollQuery *APollQuery) abstract;
@@ -192,22 +194,19 @@ namespace Apostol {
 
             ~CApostolModule() override;
 
-            CHTTPServer &Server();
-            const CHTTPServer &Server() const;
-#ifdef WITH_POSTGRESQL
-            CPQServer &PQServer();
-            const CPQServer &PQServer() const;
-#endif
-
-            CHTTPClient *GetClient(const CString &Host, uint16_t Port);
-
             CString& ModuleName() { return m_ModuleName; }
             const CString& ModuleName() const { return m_ModuleName; }
 
             CModuleStatus ModuleStatus() { return m_ModuleStatus; }
 
-            virtual bool IsEnabled() abstract;
+            const CString& AllowedMethods() { return GetAllowedMethods(); };
+            const CString& AllowedHeaders() { return GetAllowedHeaders(); };
+
+            virtual bool Enabled() abstract;
+            virtual bool Sniffer() { return m_Sniffer; };
+
             virtual bool CheckUserAgent(const CString& Value) abstract;
+            virtual bool CheckLocation(const CLocation& Location);
 
             virtual void Initialization(CModuleProcess *AProcess) {};
             virtual void Finalization(CModuleProcess *AProcess) {};
@@ -225,7 +224,15 @@ namespace Apostol {
 
             const CString& GetRoot(const CString &Host) const;
             const CStringList& GetSiteConfig(const CString &Host) const;
+
+            CHTTPClient *GetClient(const CString &Host, uint16_t Port);
+
+            CHTTPServer &Server();
+            const CHTTPServer &Server() const;
 #ifdef WITH_POSTGRESQL
+            CPQServer &PQServer();
+            const CPQServer &PQServer() const;
+
             CPQPollQuery *GetQuery(CPollConnection *AConnection);
 
             static void EnumQuery(CPQResult *APQResult, CPQueryResult& AResult);
@@ -254,9 +261,6 @@ namespace Apostol {
 
             static void DebugConnection(CHTTPServerConnection *AConnection);
 
-            const CString& AllowedMethods() { return GetAllowedMethods(m_AllowedMethods); };
-            const CString& AllowedHeaders() { return GetAllowedHeaders(m_AllowedHeaders); };
-
             static void Redirect(CHTTPServerConnection *AConnection, const CString& Location, bool SendNow = false);
 
             void SendResource(CHTTPServerConnection *AConnection, const CString &Path, LPCTSTR AContentType = nullptr, bool SendNow = false) const;
@@ -271,6 +275,9 @@ namespace Apostol {
 
         class CModuleManager: public CCollection {
             typedef CCollection inherited;
+        private:
+
+            void ExecuteModule(CHTTPServerConnection *AConnection, CApostolModule *AModule);
 
         protected:
 
@@ -293,7 +300,7 @@ namespace Apostol {
 
             void HeartbeatModules();
 
-            bool ExecuteModules(CTCPConnection *AConnection);
+            void ExecuteModules(CTCPConnection *AConnection);
 
             int ModuleCount() { return inherited::Count(); };
             void DeleteModule(int Index) { inherited::Delete(Index); };
