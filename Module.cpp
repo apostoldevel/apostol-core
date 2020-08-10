@@ -741,8 +741,48 @@ namespace Apostol {
             return false;
         }
         //--------------------------------------------------------------------------------------------------------------
-#endif
 
+        void CApostolModule::DoPostgresQueryExecuted(CPQPollQuery *APollQuery) {
+            clock_t start = clock();
+
+            auto LConnection = dynamic_cast<CHTTPServerConnection *> (APollQuery->PollConnection());
+
+            auto LReply = LConnection->Reply();
+            auto LResult = APollQuery->Results(0);
+
+            CReply::CStatusType LStatus = CReply::internal_server_error;
+
+            try {
+                if (LResult->ExecStatus() != PGRES_TUPLES_OK)
+                    throw Delphi::Exception::EDBError(LResult->GetErrorMessage());
+
+                LStatus = CReply::ok;
+                Postgres::PQResultToJson(LResult, LReply->Content);
+            } catch (Delphi::Exception::Exception &E) {
+                ExceptionToJson(LStatus, E, LReply->Content);
+                Log()->Error(APP_LOG_EMERG, 0, E.what());
+            }
+
+            LConnection->SendReply(LStatus, nullptr, true);
+
+            log_debug1(APP_LOG_DEBUG_CORE, Log(), 0, _T("Query executed runtime: %.2f ms."), (double) ((clock() - start) / (double) CLOCKS_PER_SEC * 1000));
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CApostolModule::DoPostgresQueryException(CPQPollQuery *APollQuery, Delphi::Exception::Exception *AException) {
+
+            auto LConnection = dynamic_cast<CHTTPServerConnection *> (APollQuery->PollConnection());
+            auto LReply = LConnection->Reply();
+
+            CReply::CStatusType LStatus = CReply::internal_server_error;
+
+            ExceptionToJson(LStatus, *AException, LReply->Content);
+            LConnection->SendStockReply(LStatus, true);
+
+            Log()->Error(APP_LOG_EMERG, 0, AException->what());
+        }
+        //--------------------------------------------------------------------------------------------------------------
+#endif
         void CApostolModule::Execute(CHTTPServerConnection *AConnection) {
             auto LServer = dynamic_cast<CHTTPServer *> (AConnection->Server());
             auto LRequest = AConnection->Request();
@@ -776,7 +816,12 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        bool CApostolModule::CheckLocation(const CLocation& Location) {
+        bool CApostolModule::CheckUserAgent(const CString &Value) {
+            return Enabled();
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        bool CApostolModule::CheckLocation(const CLocation &Location) {
             return true;
         }
         //--------------------------------------------------------------------------------------------------------------

@@ -187,8 +187,8 @@ namespace Apostol {
             const CString& GetAllowedHeaders() const;
 
 #ifdef WITH_POSTGRESQL
-            virtual void DoPostgresQueryExecuted(CPQPollQuery *APollQuery) abstract;
-            virtual void DoPostgresQueryException(CPQPollQuery *APollQuery, Delphi::Exception::Exception *AException) abstract;
+            virtual void DoPostgresQueryExecuted(CPQPollQuery *APollQuery);
+            virtual void DoPostgresQueryException(CPQPollQuery *APollQuery, Delphi::Exception::Exception *AException);
 #endif
         public:
 
@@ -207,7 +207,7 @@ namespace Apostol {
             virtual bool Enabled() abstract;
             virtual bool Sniffer() { return m_Sniffer; };
 
-            virtual bool CheckUserAgent(const CString& Value) abstract;
+            virtual bool CheckUserAgent(const CString& Value);
             virtual bool CheckLocation(const CLocation& Location);
 
             virtual void Initialization(CModuleProcess *AProcess) {};
