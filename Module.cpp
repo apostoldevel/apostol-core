@@ -157,6 +157,7 @@ namespace Apostol {
             CGlobalComponent(), m_pModuleProcess(AProcess), m_ModuleName(ModuleName) {
 
             m_ModuleStatus = msUnknown;
+            m_Sniffer = false;
 
             m_Version = -1;
 #ifdef WITH_POSTGRESQL
@@ -193,35 +194,37 @@ namespace Apostol {
             return m_pModuleProcess->PQServer();
         }
 #endif
-        const CString &CApostolModule::GetAllowedMethods(CString &AllowedMethods) const {
-            if (AllowedMethods.IsEmpty()) {
+        const CString &CApostolModule::GetAllowedMethods() const {
+            if (m_AllowedMethods.IsEmpty()) {
                 if (m_pMethods->Count() > 0) {
                     CMethodHandler *Handler;
                     for (int i = 0; i < m_pMethods->Count(); ++i) {
                         Handler = (CMethodHandler *) m_pMethods->Objects(i);
                         if (Handler->Allow()) {
-                            if (AllowedMethods.IsEmpty())
-                                AllowedMethods = m_pMethods->Strings(i);
+                            if (m_AllowedMethods.IsEmpty())
+                                m_AllowedMethods = m_pMethods->Strings(i);
                             else
-                                AllowedMethods += _T(", ") + m_pMethods->Strings(i);
+                                m_AllowedMethods += _T(", ") + m_pMethods->Strings(i);
                         }
                     }
                 }
             }
-            return AllowedMethods;
+
+            return m_AllowedMethods;
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        const CString &CApostolModule::GetAllowedHeaders(CString &AllowedHeaders) const {
-            if (AllowedHeaders.IsEmpty()) {
+        const CString &CApostolModule::GetAllowedHeaders() const {
+            if (m_AllowedHeaders.IsEmpty()) {
                 for (int i = 0; i < m_Headers.Count(); ++i) {
-                    if (AllowedHeaders.IsEmpty())
-                        AllowedHeaders = m_Headers.Strings(i);
+                    if (m_AllowedHeaders.IsEmpty())
+                        m_AllowedHeaders = m_Headers.Strings(i);
                     else
-                        AllowedHeaders += _T(", ") + m_Headers.Strings(i);
+                        m_AllowedHeaders += _T(", ") + m_Headers.Strings(i);
                 }
             }
-            return AllowedHeaders;
+
+            return m_AllowedHeaders;
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -372,11 +375,23 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CApostolModule::ListToJson(const CStringList &List, CString &Json, bool IsArray) {
-            IsArray = IsArray || List.Count() > 1;
+        void CApostolModule::ListToJson(const CStringList &List, CString &Json, bool DataArray, const CString &ObjectName) {
 
-            if (IsArray)
-                Json = _T("[");
+            DataArray = DataArray || List.Count() > 1;
+
+            const auto ResultObject = !ObjectName.IsEmpty();
+            const auto EmptyData = DataArray ? _T("[]") : _T("{}");
+
+            if (List.Count() == 0) {
+                Json = ResultObject ? CString().Format("{\"%s\": %s}", ObjectName.c_str(), EmptyData) : EmptyData;
+                return;
+            }
+
+            if (ResultObject)
+                Json.Format("{\"%s\": ", ObjectName.c_str());
+
+            if (DataArray)
+                Json += _T("[");
 
             for (int i = 0; i < List.Count(); ++i) {
                 const auto& Line = List[i];
@@ -387,8 +402,11 @@ namespace Apostol {
                 }
             }
 
-            if (IsArray)
+            if (DataArray)
                 Json += _T("]");
+
+            if (ResultObject)
+                Json += _T("}");
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -571,16 +589,23 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CApostolModule::PQResultToJson(CPQResult *Result, CString &Json, bool IsArray) {
-            IsArray = IsArray || Result->nTuples() > 1;
+        void CApostolModule::PQResultToJson(CPQResult *Result, CString &Json, bool DataArray, const CString &ObjectName) {
+
+            DataArray = DataArray || Result->nTuples() > 1;
+
+            const auto ResultObject = !ObjectName.IsEmpty();
+            const auto EmptyData = DataArray ? _T("[]") : _T("{}");
 
             if (Result->nTuples() == 0) {
-                Json = IsArray ? _T("[]") : _T("{}");
+                Json = ResultObject ? CString().Format("{\"%s\": %s}", ObjectName.c_str(), EmptyData) : EmptyData;
                 return;
             }
 
-            if (IsArray)
-                Json = _T("[");
+            if (ResultObject)
+                Json.Format("{\"%s\": ", ObjectName.c_str());
+
+            if (DataArray)
+                Json += _T("[");
 
             for (int Row = 0; Row < Result->nTuples(); ++Row) {
                 if (!Result->GetIsNull(Row, 0)) {
@@ -588,12 +613,15 @@ namespace Apostol {
                         Json += _T(",");
                     Json += Result->GetValue(Row, 0);
                 } else {
-                    Json = IsArray ? _T("[]") : _T("{}");
+                    Json += DataArray ? _T("null") : _T("{}");
                 }
             }
 
-            if (IsArray)
+            if (DataArray)
                 Json += _T("]");
+
+            if (ResultObject)
+                Json += _T("}");
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -748,6 +776,11 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
+        bool CApostolModule::CheckLocation(const CLocation& Location) {
+            return true;
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
         void CApostolModule::Heartbeat() {
 
         }
@@ -766,8 +799,8 @@ namespace Apostol {
             CString Payload((LPCTSTR) ARequest->Payload()->Memory() + Delta, Size);
 
             DebugMessage("[FIN: %#x; OP: %#x; MASK: %#x] [%d] [%d] Request:\n%s\n",
-                    ARequest->Frame().FIN, ARequest->Frame().Opcode, ARequest->Frame().Mask,
-                    ARequest->Size(), ARequest->Payload()->Size(), Payload.c_str()
+                         ARequest->Frame().FIN, ARequest->Frame().Opcode, ARequest->Frame().Mask,
+                         ARequest->Size(), ARequest->Payload()->Size(), Payload.c_str()
             );
         }
         //--------------------------------------------------------------------------------------------------------------
@@ -785,8 +818,8 @@ namespace Apostol {
             CString Payload((LPCTSTR) AReply->Payload()->Memory() + Delta, Size);
 
             DebugMessage("[FIN: %#x; OP: %#x; MASK: %#x] [%d] [%d] Request:\n%s\n",
-                    AReply->Frame().FIN, AReply->Frame().Opcode, AReply->Frame().Mask,
-                    AReply->Size(), AReply->Payload()->Size(), Payload.c_str()
+                         AReply->Frame().FIN, AReply->Frame().Opcode, AReply->Frame().Mask,
+                         AReply->Size(), AReply->Payload()->Size(), Payload.c_str()
             );
         }
         //--------------------------------------------------------------------------------------------------------------
@@ -929,20 +962,19 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         bool CModuleProcess::DoExecute(CTCPConnection *AConnection) {
-            bool Result = false;
             auto LConnection = dynamic_cast<CHTTPServerConnection *> (AConnection);
 
             try {
                 clock_t start = clock();
 
-                Result = ExecuteModules(LConnection);
+                ExecuteModules(LConnection);
 
                 Log()->Debug(0, _T("[Module] Runtime: %.2f ms."), (double) ((clock() - start) / (double) CLOCKS_PER_SEC * 1000));
             } catch (Delphi::Exception::Exception &E) {
                 DoServerException(LConnection, &E);
             }
 
-            return Result;
+            return true;
         }
 
         //--------------------------------------------------------------------------------------------------------------
@@ -974,7 +1006,7 @@ namespace Apostol {
         void CModuleManager::Initialization() {
             for (int i = 0; i < ModuleCount(); i++) {
                 auto Module = Modules(i);
-                if (Module->IsEnabled())
+                if (Module->Enabled())
                     DoInitialization(Module);
             }
         }
@@ -983,7 +1015,7 @@ namespace Apostol {
         void CModuleManager::Finalization() {
             for (int i = 0; i < ModuleCount(); i++) {
                 auto Module = Modules(i);
-                if (Module->IsEnabled())
+                if (Module->Enabled())
                     DoFinalization(Module);
             }
         }
@@ -997,7 +1029,7 @@ namespace Apostol {
             int Count = 0;
             for (int i = 0; i < ModuleCount(); i++) {
                 auto Module = Modules(i);
-                if (Module->IsEnabled()) {
+                if (Module->Enabled()) {
                     if (Count > 0)
                         Names << ", ";
                     Names << "\"" + Modules(i)->ModuleName() + "\"";
@@ -1011,13 +1043,26 @@ namespace Apostol {
         void CModuleManager::HeartbeatModules() {
             for (int i = 0; i < ModuleCount(); i++) {
                 auto Module = Modules(i);
-                if (Module->IsEnabled())
+                if (Module->Enabled())
                     Module->Heartbeat();
             }
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        bool CModuleManager::ExecuteModules(CTCPConnection *AConnection) {
+        void CModuleManager::ExecuteModule(CHTTPServerConnection *AConnection, CApostolModule *AModule) {
+            DoBeforeExecuteModule(AModule);
+            try {
+                AModule->Execute(AConnection);
+            } catch (...) {
+                AConnection->SendStockReply(CReply::internal_server_error);
+                DoAfterExecuteModule(AModule);
+                throw;
+            }
+            DoAfterExecuteModule(AModule);
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CModuleManager::ExecuteModules(CTCPConnection *AConnection) {
             auto LConnection = dynamic_cast<CHTTPServerConnection *> (AConnection);
 
             auto LRequest = LConnection->Request();
@@ -1025,27 +1070,19 @@ namespace Apostol {
             const auto& UserAgent = LRequest->Headers.Values(_T("User-Agent"));
 
             int Index = 0;
-            while (Index < ModuleCount() && !Modules(Index)->CheckUserAgent(UserAgent))
+            while (Index < ModuleCount()) {
+                const auto Module = Modules(Index);
+                if (Module->CheckUserAgent(UserAgent) && Module->CheckLocation(LRequest->Location)) {
+                    ExecuteModule(LConnection, Module);
+                    if (!Module->Sniffer())
+                        break;
+                }
                 Index++;
+            }
 
             if (Index == ModuleCount()) {
                 LConnection->SendStockReply(CReply::forbidden);
-                return false;
             }
-
-            auto LModule = Modules(Index);
-
-            DoBeforeExecuteModule(LModule);
-            try {
-                LModule->Execute(LConnection);
-            } catch (...) {
-                LConnection->SendStockReply(CReply::bad_request);
-                DoAfterExecuteModule(LModule);
-                throw;
-            }
-            DoAfterExecuteModule(LModule);
-
-            return true;
         }
         //--------------------------------------------------------------------------------------------------------------
 

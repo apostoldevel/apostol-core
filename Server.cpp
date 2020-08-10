@@ -529,14 +529,12 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CServerProcess::DoServerException(CTCPConnection *AConnection,
-                                               Delphi::Exception::Exception *AException) {
+        void CServerProcess::DoServerException(CTCPConnection *AConnection, Delphi::Exception::Exception *AException) {
             Log()->Error(APP_LOG_EMERG, 0, AException->what());
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CServerProcess::DoServerEventHandlerException(CPollEventHandler *AHandler,
-                                                           Delphi::Exception::Exception *AException) {
+        void CServerProcess::DoServerEventHandlerException(CPollEventHandler *AHandler, Delphi::Exception::Exception *AException) {
             Log()->Error(APP_LOG_EMERG, 0, AException->what());
         }
         //--------------------------------------------------------------------------------------------------------------

@@ -62,8 +62,10 @@ namespace Apostol {
 
         protected:
 
-            pid_t SwapProcess(CProcessType Type, int Flag, Pointer Data = nullptr);
+            void BeforeRun() override;
+            void AfterRun() override;
 
+            pid_t SwapProcess(CProcessType Type, int Flag, Pointer Data = nullptr);
             pid_t ExecProcess(CExecuteContext *AContext);
 
         public:
@@ -79,9 +81,6 @@ namespace Apostol {
             CApplication *Application() { return m_pApplication; };
 
             bool RenamePidFile(bool Back, LPCTSTR lpszErrorMessage);
-
-            void BeforeRun() override;
-            void AfterRun() override;
 
             void CreatePidFile();
             void DeletePidFile();
@@ -324,7 +323,7 @@ namespace Apostol {
         public:
 
             CProcessCustom(CCustomProcess* AParent, CApplication *AApplication, LPCTSTR AName):
-                inherited(AParent, AApplication, ptCustom, AName), CModuleProcess() {
+                    inherited(AParent, AApplication, ptCustom, AName), CModuleProcess() {
             };
 
             ~CProcessCustom() override = default;
