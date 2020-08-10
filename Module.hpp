@@ -40,6 +40,9 @@ namespace Apostol {
         typedef std::function<void (CHTTPServerConnection *AConnection)> COnMethodHandlerEvent;
         //--------------------------------------------------------------------------------------------------------------
 
+        CString LongToString(unsigned long Value);
+        //--------------------------------------------------------------------------------------------------------------
+
         LPCTSTR StrWebTime(time_t Time, LPTSTR lpszBuffer, size_t Size);
         //--------------------------------------------------------------------------------------------------------------
 
@@ -207,8 +210,7 @@ namespace Apostol {
             virtual bool Enabled() abstract;
             virtual bool Sniffer() { return m_Sniffer; };
 
-            virtual bool CheckUserAgent(const CString& Value);
-            virtual bool CheckLocation(const CLocation& Location);
+            virtual bool CheckConnection(CHTTPServerConnection *AConnection);
 
             virtual void Initialization(CModuleProcess *AProcess) {};
             virtual void Finalization(CModuleProcess *AProcess) {};

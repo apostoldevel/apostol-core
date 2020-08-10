@@ -35,6 +35,13 @@ namespace Apostol {
 
     namespace Module {
 
+        CString LongToString(unsigned long Value) {
+            TCHAR szString[_INT_T_LEN + 1] = {0};
+            sprintf(szString, "%lu", Value);
+            return CString(szString);
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
         LPCTSTR StrWebTime(time_t Time, LPTSTR lpszBuffer, size_t Size) {
             struct tm *gmt;
 
@@ -816,13 +823,8 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        bool CApostolModule::CheckUserAgent(const CString &Value) {
+        bool CApostolModule::CheckConnection(CHTTPServerConnection *AConnection) {
             return Enabled();
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
-        bool CApostolModule::CheckLocation(const CLocation &Location) {
-            return true;
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -1108,16 +1110,14 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CModuleManager::ExecuteModules(CTCPConnection *AConnection) {
+
             auto LConnection = dynamic_cast<CHTTPServerConnection *> (AConnection);
-
             auto LRequest = LConnection->Request();
-
-            const auto& UserAgent = LRequest->Headers.Values(_T("User-Agent"));
 
             int Index = 0;
             while (Index < ModuleCount()) {
                 const auto Module = Modules(Index);
-                if (Module->CheckUserAgent(UserAgent) && Module->CheckLocation(LRequest->Location)) {
+                if (Module->Enabled() && Module->CheckConnection(LConnection)) {
                     ExecuteModule(LConnection, Module);
                     if (!Module->Sniffer())
                         break;
