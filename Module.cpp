@@ -405,8 +405,19 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
+        CString CApostolModule::TryFiles(const CString &Root, const CStringList &uris, const CString &Location) {
+            for (int i = 0; i < uris.Count(); i++) {
+                const auto& uri = Root + uris[i];
+                if (FileExists(uri.c_str())) {
+                    return uri;
+                }
+            }
+            return Root + Location;
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
         void CApostolModule::SendResource(CHTTPServerConnection *AConnection, const CString &Path,
-                LPCTSTR AContentType, bool SendNow) const {
+                LPCTSTR AContentType, bool SendNow, const CStringList& TryFiles) const {
 
             auto LRequest = AConnection->Request();
             auto LReply = AConnection->Reply();
@@ -416,12 +427,16 @@ namespace Apostol {
             CString LResource(Root);
             LResource += Path;
 
-            if (DirectoryExists(LResource.c_str()) && LResource.back() != '/') {
+            if (TryFiles.Count() != 0) {
+                LResource = CApostolModule::TryFiles(Root, TryFiles, Path);
+            }
+
+            if (LResource.back() != '/' && DirectoryExists(LResource.c_str())) {
                 LResource += '/';
             }
 
             if (LResource.back() == '/') {
-                LResource += _T("index.html");
+                LResource += APOSTOL_INDEX_FILE;
             }
 
             if (FileExists(LResource.c_str())) {

@@ -26,6 +26,8 @@ Author:
 
 #define APOSTOL_MODULE_UID_LENGTH    42
 
+#define APOSTOL_INDEX_FILE "index.html"
+
 extern "C++" {
 
 namespace Apostol {
@@ -259,7 +261,10 @@ namespace Apostol {
 
             static void Redirect(CHTTPServerConnection *AConnection, const CString& Location, bool SendNow = false);
 
-            void SendResource(CHTTPServerConnection *AConnection, const CString &Path, LPCTSTR AContentType = nullptr, bool SendNow = false) const;
+            static CString TryFiles(const CString &Root, const CStringList &uris, const CString &Location);
+
+            void SendResource(CHTTPServerConnection *AConnection, const CString &Path, LPCTSTR AContentType = nullptr,
+                bool SendNow = false, const CStringList& TryFiles = CStringList()) const;
 
         };
 
