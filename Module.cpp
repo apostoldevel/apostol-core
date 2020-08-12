@@ -384,9 +384,10 @@ namespace Apostol {
 
         void CApostolModule::ListToJson(const CStringList &List, CString &Json, bool DataArray, const CString &ObjectName) {
 
-            DataArray = DataArray || List.Count() > 1;
-
             const auto ResultObject = !ObjectName.IsEmpty();
+
+            DataArray = ResultObject || DataArray || List.Count() > 1;
+
             const auto EmptyData = DataArray ? _T("[]") : _T("{}");
 
             if (List.Count() == 0) {
@@ -598,9 +599,10 @@ namespace Apostol {
 
         void CApostolModule::PQResultToJson(CPQResult *Result, CString &Json, bool DataArray, const CString &ObjectName) {
 
-            DataArray = DataArray || Result->nTuples() > 1;
-
             const auto ResultObject = !ObjectName.IsEmpty();
+
+            DataArray = ResultObject || DataArray || Result->nTuples() > 1;
+
             const auto EmptyData = DataArray ? _T("[]") : _T("{}");
 
             if (Result->nTuples() == 0) {
