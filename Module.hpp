@@ -40,6 +40,13 @@ namespace Apostol {
         typedef std::function<void (CHTTPServerConnection *AConnection)> COnMethodHandlerEvent;
         //--------------------------------------------------------------------------------------------------------------
 
+        CString b2a_hex(const unsigned char *byte_arr, int size);
+        CString hmac_sha256(const CString &key, const CString &data);
+        //--------------------------------------------------------------------------------------------------------------
+
+        CString SHA1(const CString &data);
+        //--------------------------------------------------------------------------------------------------------------
+
         CString LongToString(unsigned long Value);
         //--------------------------------------------------------------------------------------------------------------
 

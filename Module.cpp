@@ -29,11 +29,42 @@ Author:
 #include <random>
 //----------------------------------------------------------------------------------------------------------------------
 
+#include <openssl/sha.h>
+#include <openssl/hmac.h>
+//----------------------------------------------------------------------------------------------------------------------
+
 extern "C++" {
 
 namespace Apostol {
 
     namespace Module {
+
+        CString b2a_hex(const unsigned char *byte_arr, int size) {
+            const static CString HexCodes = "0123456789abcdef";
+            CString HexString;
+            for ( int i = 0; i < size; ++i ) {
+                unsigned char BinValue = byte_arr[i];
+                HexString += HexCodes[(BinValue >> 4) & 0x0F];
+                HexString += HexCodes[BinValue & 0x0F];
+            }
+            return HexString;
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        CString hmac_sha256(const CString &key, const CString &data) {
+            unsigned char* digest;
+            digest = HMAC(EVP_sha256(), key.data(), key.length(), (unsigned char *) data.data(), data.length(), nullptr, nullptr);
+            return b2a_hex( digest, SHA256_DIGEST_LENGTH );
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        CString SHA1(const CString &data) {
+            CString digest;
+            digest.SetLength(SHA_DIGEST_LENGTH);
+            ::SHA1((unsigned char *) data.data(), data.length(), (unsigned char *) digest.Data());
+            return digest;
+        }
+        //--------------------------------------------------------------------------------------------------------------
 
         CString LongToString(unsigned long Value) {
             TCHAR szString[_INT_T_LEN + 1] = {0};
