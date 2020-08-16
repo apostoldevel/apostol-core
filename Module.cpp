@@ -449,6 +449,20 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
+        void CApostolModule::ReplyError(CHTTPServerConnection *AConnection, CReply::CStatusType ErrorCode, const CString &Message) {
+            auto LReply = AConnection->Reply();
+
+            if (ErrorCode == CReply::unauthorized) {
+                CReply::AddUnauthorized(LReply, AConnection->Data()["Authorization"] != "Basic", "invalid_client", Message.c_str());
+            }
+
+            LReply->Content.Clear();
+            LReply->Content.Format(R"({"error": {"code": %u, "message": "%s"}})", ErrorCode, Delphi::Json::EncodeJsonString(Message).c_str());
+
+            AConnection->SendReply(ErrorCode, nullptr, true);
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
         void CApostolModule::Redirect(CHTTPServerConnection *AConnection, const CString& Location, bool SendNow) {
             auto LReply = AConnection->Reply();
 

@@ -272,6 +272,8 @@ namespace Apostol {
 
             static void DebugConnection(CHTTPServerConnection *AConnection);
 
+            static void ReplyError(CHTTPServerConnection *AConnection, CReply::CStatusType ErrorCode, const CString &Message);
+
             static void Redirect(CHTTPServerConnection *AConnection, const CString& Location, bool SendNow = false);
 
             static CString TryFiles(const CString &Root, const CStringList &uris, const CString &Location);
