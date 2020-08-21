@@ -920,6 +920,9 @@ namespace Apostol {
 
         void CApostolModule::WSDebugConnection(CHTTPServerConnection *AConnection) {
 
+            if (AConnection->ClosedGracefully())
+                return;
+
             DebugMessage(_T("\n[%p] [%s:%d] [%d] [WebSocket] "), AConnection, AConnection->Socket()->Binding()->PeerIP(),
                          AConnection->Socket()->Binding()->PeerPort(), AConnection->Socket()->Binding()->Handle());
 
