@@ -160,8 +160,6 @@ namespace Apostol {
 
             CString m_ModuleName;
 
-            CModuleProcess *m_pModuleProcess;
-
             CStringPairs m_Sites;
 
             mutable CString m_AllowedMethods;
@@ -175,11 +173,13 @@ namespace Apostol {
 #ifdef WITH_POSTGRESQL
             CJobManager *m_pJobs;
 #endif
-            CStringList *m_pMethods;
-
             CStringList m_Headers;
 
+            CStringList *m_pMethods;
+
             CModuleStatus m_ModuleStatus;
+
+            CModuleProcess *m_pModuleProcess;
 
             virtual void InitMethods() abstract;
 

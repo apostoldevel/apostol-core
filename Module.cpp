@@ -631,7 +631,7 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         CHTTPClient *CApostolModule::GetClient(const CString &Host, uint16_t Port) {
-            return m_pModuleProcess->GetClient(Host.c_str(), Port);
+            return m_pModuleProcess->GetClient(Host, Port);
         }
         //--------------------------------------------------------------------------------------------------------------
 #ifdef WITH_POSTGRESQL
@@ -999,7 +999,7 @@ namespace Apostol {
 
             static auto OnReply = [](CObject *Sender) {
                 auto LConnection = dynamic_cast<CHTTPServerConnection *> (Sender);
-                if (LConnection->Socket()->Connected()) {
+                if (LConnection != nullptr && !LConnection->ClosedGracefully()) {
                     auto LBinding = LConnection->Socket()->Binding();
                     if (LBinding->HandleAllocated()) {
                         DebugMessage(_T("\n[%p] [%s:%d] [%d] "), LConnection, LBinding->PeerIP(),

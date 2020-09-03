@@ -499,28 +499,28 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        CHTTPClient *CServerProcess::GetClient(const CString &Host, uint16_t Port) {
-            auto LClient = new CHTTPClient(Host.c_str(), Port);
+        CHTTPClientItem *CServerProcess::GetClient(const CString &Host, uint16_t Port) {
+            auto pClient = m_ClientManager.Add(Host.c_str(), Port);
 
-            LClient->ClientName() = m_Server.ServerName();
+            pClient->ClientName() = m_Server.ServerName();
 
-            LClient->PollStack(&m_PollStack);
+            pClient->PollStack(&m_PollStack);
 #if defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE >= 9)
-            LClient->OnVerbose([this](auto && Sender, auto && AConnection, auto && AFormat, auto && args) { DoVerbose(Sender, AConnection, AFormat, args); });
-            LClient->OnException([this](auto && AConnection, auto && AException) { DoServerException(AConnection, AException); });
-            LClient->OnEventHandlerException([this](auto && AHandler, auto && AException) { DoServerEventHandlerException(AHandler, AException); });
-            LClient->OnConnected([this](auto && Sender) { DoClientConnected(Sender); });
-            LClient->OnDisconnected([this](auto && Sender) { DoClientDisconnected(Sender); });
-            LClient->OnNoCommandHandler([this](auto && Sender, auto && AData, auto && AConnection) { DoNoCommandHandler(Sender, AData, AConnection); });
+            pClient->OnVerbose([this](auto && Sender, auto && AConnection, auto && AFormat, auto && args) { DoVerbose(Sender, AConnection, AFormat, args); });
+            pClient->OnException([this](auto && AConnection, auto && AException) { DoServerException(AConnection, AException); });
+            pClient->OnEventHandlerException([this](auto && AHandler, auto && AException) { DoServerEventHandlerException(AHandler, AException); });
+            pClient->OnConnected([this](auto && Sender) { DoClientConnected(Sender); });
+            pClient->OnDisconnected([this](auto && Sender) { DoClientDisconnected(Sender); });
+            pClient->OnNoCommandHandler([this](auto && Sender, auto && AData, auto && AConnection) { DoNoCommandHandler(Sender, AData, AConnection); });
 #else
-            LClient->OnVerbose(std::bind(&CServerProcess::DoVerbose, this, _1, _2, _3, _4));
-            LClient->OnException(std::bind(&CServerProcess::DoServerException, this, _1, _2));
-            LClient->OnEventHandlerException(std::bind(&CServerProcess::DoServerEventHandlerException, this, _1, _2));
-            LClient->OnConnected(std::bind(&CServerProcess::DoClientConnected, this, _1));
-            LClient->OnDisconnected(std::bind(&CServerProcess::DoClientDisconnected, this, _1));
-            LClient->OnNoCommandHandler(std::bind(&CServerProcess::DoNoCommandHandler, this, _1, _2, _3));
+            pClient->OnVerbose(std::bind(&CServerProcess::DoVerbose, this, _1, _2, _3, _4));
+            pClient->OnException(std::bind(&CServerProcess::DoServerException, this, _1, _2));
+            pClient->OnEventHandlerException(std::bind(&CServerProcess::DoServerEventHandlerException, this, _1, _2));
+            pClient->OnConnected(std::bind(&CServerProcess::DoClientConnected, this, _1));
+            pClient->OnDisconnected(std::bind(&CServerProcess::DoClientDisconnected, this, _1));
+            pClient->OnNoCommandHandler(std::bind(&CServerProcess::DoNoCommandHandler, this, _1, _2, _3));
 #endif
-            return LClient;
+            return pClient;
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -574,14 +574,21 @@ namespace Apostol {
         void CServerProcess::DoClientDisconnected(CObject *Sender) {
             auto LConnection = dynamic_cast<CHTTPClientConnection *>(Sender);
             if (LConnection != nullptr) {
-                Log()->Message(_T("[%s:%d] Client disconnected."), LConnection->Socket()->Binding()->PeerIP(),
-                               LConnection->Socket()->Binding()->PeerPort());
+                if (LConnection->ClosedGracefully()) {
+                    auto LClient = dynamic_cast<CHTTPClient *> (LConnection->Client());
+                    if (LClient != nullptr) {
+                        Log()->Error(APP_LOG_EMERG, 0, "[%s:%d] Client closed connection.", LClient->Host().c_str(),
+                                     LClient->Port());
+                    }
+                } else {
+                    Log()->Message(_T("[%s:%d] Client disconnected."), LConnection->Socket()->Binding()->PeerIP(),
+                                   LConnection->Socket()->Binding()->PeerPort());
+                }
             }
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CServerProcess::DoVerbose(CSocketEvent *Sender, CTCPConnection *AConnection, LPCTSTR AFormat,
-                                       va_list args) {
+        void CServerProcess::DoVerbose(CSocketEvent *Sender, CTCPConnection *AConnection, LPCTSTR AFormat, va_list args) {
             Log()->Debug(0, AFormat, args);
         }
         //--------------------------------------------------------------------------------------------------------------
@@ -589,7 +596,10 @@ namespace Apostol {
         void CServerProcess::DoAccessLog(CTCPConnection *AConnection) {
             auto LConnection = dynamic_cast<CHTTPServerConnection *> (AConnection);
 
-            if (LConnection == nullptr || LConnection->Protocol() == pWebSocket)
+            if (LConnection == nullptr)
+                return;
+
+            if (LConnection->ClosedGracefully())
                 return;
 
             auto LRequest = LConnection->Request();

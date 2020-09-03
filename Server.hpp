@@ -50,6 +50,8 @@ namespace Apostol {
 
         protected:
 
+            CHTTPClientManager m_ClientManager;
+
             CEPollTimer *m_pTimer;
 
             int m_TimerInterval;
@@ -136,9 +138,12 @@ namespace Apostol {
                          COnPQPollQueryExecutedEvent && OnExecuted = nullptr,
                          COnPQPollQueryExceptionEvent && OnException = nullptr);
 #endif
-            CHTTPClient *GetClient(const CString &Host, uint16_t Port);
+            CHTTPClientItem *GetClient(const CString &Host, uint16_t Port);
 
-            CPollStack PollStack() { return m_PollStack; }
+            CHTTPClientManager &ClientManager() { return m_ClientManager; };
+            const CHTTPClientManager &ClientManager() const { return m_ClientManager; };
+
+            CPollStack PollStack() const { return m_PollStack; }
 
             static void DebugRequest(CRequest *ARequest);
             static void DebugReply(CReply *AReply);
