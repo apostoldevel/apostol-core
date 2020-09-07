@@ -311,6 +311,9 @@ namespace Apostol {
                     }
                 }
             }
+
+            m_Sites.AddPair("*", Config()->DocRoot());
+            InitConfig(Sites.Default().Value(), m_Sites.Last().Data());
         }
         //--------------------------------------------------------------------------------------------------------------
 
