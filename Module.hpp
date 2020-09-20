@@ -91,7 +91,7 @@ namespace Apostol {
 
             CString m_CacheFile;
 
-            CReply m_Reply;
+            CHTTPReply m_Reply;
 
             CPQPollQuery *m_pPollQuery;
 
@@ -112,8 +112,8 @@ namespace Apostol {
             CPQPollQuery *PollQuery() { return m_pPollQuery; };
             void PollQuery(CPQPollQuery *Value) { m_pPollQuery = Value; };
 
-            CReply &Reply() { return m_Reply; };
-            const CReply &Reply() const { return m_Reply; };
+            CHTTPReply &Reply() { return m_Reply; };
+            const CHTTPReply &Reply() const { return m_Reply; };
 
             CStringList &Data() { return m_Data; }
             const CStringList& Data() const { return m_Data; }
@@ -256,7 +256,7 @@ namespace Apostol {
             static void PQResultToList(CPQResult *Result, CStringList &List);
             static void PQResultToJson(CPQResult *Result, CString &Json, bool DataArray = false, const CString &ObjectName = CString());
 #endif
-            static void ContentToJson(CRequest *ARequest, CJSON& Json);
+            static void ContentToJson(CHTTPRequest *ARequest, CJSON& Json);
             static void ListToJson(const CStringList &List, CString &Json, bool DataArray = false, const CString &ObjectName = CString());
 
             static void ExceptionToJson(int ErrorCode, const Delphi::Exception::Exception &E, CString& Json);
@@ -265,12 +265,12 @@ namespace Apostol {
             static void WSDebugReply(CWebSocket *AReply);
             static void WSDebugConnection(CHTTPServerConnection *AConnection);
 
-            static void DebugRequest(CRequest *ARequest);
-            static void DebugReply(CReply *AReply);
+            static void DebugRequest(CHTTPRequest *ARequest);
+            static void DebugReply(CHTTPReply *AReply);
 
             static void DebugConnection(CHTTPServerConnection *AConnection);
 
-            static void ReplyError(CHTTPServerConnection *AConnection, CReply::CStatusType ErrorCode, const CString &Message);
+            static void ReplyError(CHTTPServerConnection *AConnection, CHTTPReply::CStatusType ErrorCode, const CString &Message);
 
             static void Redirect(CHTTPServerConnection *AConnection, const CString& Location, bool SendNow = false);
 

@@ -145,8 +145,8 @@ namespace Apostol {
 
             CPollStack PollStack() const { return m_PollStack; }
 
-            static void DebugRequest(CRequest *ARequest);
-            static void DebugReply(CReply *AReply);
+            static void DebugRequest(CHTTPRequest *ARequest);
+            static void DebugReply(CHTTPReply *AReply);
 
             int TimerInterval() const { return m_TimerInterval; }
             void TimerInterval(int Value) { SetTimerInterval(Value); }

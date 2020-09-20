@@ -477,7 +477,7 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 #endif
-        void CServerProcess::DebugRequest(CRequest *ARequest) {
+        void CServerProcess::DebugRequest(CHTTPRequest *ARequest) {
             DebugMessage("[%p] Request:\n%s %s HTTP/%d.%d\n", ARequest, ARequest->Method.c_str(), ARequest->URI.c_str(), ARequest->VMajor, ARequest->VMinor);
 
             for (int i = 0; i < ARequest->Headers.Count(); i++)
@@ -488,7 +488,7 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CServerProcess::DebugReply(CReply *AReply) {
+        void CServerProcess::DebugReply(CHTTPReply *AReply) {
             DebugMessage("[%p] Reply:\nHTTP/%d.%d %d %s\n", AReply, AReply->VMajor, AReply->VMinor, AReply->Status, AReply->StatusText.c_str());
 
             for (int i = 0; i < AReply->Headers.Count(); i++)

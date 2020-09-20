@@ -269,7 +269,7 @@ namespace Apostol {
         void CApostolModule::MethodNotAllowed(CHTTPServerConnection *AConnection) {
             auto LReply = AConnection->Reply();
 
-            CReply::GetStockReply(LReply, CReply::not_allowed);
+            CHTTPReply::GetStockReply(LReply, CHTTPReply::not_allowed);
 
             if (!AllowedMethods().IsEmpty())
                 LReply->AddHeader(_T("Allow"), AllowedMethods());
@@ -379,7 +379,7 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CApostolModule::ContentToJson(CRequest *ARequest, CJSON &Json) {
+        void CApostolModule::ContentToJson(CHTTPRequest *ARequest, CJSON &Json) {
 
             const auto& ContentType = ARequest->Headers.Values(_T("Content-Type")).Lower();
 
@@ -395,7 +395,7 @@ namespace Apostol {
             } else if (ContentType.Find("multipart/form-data") != CString::npos) {
 
                 CFormData formData;
-                CRequestParser::ParseFormData(ARequest, formData);
+                CHTTPRequestParser::ParseFormData(ARequest, formData);
 
                 auto& jsonObject = Json.Object();
                 for (int i = 0; i < formData.Count(); ++i) {
@@ -452,11 +452,11 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CApostolModule::ReplyError(CHTTPServerConnection *AConnection, CReply::CStatusType ErrorCode, const CString &Message) {
+        void CApostolModule::ReplyError(CHTTPServerConnection *AConnection, CHTTPReply::CStatusType ErrorCode, const CString &Message) {
             auto LReply = AConnection->Reply();
 
-            if (ErrorCode == CReply::unauthorized) {
-                CReply::AddUnauthorized(LReply, AConnection->Data()["Authorization"] != "Basic", "invalid_client", Message.c_str());
+            if (ErrorCode == CHTTPReply::unauthorized) {
+                CHTTPReply::AddUnauthorized(LReply, AConnection->Data()["Authorization"] != "Basic", "invalid_client", Message.c_str());
             }
 
             LReply->Content.Clear();
@@ -475,7 +475,7 @@ namespace Apostol {
             AConnection->Data().Values("redirect", CString());
             AConnection->Data().Values("redirect_error", CString());
 
-            AConnection->SendStockReply(CReply::moved_temporarily, SendNow);
+            AConnection->SendStockReply(CHTTPReply::moved_temporarily, SendNow);
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -530,12 +530,12 @@ namespace Apostol {
                 }
 
                 LReply->Content.LoadFromFile(LResource.c_str());
-                AConnection->SendReply(CReply::ok, AContentType, SendNow);
+                AConnection->SendReply(CHTTPReply::ok, AContentType, SendNow);
 
                 return;
             }
 
-            AConnection->SendStockReply(CReply::not_found, SendNow);
+            AConnection->SendStockReply(CHTTPReply::not_found, SendNow);
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -547,7 +547,7 @@ namespace Apostol {
 
             // Request path must be absolute and not contain "..".
             if (LPath.empty() || LPath.front() != '/' || LPath.find("..") != CString::npos) {
-                AConnection->SendStockReply(CReply::bad_request);
+                AConnection->SendStockReply(CHTTPReply::bad_request);
                 return;
             }
 
@@ -560,7 +560,7 @@ namespace Apostol {
             LResource += LPath;
 
             if (!FileExists(LResource.c_str())) {
-                AConnection->SendStockReply(CReply::not_found);
+                AConnection->SendStockReply(CHTTPReply::not_found);
                 return;
             }
 
@@ -578,7 +578,7 @@ namespace Apostol {
             if (LModified != nullptr)
                 LReply->AddHeader(_T("Last-Modified"), LModified);
 
-            AConnection->SendReply(CReply::no_content);
+            AConnection->SendReply(CHTTPReply::no_content);
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -586,7 +586,7 @@ namespace Apostol {
             auto LRequest = AConnection->Request();
             auto LReply = AConnection->Reply();
 
-            CReply::GetStockReply(LReply, CReply::no_content);
+            CHTTPReply::GetStockReply(LReply, CHTTPReply::no_content);
 
             if (!AllowedMethods().IsEmpty())
                 LReply->AddHeader(_T("Allow"), AllowedMethods());
@@ -609,7 +609,7 @@ namespace Apostol {
 
             // Request path must be absolute and not contain "..".
             if (LPath.empty() || LPath.front() != '/' || LPath.find(_T("..")) != CString::npos) {
-                AConnection->SendStockReply(CReply::bad_request);
+                AConnection->SendStockReply(CHTTPReply::bad_request);
                 return;
             }
 
@@ -738,7 +738,7 @@ namespace Apostol {
                     auto LReply = AConnection->Reply();
                     LReply->Content = _T("{\"identity\":" "\"") + LJob->Identity() + _T("\"}");
 
-                    AConnection->SendReply(CReply::accepted);
+                    AConnection->SendReply(CHTTPReply::accepted);
                     AConnection->CloseConnection(true);
                 } else {
                     // Wait query result...
@@ -807,13 +807,13 @@ namespace Apostol {
             auto LReply = LConnection->Reply();
             auto LResult = APollQuery->Results(0);
 
-            CReply::CStatusType LStatus = CReply::internal_server_error;
+            CHTTPReply::CStatusType LStatus = CHTTPReply::internal_server_error;
 
             try {
                 if (LResult->ExecStatus() != PGRES_TUPLES_OK)
                     throw Delphi::Exception::EDBError(LResult->GetErrorMessage());
 
-                LStatus = CReply::ok;
+                LStatus = CHTTPReply::ok;
                 Postgres::PQResultToJson(LResult, LReply->Content);
             } catch (Delphi::Exception::Exception &E) {
                 ExceptionToJson(LStatus, E, LReply->Content);
@@ -831,7 +831,7 @@ namespace Apostol {
             auto LConnection = dynamic_cast<CHTTPServerConnection *> (APollQuery->PollConnection());
             auto LReply = LConnection->Reply();
 
-            CReply::CStatusType LStatus = CReply::internal_server_error;
+            CHTTPReply::CStatusType LStatus = CHTTPReply::internal_server_error;
 
             ExceptionToJson(LStatus, E, LReply->Content);
             LConnection->SendStockReply(LStatus, true);
@@ -855,7 +855,7 @@ namespace Apostol {
             DebugConnection(AConnection);
 #endif
             LReply->Clear();
-            LReply->ContentType = CReply::html;
+            LReply->ContentType = CHTTPReply::html;
 
             int i;
             CMethodHandler *Handler;
@@ -872,7 +872,7 @@ namespace Apostol {
             }
 
             if (i == m_pMethods->Count()) {
-                AConnection->SendStockReply(CReply::not_implemented);
+                AConnection->SendStockReply(CHTTPReply::not_implemented);
             }
 
             return true;
@@ -977,7 +977,7 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CApostolModule::DebugRequest(CRequest *ARequest) {
+        void CApostolModule::DebugRequest(CHTTPRequest *ARequest) {
             DebugMessage(_T("[%p] Request:\n%s %s HTTP/%d.%d\n"), ARequest, ARequest->Method.c_str(), ARequest->URI.c_str(), ARequest->VMajor, ARequest->VMinor);
 
             for (int i = 0; i < ARequest->Headers.Count(); i++)
@@ -988,7 +988,7 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CApostolModule::DebugReply(CReply *AReply) {
+        void CApostolModule::DebugReply(CHTTPReply *AReply) {
             DebugMessage(_T("[%p] Reply:\nHTTP/%d.%d %d %s\n"), AReply, AReply->VMajor, AReply->VMinor, AReply->Status, AReply->StatusText.c_str());
 
             for (int i = 0; i < AReply->Headers.Count(); i++)
@@ -1163,7 +1163,7 @@ namespace Apostol {
                 try {
                     Result = AModule->Execute(AConnection);
                 } catch (...) {
-                    AConnection->SendStockReply(CReply::internal_server_error);
+                    AConnection->SendStockReply(CHTTPReply::internal_server_error);
                     DoAfterExecuteModule(AModule);
                     throw;
                 }
@@ -1185,7 +1185,7 @@ namespace Apostol {
             }
 
             if (Index == ModuleCount()) {
-                LConnection->SendStockReply(CReply::forbidden);
+                LConnection->SendStockReply(CHTTPReply::forbidden);
             }
         }
         //--------------------------------------------------------------------------------------------------------------
