@@ -90,7 +90,7 @@ namespace Apostol {
             virtual void DoClientConnected(CObject *Sender);
             virtual void DoClientDisconnected(CObject *Sender);
 
-            virtual void DoNoCommandHandler(CSocketEvent *Sender, LPCTSTR AData, CTCPConnection *AConnection);
+            virtual void DoNoCommandHandler(CSocketEvent *Sender, const CString &Data, CTCPConnection *AConnection);
 
             void InitializeServerHandlers();
 #ifdef WITH_POSTGRESQL

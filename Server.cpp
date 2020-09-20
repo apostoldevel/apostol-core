@@ -62,75 +62,75 @@ namespace Apostol {
                 AHandlers->DisconnectDefault(ADisconnect);
 #if defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE >= 9)
                 LCommand =AHandlers->Add();
-                LCommand->Command(_T("GET"));
+                LCommand->Command() = _T("GET");
                 LCommand->OnCommand([this](auto && ACommand) { DoGet(ACommand); });
 
                 LCommand = AHandlers->Add();
-                LCommand->Command(_T("POST"));
+                LCommand->Command() = _T("POST");
                 LCommand->OnCommand([this](auto && ACommand) { DoPost(ACommand); });
 
                 LCommand = AHandlers->Add();
-                LCommand->Command(_T("OPTIONS"));
+                LCommand->Command() = _T("OPTIONS");
                 LCommand->OnCommand([this](auto && ACommand) { DoOptions(ACommand); });
 
                 LCommand = AHandlers->Add();
-                LCommand->Command(_T("PUT"));
+                LCommand->Command() = _T("PUT");
                 LCommand->OnCommand([this](auto && ACommand) { DoPut(ACommand); });
 
                 LCommand = AHandlers->Add();
-                LCommand->Command(_T("DELETE"));
+                LCommand->Command() = _T("DELETE");
                 LCommand->OnCommand([this](auto && ACommand) { DoDelete(ACommand); });
 
                 LCommand = AHandlers->Add();
-                LCommand->Command(_T("HEAD"));
+                LCommand->Command() = _T("HEAD");
                 LCommand->OnCommand([this](auto && ACommand) { DoHead(ACommand); });
 
                 LCommand = AHandlers->Add();
-                LCommand->Command(_T("PATCH"));
+                LCommand->Command() = _T("PATCH");
                 LCommand->OnCommand([this](auto && ACommand) { DoPatch(ACommand); });
 
                 LCommand = AHandlers->Add();
-                LCommand->Command(_T("TRACE"));
+                LCommand->Command() = _T("TRACE");
                 LCommand->OnCommand([this](auto && ACommand) { DoTrace(ACommand); });
 
                 LCommand = AHandlers->Add();
-                LCommand->Command(_T("CONNECT"));
+                LCommand->Command() = _T("CONNECT");
                 LCommand->OnCommand([this](auto && ACommand) { DoConnect(ACommand); });
 #else
                 LCommand =AHandlers->Add();
-                LCommand->Command(_T("GET"));
+                LCommand->Command() = _T("GET");
                 LCommand->OnCommand(std::bind(&CServerProcess::DoGet, this, _1));
 
                 LCommand = AHandlers->Add();
-                LCommand->Command(_T("POST"));
+                LCommand->Command() = _T("POST");
                 LCommand->OnCommand(std::bind(&CServerProcess::DoPost, this, _1));
 
                 LCommand = AHandlers->Add();
-                LCommand->Command(_T("OPTIONS"));
+                LCommand->Command() = _T("OPTIONS");
                 LCommand->OnCommand(std::bind(&CServerProcess::DoOptions, this, _1));
 
                 LCommand = AHandlers->Add();
-                LCommand->Command(_T("PUT"));
+                LCommand->Command() = _T("PUT");
                 LCommand->OnCommand(std::bind(&CServerProcess::DoPut, this, _1));
 
                 LCommand = AHandlers->Add();
-                LCommand->Command(_T("DELETE"));
+                LCommand->Command() = _T("DELETE");
                 LCommand->OnCommand(std::bind(&CServerProcess::DoDelete, this, _1));
 
                 LCommand = AHandlers->Add();
-                LCommand->Command(_T("HEAD"));
+                LCommand->Command() = _T("HEAD");
                 LCommand->OnCommand(std::bind(&CServerProcess::DoHead, this, _1));
 
                 LCommand = AHandlers->Add();
-                LCommand->Command(_T("PATCH"));
+                LCommand->Command() = _T("PATCH");
                 LCommand->OnCommand(std::bind(&CServerProcess::DoPatch, this, _1));
 
                 LCommand = AHandlers->Add();
-                LCommand->Command(_T("TRACE"));
+                LCommand->Command() = _T("TRACE");
                 LCommand->OnCommand(std::bind(&CServerProcess::DoTrace, this, _1));
 
                 LCommand = AHandlers->Add();
-                LCommand->Command(_T("CONNECT"));
+                LCommand->Command() = _T("CONNECT");
                 LCommand->OnCommand(std::bind(&CServerProcess::DoConnect, this, _1));
 #endif
             }
@@ -629,8 +629,8 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CServerProcess::DoNoCommandHandler(CSocketEvent *Sender, LPCTSTR AData, CTCPConnection *AConnection) {
-            Log()->Error(APP_LOG_EMERG, 0, "No command handler: %s", AData);
+        void CServerProcess::DoNoCommandHandler(CSocketEvent *Sender, const CString &Data, CTCPConnection *AConnection) {
+            Log()->Error(APP_LOG_EMERG, 0, "No command handler: %s", Data.c_str());
         }
         //--------------------------------------------------------------------------------------------------------------
 
