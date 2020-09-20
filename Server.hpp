@@ -80,9 +80,9 @@ namespace Apostol {
             virtual void DoVerbose(CSocketEvent *Sender, CTCPConnection *AConnection, LPCTSTR AFormat, va_list args);
             virtual void DoAccessLog(CTCPConnection *AConnection);
 
-            virtual void DoServerListenException(CSocketEvent *Sender, Delphi::Exception::Exception *AException);
-            virtual void DoServerException(CTCPConnection *AConnection, Delphi::Exception::Exception *AException);
-            virtual void DoServerEventHandlerException(CPollEventHandler *AHandler, Delphi::Exception::Exception *AException);
+            virtual void DoServerListenException(CSocketEvent *Sender, const Delphi::Exception::Exception &E);
+            virtual void DoServerException(CTCPConnection *AConnection, const Delphi::Exception::Exception &E);
+            virtual void DoServerEventHandlerException(CPollEventHandler *AHandler, const Delphi::Exception::Exception &E);
 
             virtual void DoServerConnected(CObject *Sender);
             virtual void DoServerDisconnected(CObject *Sender);
@@ -96,8 +96,8 @@ namespace Apostol {
 #ifdef WITH_POSTGRESQL
             void InitializePQServerHandlers();
 
-            virtual void DoPQServerException(CPQServer *AServer, Delphi::Exception::Exception *AException);
-            virtual void DoPQConnectException(CPQConnection *AConnection, Delphi::Exception::Exception *AException);
+            virtual void DoPQServerException(CPQServer *AServer, const Delphi::Exception::Exception &E);
+            virtual void DoPQConnectException(CPQConnection *AConnection, const Delphi::Exception::Exception &E);
 
             virtual void DoPQError(CPQConnection *AConnection);
             virtual void DoPQStatus(CPQConnection *AConnection);

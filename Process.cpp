@@ -72,9 +72,9 @@ void signal_handler(int signo, siginfo_t *siginfo, void *ucontext)
     {
         GApplication->SignalProcess()->SignalHandler(signo, siginfo, ucontext);
     }
-    catch (std::exception& e)
+    catch (Delphi::Exception::Exception &E)
     {
-        log_failure(e.what());
+        log_failure(E.what());
     }
     catch (...)
     {
@@ -491,8 +491,8 @@ namespace Apostol {
                     AProcess->BeforeRun();
                     AProcess->Run();
                     AProcess->AfterRun();
-                } catch (std::exception& e) {
-                    log_failure(e.what())
+                } catch (Delphi::Exception::Exception &E) {
+                    log_failure(E.what())
                 } catch (...) {
                     log_failure("Unknown error...")
                 }

@@ -599,9 +599,9 @@ namespace Apostol {
                 {
                     Server().Wait();
                 }
-                catch (std::exception& e)
+                catch (Delphi::Exception::Exception &E)
                 {
-                    Log()->Error(APP_LOG_EMERG, 0, e.what());
+                    Log()->Error(APP_LOG_EMERG, 0, E.what());
                 }
 
                 DoExit();
@@ -1110,9 +1110,9 @@ namespace Apostol {
                 {
                     Server().Wait();
                 }
-                catch (std::exception& e)
+                catch (Delphi::Exception::Exception &E)
                 {
-                    Log()->Error(APP_LOG_EMERG, 0, e.what());
+                    Log()->Error(APP_LOG_EMERG, 0, E.what());
                 }
 
                 if (sig_terminate || sig_quit) {
@@ -1211,9 +1211,9 @@ namespace Apostol {
                 {
                     Server().Wait();
                 }
-                catch (std::exception& e)
+                catch (Delphi::Exception::Exception &E)
                 {
-                    Log()->Error(APP_LOG_EMERG, 0, e.what());
+                    Log()->Error(APP_LOG_EMERG, 0, E.what());
                 }
 
                 if (sig_terminate || sig_quit) {

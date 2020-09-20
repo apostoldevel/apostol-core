@@ -198,7 +198,7 @@ namespace Apostol {
 
 #ifdef WITH_POSTGRESQL
             virtual void DoPostgresQueryExecuted(CPQPollQuery *APollQuery);
-            virtual void DoPostgresQueryException(CPQPollQuery *APollQuery, Delphi::Exception::Exception *AException);
+            virtual void DoPostgresQueryException(CPQPollQuery *APollQuery, const Delphi::Exception::Exception &E);
 #endif
         public:
 
@@ -215,9 +215,7 @@ namespace Apostol {
             const CString& AllowedHeaders() { return GetAllowedHeaders(); };
 
             virtual bool Enabled() abstract;
-            virtual bool Sniffer() { return m_Sniffer; };
-
-            virtual bool CheckConnection(CHTTPServerConnection *AConnection);
+            virtual bool CheckLocation(const CLocation &Location);
 
             virtual void Initialization(CModuleProcess *AProcess) {};
             virtual void Finalization(CModuleProcess *AProcess) {};
@@ -226,7 +224,7 @@ namespace Apostol {
             virtual void AfterExecute(CModuleProcess *AProcess) {};
 
             virtual void Heartbeat();
-            virtual void Execute(CHTTPServerConnection *AConnection);
+            virtual bool Execute(CHTTPServerConnection *AConnection);
 
             static CString GetUserAgent(CHTTPServerConnection *AConnection);
             static CString GetOrigin(CHTTPServerConnection *AConnection);
@@ -261,7 +259,7 @@ namespace Apostol {
             static void ContentToJson(CRequest *ARequest, CJSON& Json);
             static void ListToJson(const CStringList &List, CString &Json, bool DataArray = false, const CString &ObjectName = CString());
 
-            static void ExceptionToJson(int ErrorCode, const std::exception &e, CString& Json);
+            static void ExceptionToJson(int ErrorCode, const Delphi::Exception::Exception &E, CString& Json);
 
             static void WSDebugRequest(CWebSocket *ARequest);
             static void WSDebugReply(CWebSocket *AReply);
@@ -291,9 +289,10 @@ namespace Apostol {
 
         class CModuleManager: public CCollection {
             typedef CCollection inherited;
+
         private:
 
-            void ExecuteModule(CHTTPServerConnection *AConnection, CApostolModule *AModule);
+            bool ExecuteModule(CHTTPServerConnection *AConnection, CApostolModule *AModule);
 
         protected:
 
@@ -318,8 +317,8 @@ namespace Apostol {
 
             void ExecuteModules(CTCPConnection *AConnection);
 
-            int ModuleCount() { return inherited::Count(); };
-            void DeleteModule(int Index) { inherited::Delete(Index); };
+            int ModuleCount() const { return inherited::Count(); }
+            void DeleteModule(int Index) { inherited::Delete(Index); }
 
             CApostolModule *Modules(int Index) { return (CApostolModule *) inherited::GetItem(Index); }
             void Modules(int Index, CApostolModule *Value) { inherited::SetItem(Index, (CCollectionItem *) Value); }

@@ -317,13 +317,13 @@ namespace Apostol {
 
         //--------------------------------------------------------------------------------------------------------------
 
-        class CProcessCustom: public CApplicationProcess, public CModuleProcess {
+        class CProcessCustom: public CApplicationProcess, public CServerProcess {
             typedef CApplicationProcess inherited;
 
         public:
 
             CProcessCustom(CCustomProcess* AParent, CApplication *AApplication, LPCTSTR AName):
-                    inherited(AParent, AApplication, ptCustom, AName), CModuleProcess() {
+                    inherited(AParent, AApplication, ptCustom, AName), CServerProcess() {
             };
 
             ~CProcessCustom() override = default;

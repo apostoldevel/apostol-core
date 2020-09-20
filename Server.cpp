@@ -355,13 +355,13 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CServerProcess::DoPQConnectException(CPQConnection *AConnection, Delphi::Exception::Exception *AException) {
-            Log()->Postgres(APP_LOG_EMERG, AException->what());
+        void CServerProcess::DoPQConnectException(CPQConnection *AConnection, const Delphi::Exception::Exception &E) {
+            Log()->Postgres(APP_LOG_EMERG, E.what());
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CServerProcess::DoPQServerException(CPQServer *AServer, Delphi::Exception::Exception *AException) {
-            Log()->Postgres(APP_LOG_EMERG, AException->what());
+        void CServerProcess::DoPQServerException(CPQServer *AServer, const Delphi::Exception::Exception &E) {
+            Log()->Postgres(APP_LOG_EMERG, E.what());
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -524,18 +524,18 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CServerProcess::DoServerListenException(CSocketEvent *Sender, Delphi::Exception::Exception *AException) {
-            Log()->Error(APP_LOG_EMERG, 0, AException->what());
+        void CServerProcess::DoServerListenException(CSocketEvent *Sender, const Delphi::Exception::Exception &E) {
+            Log()->Error(APP_LOG_EMERG, 0, E.what());
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CServerProcess::DoServerException(CTCPConnection *AConnection, Delphi::Exception::Exception *AException) {
-            Log()->Error(APP_LOG_EMERG, 0, AException->what());
+        void CServerProcess::DoServerException(CTCPConnection *AConnection, const Delphi::Exception::Exception &E) {
+            Log()->Error(APP_LOG_EMERG, 0, E.what());
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CServerProcess::DoServerEventHandlerException(CPollEventHandler *AHandler, Delphi::Exception::Exception *AException) {
-            Log()->Error(APP_LOG_EMERG, 0, AException->what());
+        void CServerProcess::DoServerEventHandlerException(CPollEventHandler *AHandler, const Delphi::Exception::Exception &E) {
+            Log()->Error(APP_LOG_EMERG, 0, E.what());
         }
         //--------------------------------------------------------------------------------------------------------------
 

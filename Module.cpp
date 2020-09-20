@@ -373,9 +373,9 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CApostolModule::ExceptionToJson(int ErrorCode, const std::exception &e, CString& Json) {
+        void CApostolModule::ExceptionToJson(int ErrorCode, const Delphi::Exception::Exception &E, CString& Json) {
             Json.Clear();
-            Json.Format(R"({"error": {"code": %u, "message": "%s"}})", ErrorCode, Delphi::Json::EncodeJsonString(e.what()).c_str());
+            Json.Format(R"({"error": {"code": %u, "message": "%s"}})", ErrorCode, Delphi::Json::EncodeJsonString(E.what()).c_str());
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -826,24 +826,28 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CApostolModule::DoPostgresQueryException(CPQPollQuery *APollQuery, Delphi::Exception::Exception *AException) {
+        void CApostolModule::DoPostgresQueryException(CPQPollQuery *APollQuery, const Delphi::Exception::Exception &E) {
 
             auto LConnection = dynamic_cast<CHTTPServerConnection *> (APollQuery->PollConnection());
             auto LReply = LConnection->Reply();
 
             CReply::CStatusType LStatus = CReply::internal_server_error;
 
-            ExceptionToJson(LStatus, *AException, LReply->Content);
+            ExceptionToJson(LStatus, E, LReply->Content);
             LConnection->SendStockReply(LStatus, true);
 
-            Log()->Error(APP_LOG_EMERG, 0, AException->what());
+            Log()->Error(APP_LOG_EMERG, 0, E.what());
         }
         //--------------------------------------------------------------------------------------------------------------
 #endif
-        void CApostolModule::Execute(CHTTPServerConnection *AConnection) {
+        bool CApostolModule::Execute(CHTTPServerConnection *AConnection) {
+
             auto LServer = dynamic_cast<CHTTPServer *> (AConnection->Server());
             auto LRequest = AConnection->Request();
             auto LReply = AConnection->Reply();
+
+            if (!CheckLocation(LRequest->Location))
+                return false;
 
             if (m_Sites.Count() == 0)
                 InitSites(LServer->Sites());
@@ -870,11 +874,13 @@ namespace Apostol {
             if (i == m_pMethods->Count()) {
                 AConnection->SendStockReply(CReply::not_implemented);
             }
+
+            return true;
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        bool CApostolModule::CheckConnection(CHTTPServerConnection *AConnection) {
-            return Enabled();
+        bool CApostolModule::CheckLocation(const CLocation &Location) {
+            return !Location.pathname.IsEmpty();
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -1056,7 +1062,7 @@ namespace Apostol {
             try {
                 HeartbeatModules();
             } catch (Delphi::Exception::Exception &E) {
-                DoServerEventHandlerException(AHandler, &E);
+                DoServerEventHandlerException(AHandler, E);
             }
         }
         //--------------------------------------------------------------------------------------------------------------
@@ -1071,7 +1077,7 @@ namespace Apostol {
 
                 Log()->Debug(0, _T("[Module] Runtime: %.2f ms."), (double) ((clock() - start) / (double) CLOCKS_PER_SEC * 1000));
             } catch (Delphi::Exception::Exception &E) {
-                DoServerException(LConnection, &E);
+                DoServerException(LConnection, E);
             }
 
             return true;
@@ -1139,6 +1145,7 @@ namespace Apostol {
 
             return Names.IsEmpty() ? "idle" : Names;
         }
+        //--------------------------------------------------------------------------------------------------------------
 
         void CModuleManager::HeartbeatModules() {
             for (int i = 0; i < ModuleCount(); i++) {
@@ -1149,32 +1156,31 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CModuleManager::ExecuteModule(CHTTPServerConnection *AConnection, CApostolModule *AModule) {
-            DoBeforeExecuteModule(AModule);
-            try {
-                AModule->Execute(AConnection);
-            } catch (...) {
-                AConnection->SendStockReply(CReply::internal_server_error);
+        bool CModuleManager::ExecuteModule(CHTTPServerConnection *AConnection, CApostolModule *AModule) {
+            bool Result = AModule->Enabled();
+            if (Result) {
+                DoBeforeExecuteModule(AModule);
+                try {
+                    Result = AModule->Execute(AConnection);
+                } catch (...) {
+                    AConnection->SendStockReply(CReply::internal_server_error);
+                    DoAfterExecuteModule(AModule);
+                    throw;
+                }
                 DoAfterExecuteModule(AModule);
-                throw;
             }
-            DoAfterExecuteModule(AModule);
+            return Result;
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CModuleManager::ExecuteModules(CTCPConnection *AConnection) {
 
             auto LConnection = dynamic_cast<CHTTPServerConnection *> (AConnection);
-            auto LRequest = LConnection->Request();
+            if (LConnection == nullptr)
+                return;
 
             int Index = 0;
-            while (Index < ModuleCount()) {
-                const auto Module = Modules(Index);
-                if (Module->Enabled() && Module->CheckConnection(LConnection)) {
-                    ExecuteModule(LConnection, Module);
-                    if (!Module->Sniffer())
-                        break;
-                }
+            while (Index < ModuleCount() && !ExecuteModule(LConnection, Modules(Index))) {
                 Index++;
             }
 
