@@ -630,7 +630,7 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoNoCommandHandler(CSocketEvent *Sender, const CString &Data, CTCPConnection *AConnection) {
-            Log()->Error(APP_LOG_EMERG, 0, "No command handler: %s", Data.c_str());
+            Log()->Error(APP_LOG_EMERG, 0, "No command handler: %s", Data.IsEmpty() ? "(null)" : Data.c_str());
         }
         //--------------------------------------------------------------------------------------------------------------
 
