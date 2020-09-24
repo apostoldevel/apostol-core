@@ -160,7 +160,7 @@ namespace Apostol {
 
         //--------------------------------------------------------------------------------------------------------------
 
-        CConfig::CConfig(CLog *ALog): CCustomConfig() {
+        CConfig::CConfig(CLog *ALog): CCustomConfig(), m_Flags{ false, false, false, false } {
 
             m_pIniFile = nullptr;
 
