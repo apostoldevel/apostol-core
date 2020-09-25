@@ -1164,8 +1164,6 @@ namespace Apostol {
                     Result = AModule->Execute(AConnection);
                 } catch (...) {
                     AConnection->SendStockReply(CHTTPReply::internal_server_error);
-                    DoAfterExecuteModule(AModule);
-                    throw;
                 }
                 DoAfterExecuteModule(AModule);
             }
