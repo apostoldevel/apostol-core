@@ -333,6 +333,26 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
+        CString CApostolModule::GetHostName() {
+            CString Result;
+            Result.SetLength(NI_MAXHOST);
+            if (GStack->GetHostName(Result.Data(), Result.Size())) {
+                Result.Truncate();
+            }
+            return Result;
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        CString CApostolModule::GetIPByHostName(const CString &HostName) {
+            CString Result;
+            if (!HostName.IsEmpty()) {
+                Result.SetLength(16);
+                GStack->GetIPByName(HostName.c_str(), Result.Data(), Result.Size());
+            }
+            return Result;
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
         CString CApostolModule::GetUserAgent(CHTTPServerConnection *AConnection) {
             auto LServer = dynamic_cast<CHTTPServer *> (AConnection->Server());
             auto LRequest = AConnection->Request();
@@ -721,39 +741,6 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        bool CApostolModule::StartQuery(CHTTPServerConnection *AConnection, const CStringList& SQL) {
-
-            auto LQuery = m_Version == 2 ? GetQuery(nullptr) : GetQuery(AConnection);
-
-            if (LQuery == nullptr)
-                throw Delphi::Exception::Exception(_T("StartQuery: GetQuery() failed!"));
-
-            LQuery->SQL() = SQL;
-
-            if (LQuery->Start() != POLL_QUERY_START_ERROR) {
-                if (m_Version == 2) {
-                    auto LJob = m_pJobs->Add(LQuery);
-                    LJob->Data() = AConnection->Data();
-
-                    auto LReply = AConnection->Reply();
-                    LReply->Content = _T("{\"identity\":" "\"") + LJob->Identity() + _T("\"}");
-
-                    AConnection->SendReply(CHTTPReply::accepted);
-                    AConnection->CloseConnection(true);
-                } else {
-                    // Wait query result...
-                    AConnection->CloseConnection(false);
-                }
-
-                return true;
-            } else {
-                delete LQuery;
-            }
-
-            return false;
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
         CPQPollQuery *CApostolModule::GetQuery(CPollConnection *AConnection) {
             CPQPollQuery *LQuery = m_pModuleProcess->GetQuery(AConnection);
 
@@ -771,13 +758,43 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        bool CApostolModule::ExecSQL(const CStringList &SQL, CPollConnection *AConnection,
+        void CApostolModule::StartQuery(CHTTPServerConnection *AConnection, const CStringList& SQL) {
+
+            auto LQuery = m_Version == 2 ? GetQuery(nullptr) : GetQuery(AConnection);
+
+            if (LQuery == nullptr)
+                throw Delphi::Exception::Exception(_T("StartQuery: Get SQL query failed."));
+
+            LQuery->SQL() = SQL;
+
+            if (LQuery->Start() == POLL_QUERY_START_ERROR) {
+                delete LQuery;
+                throw Delphi::Exception::Exception(_T("StartQuery: Start SQL query failed."));
+            }
+
+            if (m_Version == 2) {
+                auto LJob = m_pJobs->Add(LQuery);
+                LJob->Data() = AConnection->Data();
+
+                auto LReply = AConnection->Reply();
+                LReply->Content = _T("{\"identity\":" "\"") + LJob->Identity() + _T("\"}");
+
+                AConnection->SendReply(CHTTPReply::accepted);
+                AConnection->CloseConnection(true);
+            } else {
+                // Wait query result...
+                AConnection->CloseConnection(false);
+            }
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CApostolModule::ExecSQL(const CStringList &SQL, CPollConnection *AConnection,
                 COnPQPollQueryExecutedEvent &&OnExecuted, COnPQPollQueryExceptionEvent &&OnException) {
 
             auto LQuery = GetQuery(AConnection);
 
             if (LQuery == nullptr)
-                throw Delphi::Exception::Exception(_T("ExecSQL: GetQuery() failed!"));
+                throw Delphi::Exception::Exception(_T("ExecSQL: Get SQL query failed."));
 
             if (OnExecuted != nullptr)
                 LQuery->OnPollExecuted(static_cast<COnPQPollQueryExecutedEvent &&>(OnExecuted));
@@ -787,15 +804,10 @@ namespace Apostol {
 
             LQuery->SQL() = SQL;
 
-            if (LQuery->Start() != POLL_QUERY_START_ERROR) {
-                return true;
-            } else {
+            if (LQuery->Start() == POLL_QUERY_START_ERROR) {
                 delete LQuery;
+                throw Delphi::Exception::Exception(_T("ExecSQL: Start SQL query failed."));
             }
-
-            Log()->Error(APP_LOG_ALERT, 0, _T("ExecSQL: StartQuery() failed!"));
-
-            return false;
         }
         //--------------------------------------------------------------------------------------------------------------
 

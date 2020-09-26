@@ -226,6 +226,9 @@ namespace Apostol {
             virtual void Heartbeat();
             virtual bool Execute(CHTTPServerConnection *AConnection);
 
+            static CString GetHostName();
+            static CString GetIPByHostName(const CString &HostName);
+
             static CString GetUserAgent(CHTTPServerConnection *AConnection);
             static CString GetOrigin(CHTTPServerConnection *AConnection);
             static CString GetProtocol(CHTTPServerConnection *AConnection);
@@ -247,9 +250,9 @@ namespace Apostol {
             static void EnumQuery(CPQResult *APQResult, CPQueryResult& AResult);
             static void QueryToResults(CPQPollQuery *APollQuery, CPQueryResults& AResults);
 
-            bool StartQuery(CHTTPServerConnection *AConnection, const CStringList& SQL);
+            void StartQuery(CHTTPServerConnection *AConnection, const CStringList& SQL);
 
-            bool ExecSQL(const CStringList &SQL, CPollConnection *AConnection = nullptr,
+            void ExecSQL(const CStringList &SQL, CPollConnection *AConnection = nullptr,
                          COnPQPollQueryExecutedEvent && OnExecuted = nullptr,
                          COnPQPollQueryExceptionEvent && OnException = nullptr);
 
