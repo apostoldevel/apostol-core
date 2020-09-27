@@ -160,12 +160,13 @@ namespace Apostol {
 
             CString m_ModuleName;
 
+            /// Ini file section name
+            CString m_SectionName;
+
             CStringPairs m_Sites;
 
             mutable CString m_AllowedMethods;
             mutable CString m_AllowedHeaders;
-
-            bool m_Sniffer;
 
         protected:
 
@@ -202,12 +203,12 @@ namespace Apostol {
 #endif
         public:
 
-            explicit CApostolModule(CModuleProcess *AProcess, const CString& ModuleName);
+            explicit CApostolModule(CModuleProcess *AProcess, const CString& ModuleName, const CString& SectionName = CString());
 
             ~CApostolModule() override;
 
-            CString& ModuleName() { return m_ModuleName; }
             const CString& ModuleName() const { return m_ModuleName; }
+            const CString& SectionName() const { return m_SectionName; }
 
             CModuleStatus ModuleStatus() { return m_ModuleStatus; }
 

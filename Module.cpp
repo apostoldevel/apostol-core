@@ -191,8 +191,9 @@ namespace Apostol {
 
         //--------------------------------------------------------------------------------------------------------------
 
-        CApostolModule::CApostolModule(CModuleProcess *AProcess, const CString& ModuleName): CCollectionItem(AProcess),
-            CGlobalComponent(), m_pModuleProcess(AProcess), m_ModuleName(ModuleName) {
+        CApostolModule::CApostolModule(CModuleProcess *AProcess, const CString& ModuleName, const CString& SectionName):
+            CCollectionItem(AProcess), CGlobalComponent(), m_pModuleProcess(AProcess), m_ModuleName(ModuleName),
+            m_SectionName(SectionName) {
 
             m_ModuleStatus = msUnknown;
             m_Sniffer = false;

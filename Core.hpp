@@ -36,6 +36,9 @@ Author:
 #include "Config.hpp"
 //----------------------------------------------------------------------------------------------------------------------
 
+#define APP_FILE_NOT_FOUND _T("File not found: %s")
+//----------------------------------------------------------------------------------------------------------------------
+
 class CGlobalComponent: public CLogComponent, public CConfigComponent {
 public:
 
