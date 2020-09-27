@@ -196,7 +196,6 @@ namespace Apostol {
             m_SectionName(SectionName) {
 
             m_ModuleStatus = msUnknown;
-            m_Sniffer = false;
 
             m_Version = -1;
 #ifdef WITH_POSTGRESQL
