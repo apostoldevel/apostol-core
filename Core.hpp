@@ -39,6 +39,9 @@ Author:
 #define APP_FILE_NOT_FOUND _T("File not found: %s")
 //----------------------------------------------------------------------------------------------------------------------
 
+typedef std::function<void (const CIniFile &IniFile, const CString &Section, CStringList &Config)> COnInitConfigEvent;
+//----------------------------------------------------------------------------------------------------------------------
+
 class CGlobalComponent: public CLogComponent, public CConfigComponent {
 public:
 
@@ -63,6 +66,42 @@ public:
                              LConfFile.c_str(), Line, lpszDefault);
         }
     };
+
+    static void LoadConfig(const CString &FileName, TPairs<CStringList> &Profiles, COnInitConfigEvent && OnInitConfig) {
+
+        const CString Prefix(Config()->Prefix());
+        CString ConfigFile(FileName);
+
+        if (!path_separator(ConfigFile.front())) {
+            ConfigFile = Prefix + ConfigFile;
+        }
+
+        Profiles.Clear();
+
+        if (FileExists(ConfigFile.c_str())) {
+            CIniFile IniFile(ConfigFile.c_str());
+            IniFile.OnIniFileParseError(OnIniFileParseError);
+
+            CStringList Sections;
+            IniFile.ReadSections(&Sections);
+
+            for (int i = 0; i < Sections.Count(); i++) {
+                const auto& Section = Sections[i];
+                int Index = Profiles.AddPair(Section, CStringList());
+                auto& Config = Profiles[Index].Value();
+                OnInitConfig(IniFile, Section, Config);
+            }
+
+            auto& Default = Profiles.Default();
+            if (Default.Name().IsEmpty()) {
+                Default.Name() = _T("default");
+                OnInitConfig(IniFile, Default.Name(), Default.Value());
+            }
+        } else {
+            Log()->Error(APP_LOG_EMERG, 0, APP_FILE_NOT_FOUND, ConfigFile.c_str());
+        }
+    }
+    //--------------------------------------------------------------------------------------------------------------
 
     static CConfig *Config() { return GConfig; };
 
