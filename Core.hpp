@@ -43,6 +43,24 @@ public:
 
     };
 
+    static void OnIniFileParseError (CCustomIniFile *Sender, LPCTSTR lpszSectionName, LPCTSTR lpszKeyName,
+                                     LPCTSTR lpszValue, LPCTSTR lpszDefault, int Line) {
+
+        const auto& LConfFile = Sender->FileName();
+
+        if ((lpszValue == nullptr) || (lpszValue[0] == '\0')) {
+            if ((lpszDefault == nullptr) || (lpszDefault[0] == '\0'))
+                Log()->Error(APP_LOG_EMERG, 0, ConfMsgEmpty, lpszSectionName, lpszKeyName, LConfFile.c_str(), Line);
+        } else {
+            if ((lpszDefault == nullptr) || (lpszDefault[0] == '\0'))
+                Log()->Error(APP_LOG_EMERG, 0, ConfMsgInvalidValue, lpszSectionName, lpszKeyName, lpszValue,
+                             LConfFile.c_str(), Line);
+            else
+                Log()->Error(APP_LOG_EMERG, 0, ConfMsgInvalidValue _T(" - ignored and set by default: \"%s\""), lpszSectionName, lpszKeyName, lpszValue,
+                             LConfFile.c_str(), Line, lpszDefault);
+        }
+    };
+
     static CConfig *Config() { return GConfig; };
 
     static CLog *Log(){ return GLog; };

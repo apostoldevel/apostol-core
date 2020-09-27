@@ -341,7 +341,7 @@ namespace Apostol {
 
             bool CheckLogFiles();
 
-            void OnIniFileParseError(Pointer Sender, LPCTSTR lpszSectionName, LPCTSTR lpszKeyName, LPCTSTR lpszValue,
+            void OnIniFileParseError(CCustomIniFile *Sender, LPCTSTR lpszSectionName, LPCTSTR lpszKeyName, LPCTSTR lpszValue,
                     LPCTSTR lpszDefault, int Line);
 
         public:

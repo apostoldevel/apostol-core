@@ -612,23 +612,25 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CConfig::OnIniFileParseError(Pointer Sender, LPCTSTR lpszSectionName, LPCTSTR lpszKeyName,
+        void CConfig::OnIniFileParseError(CCustomIniFile *Sender, LPCTSTR lpszSectionName, LPCTSTR lpszKeyName,
                 LPCTSTR lpszValue, LPCTSTR lpszDefault, int Line) {
+
+            const auto& LConfFile = Sender->FileName();
 
             m_uErrorCount++;
             if ((lpszValue == nullptr) || (lpszValue[0] == '\0')) {
                 if (Flags().test_config || (lpszDefault == nullptr) || (lpszDefault[0] == '\0'))
-                    Log()->Error(APP_LOG_EMERG, 0, ConfMsgEmpty, lpszSectionName, lpszKeyName, m_sConfFile.c_str(), Line);
+                    Log()->Error(APP_LOG_EMERG, 0, ConfMsgEmpty, lpszSectionName, lpszKeyName, LConfFile.c_str(), Line);
                 else
                     Log()->Error(APP_LOG_EMERG, 0, ConfMsgEmpty _T(" - ignored and set by default: \"%s\""), lpszSectionName,
-                                lpszKeyName, m_sConfFile.c_str(), Line, lpszDefault);
+                                lpszKeyName, LConfFile.c_str(), Line, lpszDefault);
             } else {
                 if (Flags().test_config || (lpszDefault == nullptr) || (lpszDefault[0] == '\0'))
                     Log()->Error(APP_LOG_EMERG, 0, ConfMsgInvalidValue, lpszSectionName, lpszKeyName, lpszValue,
-                                m_sConfFile.c_str(), Line);
+                                LConfFile.c_str(), Line);
                 else
                     Log()->Error(APP_LOG_EMERG, 0, ConfMsgInvalidValue _T(" - ignored and set by default: \"%s\""), lpszSectionName, lpszKeyName, lpszValue,
-                                m_sConfFile.c_str(), Line, lpszDefault);
+                                LConfFile.c_str(), Line, lpszDefault);
             }
         }
 
