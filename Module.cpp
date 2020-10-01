@@ -475,6 +475,8 @@ namespace Apostol {
         void CApostolModule::ReplyError(CHTTPServerConnection *AConnection, CHTTPReply::CStatusType ErrorCode, const CString &Message) {
             auto LReply = AConnection->Reply();
 
+            LReply->ContentType = CHTTPReply::json;
+
             if (ErrorCode == CHTTPReply::unauthorized) {
                 CHTTPReply::AddUnauthorized(LReply, AConnection->Data()["Authorization"] != "Basic", "invalid_client", Message.c_str());
             }
