@@ -485,6 +485,8 @@ namespace Apostol {
             LReply->Content.Format(R"({"error": {"code": %u, "message": "%s"}})", ErrorCode, Delphi::Json::EncodeJsonString(Message).c_str());
 
             AConnection->SendReply(ErrorCode, nullptr, true);
+
+            Log()->Error(APP_LOG_NOTICE, 0, _T("ReplyError: %s"), Message.c_str());
         }
         //--------------------------------------------------------------------------------------------------------------
 
