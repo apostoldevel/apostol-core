@@ -486,7 +486,7 @@ namespace Apostol {
 
             AConnection->SendReply(ErrorCode, nullptr, true);
 
-            Log()->Error(APP_LOG_NOTICE, 0, _T("ReplyError: %s"), Message.c_str());
+            Log()->Error(ErrorCode == CHTTPReply::internal_server_error ? APP_LOG_EMERG : APP_LOG_NOTICE, 0, _T("ReplyError: %s"), Message.c_str());
         }
         //--------------------------------------------------------------------------------------------------------------
 
