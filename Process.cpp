@@ -36,7 +36,7 @@ void signal_error(int signo, siginfo_t *siginfo, void *ucontext) {
     char      **msg;
 
     GLog->Error(APP_LOG_CRIT, 0, "-----BEGIN BACKTRACE LOG-----");
-    GLog->Error(APP_LOG_CRIT, 0, "Signal: %d (%s)", signo, sys_siglist[signo]);
+    GLog->Error(APP_LOG_CRIT, 0, "Signal: %d (%s)", signo, strsignal(signo));
     GLog->Error(APP_LOG_CRIT, 0, "Addr  : %p", siginfo->si_addr);
 
 #ifdef __x86_64__
@@ -66,8 +66,7 @@ void signal_error(int signo, siginfo_t *siginfo, void *ucontext) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-void signal_handler(int signo, siginfo_t *siginfo, void *ucontext)
-{
+void signal_handler(int signo, siginfo_t *siginfo, void *ucontext) {
     try
     {
         GApplication->SignalProcess()->SignalHandler(signo, siginfo, ucontext);
@@ -75,6 +74,10 @@ void signal_handler(int signo, siginfo_t *siginfo, void *ucontext)
     catch (Delphi::Exception::Exception &E)
     {
         log_failure(E.what());
+    }
+    catch (std::exception &e)
+    {
+        log_failure(e.what());
     }
     catch (...)
     {
