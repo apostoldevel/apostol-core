@@ -618,9 +618,9 @@ namespace Apostol {
 
                 auto LBinding = LConnection->Socket()->Binding();
                 if (LBinding != nullptr) {
-                    Log()->Access(_T("%s %d %8.3f ms [%s] \"%s %s HTTP/%d.%d\" %d %d \"%s\" \"%s\"\r\n"),
+                    Log()->Access(_T("%s %d %.3f [%s] \"%s %s HTTP/%d.%d\" %d %d \"%s\" \"%s\"\r\n"),
                                   LBinding->PeerIP(), LBinding->PeerPort(),
-                                  double(clock() - AConnection->Created()) / (CLOCKS_PER_SEC * 1000), szTime,
+                                  (double) (clock() - AConnection->Clock()) / (double) CLOCKS_PER_SEC, szTime,
                                   LRequest->Method.c_str(), LRequest->URI.c_str(), LRequest->VMajor, LRequest->VMinor,
                                   LReply->Status, LReply->Content.Size(),
                                   LReferer.IsEmpty() ? "-" : LReferer.c_str(),

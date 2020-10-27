@@ -838,7 +838,7 @@ namespace Apostol {
 
             LConnection->SendReply(LStatus, nullptr, true);
 
-            log_debug1(APP_LOG_DEBUG_CORE, Log(), 0, _T("Query executed runtime: %.2f ms."), (double) ((clock() - start) / (double) CLOCKS_PER_SEC * 1000));
+            log_debug1(APP_LOG_DEBUG_CORE, Log(), 0, _T("Query executed runtime: %.3f sec."), (double) (clock() - start) / (double) CLOCKS_PER_SEC);
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -1091,7 +1091,7 @@ namespace Apostol {
 
                 ExecuteModules(LConnection);
 
-                Log()->Debug(0, _T("[Module] Runtime: %.2f ms."), (double) ((clock() - start) / (double) CLOCKS_PER_SEC * 1000));
+                Log()->Debug(0, _T("[Module] Runtime: %.3f sec."), (double) (clock() - start) / (double) CLOCKS_PER_SEC);
             } catch (Delphi::Exception::Exception &E) {
                 DoServerException(LConnection, E);
             }
