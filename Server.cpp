@@ -594,6 +594,7 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoAccessLog(CTCPConnection *AConnection) {
+
             auto LConnection = dynamic_cast<CHTTPServerConnection *> (AConnection);
 
             if (LConnection == nullptr)
@@ -617,9 +618,9 @@ namespace Apostol {
 
                 auto LBinding = LConnection->Socket()->Binding();
                 if (LBinding != nullptr) {
-                    Log()->Access(_T("%s %d %8.2f ms [%s] \"%s %s HTTP/%d.%d\" %d %d \"%s\" \"%s\"\r\n"),
+                    Log()->Access(_T("%s %d %8.3f ms [%s] \"%s %s HTTP/%d.%d\" %d %d \"%s\" \"%s\"\r\n"),
                                   LBinding->PeerIP(), LBinding->PeerPort(),
-                                  double((clock() - AConnection->Tag()) / (double) CLOCKS_PER_SEC * 1000), szTime,
+                                  double(clock() - AConnection->Created()) / (CLOCKS_PER_SEC * 1000), szTime,
                                   LRequest->Method.c_str(), LRequest->URI.c_str(), LRequest->VMajor, LRequest->VMinor,
                                   LReply->Status, LReply->Content.Size(),
                                   LReferer.IsEmpty() ? "-" : LReferer.c_str(),
