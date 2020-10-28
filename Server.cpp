@@ -606,6 +606,9 @@ namespace Apostol {
             auto LRequest = LConnection->Request();
             auto LReply = LConnection->Reply();
 
+            if (LRequest->Method.IsEmpty())
+                return;
+
             TCHAR szTime[PATH_MAX / 4] = {0};
 
             time_t wtime = time(nullptr);
