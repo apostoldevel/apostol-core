@@ -364,13 +364,13 @@ namespace Apostol {
         void CLog::Message(LPCSTR AFormat, ...) {
             va_list args;
             va_start(args, AFormat);
-            Error(APP_LOG_NOTICE, 0, AFormat, args);
+            Error(APP_LOG_INFO, 0, AFormat, args);
             va_end(args);
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CLog::Message(LPCSTR AFormat, va_list args) {
-            Error(APP_LOG_NOTICE, 0, AFormat,  args);
+            Error(APP_LOG_INFO, 0, AFormat,  args);
         }
         //--------------------------------------------------------------------------------------------------------------
 
