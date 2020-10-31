@@ -1068,8 +1068,6 @@ namespace Apostol {
 
             SetLimitNoFile(Config()->LimitNoFile());
 
-            Log()->Error(APP_LOG_NOTICE, 0, "CONFIG: Current port: %d", Config()->Port());
-
             ServerStart();
 #ifdef WITH_POSTGRESQL
             PQServerStart("worker");
