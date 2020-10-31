@@ -462,11 +462,11 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoPQConnect(CObject *Sender) {
-            auto LConnection = dynamic_cast<CPQConnection *>(Sender);
-            if (LConnection != nullptr) {
-                const auto& Info = LConnection->ConnInfo();
+            auto pConnection = dynamic_cast<CPQConnection *>(Sender);
+            if (pConnection != nullptr) {
+                const auto& Info = pConnection->ConnInfo();
                 if (!Info.ConnInfo().IsEmpty()) {
-                    Log()->Postgres(APP_LOG_EMERG, "[%d] [postgresql://%s@%s:%s/%s] Connected.", LConnection->PID(),
+                    Log()->Postgres(APP_LOG_EMERG, "[%d] [postgresql://%s@%s:%s/%s] Connected.", pConnection->PID(),
                                     Info["user"].c_str(), Info["host"].c_str(), Info["port"].c_str(), Info["dbname"].c_str());
                 }
             }
@@ -474,11 +474,11 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoPQDisconnect(CObject *Sender) {
-            auto LConnection = dynamic_cast<CPQConnection *>(Sender);
-            if (LConnection != nullptr) {
-                const auto& Info = LConnection->ConnInfo();
+            auto pConnection = dynamic_cast<CPQConnection *>(Sender);
+            if (pConnection != nullptr) {
+                const auto& Info = pConnection->ConnInfo();
                 if (!Info.ConnInfo().IsEmpty()) {
-                    Log()->Postgres(APP_LOG_EMERG, "[%d] [postgresql://%s@%s:%s/%s] Disconnected.", LConnection->PID(),
+                    Log()->Postgres(APP_LOG_EMERG, "[%d] [postgresql://%s@%s:%s/%s] Disconnected.", pConnection->PID(),
                                     Info["user"].c_str(), Info["host"].c_str(), Info["port"].c_str(), Info["dbname"].c_str());
                 }
             }
@@ -548,19 +548,19 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoServerConnected(CObject *Sender) {
-            auto LConnection = dynamic_cast<CHTTPServerConnection *>(Sender);
-            if (LConnection != nullptr) {
-                Log()->Message(_T("[%s:%d] Client opened connection."), LConnection->Socket()->Binding()->PeerIP(),
-                               LConnection->Socket()->Binding()->PeerPort());
+            auto pConnection = dynamic_cast<CHTTPServerConnection *>(Sender);
+            if (pConnection != nullptr) {
+                Log()->Message(_T("[%s:%d] Client opened connection."), pConnection->Socket()->Binding()->PeerIP(),
+                               pConnection->Socket()->Binding()->PeerPort());
             }
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoServerDisconnected(CObject *Sender) {
-            auto LConnection = dynamic_cast<CHTTPServerConnection *>(Sender);
-            if (LConnection != nullptr) {
+            auto pConnection = dynamic_cast<CHTTPServerConnection *>(Sender);
+            if (pConnection != nullptr) {
 #ifdef WITH_POSTGRESQL
-                auto LPollQuery = m_PQServer.FindQueryByConnection(LConnection);
+                auto LPollQuery = m_PQServer.FindQueryByConnection(pConnection);
                 if (LPollQuery != nullptr) {
                     LPollQuery->PollConnection(nullptr);
                 }
@@ -571,26 +571,26 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoClientConnected(CObject *Sender) {
-            auto LConnection = dynamic_cast<CHTTPClientConnection *>(Sender);
-            if (LConnection != nullptr) {
-                Log()->Message(_T("[%s:%d] Client connected."), LConnection->Socket()->Binding()->PeerIP(),
-                               LConnection->Socket()->Binding()->PeerPort());
+            auto pConnection = dynamic_cast<CHTTPClientConnection *>(Sender);
+            if (pConnection != nullptr) {
+                Log()->Message(_T("[%s:%d] Client connected."), pConnection->Socket()->Binding()->PeerIP(),
+                               pConnection->Socket()->Binding()->PeerPort());
             }
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoClientDisconnected(CObject *Sender) {
-            auto LConnection = dynamic_cast<CHTTPClientConnection *>(Sender);
-            if (LConnection != nullptr) {
-                if (LConnection->ClosedGracefully()) {
-                    auto LClient = dynamic_cast<CHTTPClient *> (LConnection->Client());
+            auto pConnection = dynamic_cast<CHTTPClientConnection *>(Sender);
+            if (pConnection != nullptr) {
+                if (pConnection->ClosedGracefully()) {
+                    auto LClient = dynamic_cast<CHTTPClient *> (pConnection->Client());
                     if (LClient != nullptr) {
                         Log()->Error(APP_LOG_EMERG, 0, "[%s:%d] Client closed connection.", LClient->Host().c_str(),
                                      LClient->Port());
                     }
                 } else {
-                    Log()->Message(_T("[%s:%d] Client disconnected."), LConnection->Socket()->Binding()->PeerIP(),
-                                   LConnection->Socket()->Binding()->PeerPort());
+                    Log()->Message(_T("[%s:%d] Client disconnected."), pConnection->Socket()->Binding()->PeerIP(),
+                                   pConnection->Socket()->Binding()->PeerPort());
                 }
             }
         }
@@ -603,18 +603,18 @@ namespace Apostol {
 
         void CServerProcess::DoAccessLog(CTCPConnection *AConnection) {
 
-            auto LConnection = dynamic_cast<CHTTPServerConnection *> (AConnection);
+            auto pConnection = dynamic_cast<CHTTPServerConnection *> (AConnection);
 
-            if (LConnection == nullptr)
+            if (pConnection == nullptr)
                 return;
 
-            if (LConnection->ClosedGracefully())
+            if (pConnection->ClosedGracefully())
                 return;
 
-            auto LRequest = LConnection->Request();
-            auto LReply = LConnection->Reply();
+            auto pRequest = pConnection->Request();
+            auto pReply = pConnection->Reply();
 
-            if (LRequest->Method.IsEmpty())
+            if (pRequest->Method.IsEmpty())
                 return;
 
             TCHAR szTime[PATH_MAX / 4] = {0};
@@ -624,18 +624,18 @@ namespace Apostol {
 
             if ((wtm != nullptr) && (strftime(szTime, sizeof(szTime), "%d/%b/%Y:%T %z", wtm) != 0)) {
 
-                const CString &LReferer = LRequest->Headers.Values(_T("Referer"));
-                const CString &LUserAgent = LRequest->Headers.Values(_T("User-Agent"));
+                const auto& referer = pRequest->Headers[_T("Referer")];
+                const auto& user_agent = pRequest->Headers[_T("User-Agent")];
 
-                auto LBinding = LConnection->Socket()->Binding();
-                if (LBinding != nullptr) {
+                auto pBinding = pConnection->Socket()->Binding();
+                if (pBinding != nullptr) {
                     Log()->Access(_T("%s %d %.3f [%s] \"%s %s HTTP/%d.%d\" %d %d \"%s\" \"%s\"\r\n"),
-                                  LBinding->PeerIP(), LBinding->PeerPort(),
-                                  (double) (clock() - AConnection->Clock()) / (double) CLOCKS_PER_SEC, szTime,
-                                  LRequest->Method.c_str(), LRequest->URI.c_str(), LRequest->VMajor, LRequest->VMinor,
-                                  LReply->Status, LReply->Content.Size(),
-                                  LReferer.IsEmpty() ? "-" : LReferer.c_str(),
-                                  LUserAgent.IsEmpty() ? "-" : LUserAgent.c_str());
+                                  pBinding->PeerIP(), pBinding->PeerPort(),
+                                  (Now() - AConnection->Clock()) * MSecsPerDay / MSecsPerSec, szTime,
+                                  pRequest->Method.c_str(), pRequest->URI.c_str(), pRequest->VMajor, pRequest->VMinor,
+                                  pReply->Status, pReply->Content.Size(),
+                                  referer.IsEmpty() ? "-" : referer.c_str(),
+                                  user_agent.IsEmpty() ? "-" : user_agent.c_str());
                 }
             }
         }
