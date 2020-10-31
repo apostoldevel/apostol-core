@@ -563,8 +563,8 @@ namespace Apostol {
                 m_PostgresConnInfo.AddPair("worker", CStringList());
                 m_PostgresConnInfo.AddPair("helper", CStringList());
 
-                auto &worker = m_PostgresConnInfo["worker"].Value();
-                auto &helper = m_PostgresConnInfo["helper"].Value();
+                auto &worker = m_PostgresConnInfo["worker"];
+                auto &helper = m_PostgresConnInfo["helper"];
 
                 m_pIniFile->ReadSectionValues(_T("postgres/worker"), &worker);
                 m_pIniFile->ReadSectionValues(_T("postgres/helper"), &helper);

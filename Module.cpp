@@ -320,7 +320,7 @@ namespace Apostol {
         const CString &CApostolModule::GetRoot(const CString &Host) const {
             auto Index = m_Sites.IndexOfName(Host);
             if (Index == -1)
-                return m_Sites["*"].Value();
+                return m_Sites["*"];
             return m_Sites[Index].Value();
         }
         //--------------------------------------------------------------------------------------------------------------
@@ -328,7 +328,7 @@ namespace Apostol {
         const CStringList &CApostolModule::GetSiteConfig(const CString &Host) const {
             auto Index = m_Sites.IndexOfName(Host);
             if (Index == -1)
-                return m_Sites["*"].Data();
+                return m_Sites.Pairs("*").Data();
             return m_Sites[Index].Data();
         }
         //--------------------------------------------------------------------------------------------------------------

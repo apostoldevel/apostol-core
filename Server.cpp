@@ -273,7 +273,7 @@ namespace Apostol {
 #ifdef WITH_POSTGRESQL
         void CServerProcess::PQServerStart(const CString &Name) {
             if (Config()->PostgresConnect()) {
-                m_PQServer.ConnInfo().SetParameters(Config()->PostgresConnInfo()[Name].Value());
+                m_PQServer.ConnInfo().SetParameters(Config()->PostgresConnInfo()[Name]);
                 m_PQServer.Active(true);
             }
         }
