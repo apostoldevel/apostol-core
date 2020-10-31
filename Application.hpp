@@ -169,7 +169,7 @@ namespace Apostol {
 
             void Run() override;
 
-            void Reload();
+            void Reload() override;
 
         };
 

@@ -270,6 +270,14 @@ namespace Apostol {
             m_Server.ActiveLevel(alShutDown);
         }
         //--------------------------------------------------------------------------------------------------------------
+
+        void CServerProcess::Reload() {
+            Config()->Reload();
+
+            LoadSites(m_Server.Sites());
+            LoadProviders(m_Server.Providers());
+        }
+        //--------------------------------------------------------------------------------------------------------------
 #ifdef WITH_POSTGRESQL
         void CServerProcess::PQServerStart(const CString &Name) {
             if (Config()->PostgresConnect()) {

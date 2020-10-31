@@ -534,7 +534,7 @@ namespace Apostol {
 #endif
             ServerStop();
 
-            Config()->Reload();
+            CServerProcess::Reload();
 
             SetLimitNoFile(Config()->LimitNoFile());
 
@@ -926,6 +926,8 @@ namespace Apostol {
 
                     Log()->Error(APP_LOG_NOTICE, 0, "reconfiguring");
 
+                    Reload();
+
                     StartProcesses(PROCESS_JUST_RESPAWN);
 
                     /* allow new processes to start */
@@ -1064,9 +1066,9 @@ namespace Apostol {
 
             InitSignals();
 
-            Config()->Reload();
-
             SetLimitNoFile(Config()->LimitNoFile());
+
+            Log()->Error(APP_LOG_NOTICE, 0, "CONFIG: Current port: %d", Config()->Port());
 
             ServerStart();
 #ifdef WITH_POSTGRESQL
@@ -1174,17 +1176,11 @@ namespace Apostol {
 
             InitSignals();
 
-            Config()->Reload();
-
             SetLimitNoFile(Config()->LimitNoFile());
-
-            //ServerStart();
 #ifdef WITH_POSTGRESQL
             PQServerStart("helper");
 #endif
             Initialization();
-
-            //SetUser(Config()->User(), Config()->Group());
 
             SigProcMask(SIG_UNBLOCK, SigAddSet(&set));
 

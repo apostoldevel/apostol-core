@@ -123,6 +123,8 @@ namespace Apostol {
             void ServerStop();
             void ServerShutDown();
 
+            virtual void Reload();
+
             CHTTPServer &Server() { return m_Server; };
             const CHTTPServer &Server() const { return m_Server; };
 #ifdef WITH_POSTGRESQL
