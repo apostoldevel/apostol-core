@@ -390,7 +390,10 @@ namespace Apostol {
 
         void CServerProcess::DoPQSendQuery(CPQQuery *AQuery) {
             for (int I = 0; I < AQuery->SQL().Count(); ++I) {
-                Log()->Postgres(APP_LOG_INFO, AQuery->SQL()[I].c_str());
+                const auto &caLine = AQuery->SQL()[I];
+                if (!caLine.IsEmpty()) {
+                    Log()->Postgres(APP_LOG_INFO, caLine.c_str());
+                }
             }
         }
         //--------------------------------------------------------------------------------------------------------------
