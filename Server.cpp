@@ -364,42 +364,39 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoPQConnectException(CPQConnection *AConnection, const Delphi::Exception::Exception &E) {
-            Log()->Postgres(APP_LOG_EMERG, E.what());
+            Log()->Postgres(APP_LOG_EMERG, "ConnectException: %s", E.what());
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoPQServerException(CPQServer *AServer, const Delphi::Exception::Exception &E) {
-            Log()->Postgres(APP_LOG_EMERG, E.what());
+            Log()->Postgres(APP_LOG_EMERG, "ServerException: %s", E.what());
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoPQError(CPQConnection *AConnection) {
-            Log()->Postgres(APP_LOG_EMERG, AConnection->GetErrorMessage());
+            Log()->Postgres(APP_LOG_EMERG, "Error: %s", AConnection->GetErrorMessage());
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoPQStatus(CPQConnection *AConnection) {
-            Log()->Postgres(APP_LOG_DEBUG, AConnection->StatusString());
+            Log()->Postgres(APP_LOG_DEBUG, "Status: %s", AConnection->StatusString());
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoPQPollingStatus(CPQConnection *AConnection) {
-            Log()->Postgres(APP_LOG_DEBUG, AConnection->PollingStatusString());
+            Log()->Postgres(APP_LOG_DEBUG, "PollingStatus: %s", AConnection->PollingStatusString());
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoPQSendQuery(CPQQuery *AQuery) {
             for (int I = 0; I < AQuery->SQL().Count(); ++I) {
-                const auto &caLine = AQuery->SQL()[I];
-                if (!caLine.IsEmpty()) {
-                    Log()->Postgres(APP_LOG_INFO, caLine.c_str());
-                }
+                Log()->Postgres(APP_LOG_INFO, "SendQuery: %s", AQuery->SQL()[I].c_str());
             }
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoPQResultStatus(CPQResult *AResult) {
-            Log()->Postgres(APP_LOG_DEBUG, AResult->StatusString());
+            Log()->Postgres(APP_LOG_DEBUG, "ResultStatus: %s", AResult->StatusString());
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -454,11 +451,11 @@ namespace Apostol {
                     Log()->Postgres(APP_LOG_DEBUG, "%s", Print.c_str());
                 }
             } else {
-                Log()->Postgres(APP_LOG_EMERG, AResult->GetErrorMessage());
+                Log()->Postgres(APP_LOG_EMERG, "%s", AResult->GetErrorMessage());
             }
 #else
             if (!(AExecStatus == PGRES_TUPLES_OK || AExecStatus == PGRES_SINGLE_TUPLE)) {
-                Log()->Postgres(APP_LOG_EMERG, AResult->GetErrorMessage());
+                Log()->Postgres(APP_LOG_EMERG, "%s", AResult->GetErrorMessage());
             }
 #endif
         }
@@ -536,17 +533,17 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoServerListenException(CSocketEvent *Sender, const Delphi::Exception::Exception &E) {
-            Log()->Error(APP_LOG_EMERG, 0, E.what());
+            Log()->Error(APP_LOG_EMERG, 0, "%s", E.what());
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoServerException(CTCPConnection *AConnection, const Delphi::Exception::Exception &E) {
-            Log()->Error(APP_LOG_EMERG, 0, E.what());
+            Log()->Error(APP_LOG_EMERG, 0, "%s", E.what());
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoServerEventHandlerException(CPollEventHandler *AHandler, const Delphi::Exception::Exception &E) {
-            Log()->Error(APP_LOG_EMERG, 0, E.what());
+            Log()->Error(APP_LOG_EMERG, 0, "%s", E.what());
         }
         //--------------------------------------------------------------------------------------------------------------
 
