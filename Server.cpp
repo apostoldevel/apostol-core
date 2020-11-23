@@ -691,6 +691,52 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
+        void CServerProcess::FetchAccessToken(const CString &URI, const CString &Assertion,
+                COnSocketExecuteEvent && OnDone, COnSocketExceptionEvent && OnFailed) {
+
+            auto OnRequest = [](CHTTPClient *Sender, CHTTPRequest *ARequest) {
+
+                const auto &token_uri = Sender->Data()["token_uri"];
+                const auto &grant_type = Sender->Data()["grant_type"];
+                const auto &assertion = Sender->Data()["assertion"];
+
+                ARequest->Content = _T("grant_type=");
+                ARequest->Content << CHTTPServer::URLEncode(grant_type);
+
+                ARequest->Content << _T("&assertion=");
+                ARequest->Content << CHTTPServer::URLEncode(assertion);
+
+                CHTTPRequest::Prepare(ARequest, _T("POST"), token_uri.c_str(), _T("application/x-www-form-urlencoded"));
+
+                DebugRequest(ARequest);
+            };
+
+            auto OnException = [](CTCPConnection *Sender, const Delphi::Exception::Exception &E) {
+
+                auto pConnection = dynamic_cast<CHTTPClientConnection *> (Sender);
+                auto pClient = dynamic_cast<CHTTPClient *> (pConnection->Client());
+
+                DebugReply(pConnection->Reply());
+
+                Log()->Error(APP_LOG_EMERG, 0, "[%s:%d] %s", pClient->Host().c_str(), pClient->Port(), E.what());
+            };
+
+            CLocation token_uri(URI);
+
+            auto pClient = GetClient(token_uri.hostname, token_uri.port);
+
+            pClient->Data().Values("token_uri", token_uri.pathname);
+            pClient->Data().Values("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer");
+            pClient->Data().Values("assertion", Assertion);
+
+            pClient->OnRequest(OnRequest);
+            pClient->OnExecute(static_cast<COnSocketExecuteEvent &&>(OnDone));
+            pClient->OnException(OnFailed == nullptr ? OnException : static_cast<COnSocketExceptionEvent &&>(OnFailed));
+
+            pClient->Active(true);
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
         void CServerProcess::LoadProviders(CProviders &Providers) {
 
             const CString FileName(Config()->ConfPrefix() + "oauth2.conf");

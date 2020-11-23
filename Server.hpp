@@ -153,6 +153,9 @@ namespace Apostol {
             int TimerInterval() const { return m_TimerInterval; }
             void TimerInterval(int Value) { SetTimerInterval(Value); }
 
+            void FetchAccessToken(const CString &URI, const CString &Assertion,
+                COnSocketExecuteEvent && OnDone, COnSocketExceptionEvent && OnFailed = nullptr);
+
             static void LoadProviders(CProviders &Providers);
             static void LoadSites(CSites &Sites);
 
