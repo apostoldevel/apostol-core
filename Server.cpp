@@ -114,24 +114,24 @@ namespace Apostol {
                 pCommand->OnCommand(std::bind(&CServerProcess::DoPut, this, _1));
 
                 pCommand = AHandlers->Add();
-                LCommand->Command() = _T("DELETE");
-                LCommand->OnCommand(std::bind(&CServerProcess::DoDelete, this, _1));
+                pCommand->Command() = _T("DELETE");
+                pCommand->OnCommand(std::bind(&CServerProcess::DoDelete, this, _1));
 
-                LCommand = AHandlers->Add();
-                LCommand->Command() = _T("HEAD");
-                LCommand->OnCommand(std::bind(&CServerProcess::DoHead, this, _1));
+                pCommand = AHandlers->Add();
+                pCommand->Command() = _T("HEAD");
+                pCommand->OnCommand(std::bind(&CServerProcess::DoHead, this, _1));
 
-                LCommand = AHandlers->Add();
-                LCommand->Command() = _T("PATCH");
-                LCommand->OnCommand(std::bind(&CServerProcess::DoPatch, this, _1));
+                pCommand = AHandlers->Add();
+                pCommand->Command() = _T("PATCH");
+                pCommand->OnCommand(std::bind(&CServerProcess::DoPatch, this, _1));
 
-                LCommand = AHandlers->Add();
-                LCommand->Command() = _T("TRACE");
-                LCommand->OnCommand(std::bind(&CServerProcess::DoTrace, this, _1));
+                pCommand = AHandlers->Add();
+                pCommand->Command() = _T("TRACE");
+                pCommand->OnCommand(std::bind(&CServerProcess::DoTrace, this, _1));
 
-                LCommand = AHandlers->Add();
-                LCommand->Command() = _T("CONNECT");
-                LCommand->OnCommand(std::bind(&CServerProcess::DoConnect, this, _1));
+                pCommand = AHandlers->Add();
+                pCommand->Command() = _T("CONNECT");
+                pCommand->OnCommand(std::bind(&CServerProcess::DoConnect, this, _1));
 #endif
             }
         }
