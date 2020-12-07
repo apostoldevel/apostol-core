@@ -56,64 +56,64 @@ namespace Apostol {
 
             if (Assigned(AHandlers)) {
 
-                CCommandHandler *LCommand;
+                CCommandHandler *pCommand;
 
                 AHandlers->ParseParamsDefault(false);
                 AHandlers->DisconnectDefault(ADisconnect);
 #if defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE >= 9)
-                LCommand =AHandlers->Add();
-                LCommand->Command() = _T("GET");
-                LCommand->OnCommand([this](auto && ACommand) { DoGet(ACommand); });
+                pCommand =AHandlers->Add();
+                pCommand->Command() = _T("GET");
+                pCommand->OnCommand([this](auto && ACommand) { DoGet(ACommand); });
 
-                LCommand = AHandlers->Add();
-                LCommand->Command() = _T("POST");
-                LCommand->OnCommand([this](auto && ACommand) { DoPost(ACommand); });
+                pCommand = AHandlers->Add();
+                pCommand->Command() = _T("POST");
+                pCommand->OnCommand([this](auto && ACommand) { DoPost(ACommand); });
 
-                LCommand = AHandlers->Add();
-                LCommand->Command() = _T("OPTIONS");
-                LCommand->OnCommand([this](auto && ACommand) { DoOptions(ACommand); });
+                pCommand = AHandlers->Add();
+                pCommand->Command() = _T("OPTIONS");
+                pCommand->OnCommand([this](auto && ACommand) { DoOptions(ACommand); });
 
-                LCommand = AHandlers->Add();
-                LCommand->Command() = _T("PUT");
-                LCommand->OnCommand([this](auto && ACommand) { DoPut(ACommand); });
+                pCommand = AHandlers->Add();
+                pCommand->Command() = _T("PUT");
+                pCommand->OnCommand([this](auto && ACommand) { DoPut(ACommand); });
 
-                LCommand = AHandlers->Add();
-                LCommand->Command() = _T("DELETE");
-                LCommand->OnCommand([this](auto && ACommand) { DoDelete(ACommand); });
+                pCommand = AHandlers->Add();
+                pCommand->Command() = _T("DELETE");
+                pCommand->OnCommand([this](auto && ACommand) { DoDelete(ACommand); });
 
-                LCommand = AHandlers->Add();
-                LCommand->Command() = _T("HEAD");
-                LCommand->OnCommand([this](auto && ACommand) { DoHead(ACommand); });
+                pCommand = AHandlers->Add();
+                pCommand->Command() = _T("HEAD");
+                pCommand->OnCommand([this](auto && ACommand) { DoHead(ACommand); });
 
-                LCommand = AHandlers->Add();
-                LCommand->Command() = _T("PATCH");
-                LCommand->OnCommand([this](auto && ACommand) { DoPatch(ACommand); });
+                pCommand = AHandlers->Add();
+                pCommand->Command() = _T("PATCH");
+                pCommand->OnCommand([this](auto && ACommand) { DoPatch(ACommand); });
 
-                LCommand = AHandlers->Add();
-                LCommand->Command() = _T("TRACE");
-                LCommand->OnCommand([this](auto && ACommand) { DoTrace(ACommand); });
+                pCommand = AHandlers->Add();
+                pCommand->Command() = _T("TRACE");
+                pCommand->OnCommand([this](auto && ACommand) { DoTrace(ACommand); });
 
-                LCommand = AHandlers->Add();
-                LCommand->Command() = _T("CONNECT");
-                LCommand->OnCommand([this](auto && ACommand) { DoConnect(ACommand); });
+                pCommand = AHandlers->Add();
+                pCommand->Command() = _T("CONNECT");
+                pCommand->OnCommand([this](auto && ACommand) { DoConnect(ACommand); });
 #else
-                LCommand =AHandlers->Add();
-                LCommand->Command() = _T("GET");
-                LCommand->OnCommand(std::bind(&CServerProcess::DoGet, this, _1));
+                pCommand =AHandlers->Add();
+                pCommand->Command() = _T("GET");
+                pCommand->OnCommand(std::bind(&CServerProcess::DoGet, this, _1));
 
-                LCommand = AHandlers->Add();
-                LCommand->Command() = _T("POST");
-                LCommand->OnCommand(std::bind(&CServerProcess::DoPost, this, _1));
+                pCommand = AHandlers->Add();
+                pCommand->Command() = _T("POST");
+                pCommand->OnCommand(std::bind(&CServerProcess::DoPost, this, _1));
 
-                LCommand = AHandlers->Add();
-                LCommand->Command() = _T("OPTIONS");
-                LCommand->OnCommand(std::bind(&CServerProcess::DoOptions, this, _1));
+                pCommand = AHandlers->Add();
+                pCommand->Command() = _T("OPTIONS");
+                pCommand->OnCommand(std::bind(&CServerProcess::DoOptions, this, _1));
 
-                LCommand = AHandlers->Add();
-                LCommand->Command() = _T("PUT");
-                LCommand->OnCommand(std::bind(&CServerProcess::DoPut, this, _1));
+                pCommand = AHandlers->Add();
+                pCommand->Command() = _T("PUT");
+                pCommand->OnCommand(std::bind(&CServerProcess::DoPut, this, _1));
 
-                LCommand = AHandlers->Add();
+                pCommand = AHandlers->Add();
                 LCommand->Command() = _T("DELETE");
                 LCommand->OnCommand(std::bind(&CServerProcess::DoDelete, this, _1));
 

@@ -982,8 +982,8 @@ namespace Apostol {
         void CModuleProcess::DoTimer(CPollEventHandler *AHandler) {
             uint64_t exp;
 
-            auto LTimer = dynamic_cast<CEPollTimer *> (AHandler->Binding());
-            LTimer->Read(&exp, sizeof(uint64_t));
+            auto pTimer = dynamic_cast<CEPollTimer *> (AHandler->Binding());
+            pTimer->Read(&exp, sizeof(uint64_t));
 
             try {
                 HeartbeatModules();

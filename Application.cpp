@@ -1044,9 +1044,9 @@ namespace Apostol {
         CProcessWorker::CProcessWorker(CCustomProcess *AParent, CApplication *AApplication) :
                 inherited(AParent, AApplication, ptWorker, "worker"), CWorkerProcess() {
 
-            auto LParent = dynamic_cast<CServerProcess *>(AParent);
-            if (LParent != nullptr) {
-                Server() = LParent->Server();
+            auto pParent = dynamic_cast<CServerProcess *>(AParent);
+            if (pParent != nullptr) {
+                Server() = pParent->Server();
                 Log()->Error(APP_LOG_DEBUG, 0, "worker process: http server assigned by parent");
             } else {
                 InitializeServer(AApplication->Title());
@@ -1147,9 +1147,9 @@ namespace Apostol {
         CProcessHelper::CProcessHelper(CCustomProcess *AParent, CApplication *AApplication) :
                 inherited(AParent, AApplication, ptHelper, "helper"), CHelperProcess() {
 
-            auto LParent = dynamic_cast<CServerProcess *>(AParent);
-            if (LParent != nullptr) {
-                Server() = LParent->Server();
+            auto pParent = dynamic_cast<CServerProcess *>(AParent);
+            if (pParent != nullptr) {
+                Server() = pParent->Server();
                 Log()->Error(APP_LOG_DEBUG, 0, "helper process: http server assigned by parent");
             } else {
                 InitializeServer(AApplication->Title());
