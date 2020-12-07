@@ -293,51 +293,51 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         CPQPollQuery *CServerProcess::GetQuery(CPollConnection *AConnection) {
-            CPQPollQuery *LQuery = nullptr;
+            CPQPollQuery *pQuery = nullptr;
 
             if (m_PQServer.Active()) {
-                LQuery = m_PQServer.GetQuery();
+                pQuery = m_PQServer.GetQuery();
 #if defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE >= 9)
-                LQuery->OnSendQuery([this](auto && AQuery) { DoPQSendQuery(AQuery); });
-                LQuery->OnResultStatus([this](auto && AResult) { DoPQResultStatus(AResult); });
-                LQuery->OnResult([this](auto && AResult, auto && AExecStatus) { DoPQResult(AResult, AExecStatus); });
+                pQuery->OnSendQuery([this](auto && AQuery) { DoPQSendQuery(AQuery); });
+                pQuery->OnResultStatus([this](auto && AResult) { DoPQResultStatus(AResult); });
+                pQuery->OnResult([this](auto && AResult, auto && AExecStatus) { DoPQResult(AResult, AExecStatus); });
 #else
-                LQuery->OnSendQuery(std::bind(&CServerProcess::DoPQSendQuery, this, _1));
-                LQuery->OnResultStatus(std::bind(&CServerProcess::DoPQResultStatus, this, _1));
-                LQuery->OnResult(std::bind(&CServerProcess::DoPQResult, this, _1, _2));
+                pQuery->OnSendQuery(std::bind(&CServerProcess::DoPQSendQuery, this, _1));
+                pQuery->OnResultStatus(std::bind(&CServerProcess::DoPQResultStatus, this, _1));
+                pQuery->OnResult(std::bind(&CServerProcess::DoPQResult, this, _1, _2));
 #endif
-                LQuery->PollConnection(AConnection);
+                pQuery->PollConnection(AConnection);
             }
 
-            return LQuery;
+            return pQuery;
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        bool CServerProcess::ExecSQL(const CStringList &SQL, CPollConnection *AConnection,
+        CPQPollQuery *CServerProcess::ExecSQL(const CStringList &SQL, CPollConnection *AConnection,
                 COnPQPollQueryExecutedEvent &&OnExecuted, COnPQPollQueryExceptionEvent &&OnException) {
 
-            auto LQuery = GetQuery(AConnection);
+            auto pQuery = GetQuery(AConnection);
 
-            if (LQuery == nullptr)
-                throw Delphi::Exception::Exception("ExecSQL: GetQuery() failed!");
+            if (pQuery == nullptr)
+                throw Delphi::Exception::Exception(_T("ExecSQL: Get SQL query failed."));
 
             if (OnExecuted != nullptr)
-                LQuery->OnPollExecuted(static_cast<COnPQPollQueryExecutedEvent &&>(OnExecuted));
+                pQuery->OnPollExecuted(static_cast<COnPQPollQueryExecutedEvent &&>(OnExecuted));
 
             if (OnException != nullptr)
-                LQuery->OnException(static_cast<COnPQPollQueryExceptionEvent &&>(OnException));
+                pQuery->OnException(static_cast<COnPQPollQueryExceptionEvent &&>(OnException));
 
-            LQuery->SQL() = SQL;
+            pQuery->SQL() = SQL;
 
-            if (LQuery->Start() != POLL_QUERY_START_ERROR) {
-                return true;
-            } else {
-                delete LQuery;
+            if (pQuery->Start() == POLL_QUERY_START_ERROR) {
+                delete pQuery;
+                throw Delphi::Exception::Exception(_T("ExecSQL: Start SQL query failed."));
             }
 
-            Log()->Error(APP_LOG_ALERT, 0, "ExecSQL: Start() failed!");
+            if (AConnection != nullptr)
+                AConnection->CloseConnection(false);
 
-            return false;
+            return pQuery;
         }
         //--------------------------------------------------------------------------------------------------------------
 

@@ -82,67 +82,7 @@ namespace Apostol {
                     m_Handler(AConnection);
             }
         };
-        //--------------------------------------------------------------------------------------------------------------
-#ifdef WITH_POSTGRESQL
-        class CJob: CCollectionItem {
-        private:
 
-            CString m_Identity;
-
-            CString m_CacheFile;
-
-            CHTTPReply m_Reply;
-
-            CPQPollQuery *m_pPollQuery;
-
-            CStringList m_Data;
-
-        public:
-
-            explicit CJob(CCollection *ACCollection);
-
-            ~CJob() override = default;
-
-            CString &Identity() { return m_Identity; };
-            const CString &Identity() const { return m_Identity; };
-
-            CString &CacheFile() { return m_CacheFile; };
-            const CString &CacheFile() const { return m_CacheFile; };
-
-            CPQPollQuery *PollQuery() { return m_pPollQuery; };
-            void PollQuery(CPQPollQuery *Value) { m_pPollQuery = Value; };
-
-            CHTTPReply &Reply() { return m_Reply; };
-            const CHTTPReply &Reply() const { return m_Reply; };
-
-            CStringList &Data() { return m_Data; }
-            const CStringList& Data() const { return m_Data; }
-        };
-        //--------------------------------------------------------------------------------------------------------------
-
-        class CJobManager: CCollection {
-            typedef CCollection inherited;
-        private:
-
-            CJob *Get(int Index);
-            void Set(int Index, CJob *Value);
-
-        public:
-
-            CJobManager(): CCollection(this) {
-
-            }
-
-            CJob *Add(CPQPollQuery *Query);
-
-            CJob *FindJobById(const CString &Id);
-            CJob *FindJobByQuery(CPQPollQuery *Query);
-
-            CJob *Jobs(int Index) { return Get(Index); }
-            void Jobs(int Index, CJob *Value) { Set(Index, Value); }
-
-        };
-#endif
         //--------------------------------------------------------------------------------------------------------------
 
         //-- CApostolModule --------------------------------------------------------------------------------------------
@@ -170,10 +110,6 @@ namespace Apostol {
 
         protected:
 
-            int m_Version;
-#ifdef WITH_POSTGRESQL
-            CJobManager *m_pJobs;
-#endif
             CStringList m_Headers;
 
             CStringList *m_pMethods;
@@ -251,9 +187,7 @@ namespace Apostol {
             static void EnumQuery(CPQResult *APQResult, CPQueryResult& AResult);
             static void QueryToResults(CPQPollQuery *APollQuery, CPQueryResults& AResults);
 
-            void StartQuery(CHTTPServerConnection *AConnection, const CStringList& SQL);
-
-            void ExecSQL(const CStringList &SQL, CPollConnection *AConnection = nullptr,
+            CPQPollQuery *ExecSQL(const CStringList &SQL, CPollConnection *AConnection = nullptr,
                          COnPQPollQueryExecutedEvent && OnExecuted = nullptr,
                          COnPQPollQueryExceptionEvent && OnException = nullptr);
 

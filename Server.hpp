@@ -136,7 +136,7 @@ namespace Apostol {
 
             virtual CPQPollQuery *GetQuery(CPollConnection *AConnection);
 
-            bool ExecSQL(const CStringList &SQL, CPollConnection *AConnection = nullptr,
+            CPQPollQuery *ExecSQL(const CStringList &SQL, CPollConnection *AConnection = nullptr,
                          COnPQPollQueryExecutedEvent && OnExecuted = nullptr,
                          COnPQPollQueryExceptionEvent && OnException = nullptr);
 #endif

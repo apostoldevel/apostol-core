@@ -129,62 +129,7 @@ namespace Apostol {
 
             return S;
         }
-#ifdef WITH_POSTGRESQL
-        //--------------------------------------------------------------------------------------------------------------
 
-        //-- CJob ------------------------------------------------------------------------------------------------------
-
-        //--------------------------------------------------------------------------------------------------------------
-
-        CJob::CJob(CCollection *ACCollection) : CCollectionItem(ACCollection) {
-            m_Identity = ApostolUID();
-            m_pPollQuery = nullptr;
-        }
-
-        //--------------------------------------------------------------------------------------------------------------
-
-        //-- CJobManager -----------------------------------------------------------------------------------------------
-
-        //--------------------------------------------------------------------------------------------------------------
-
-        CJob *CJobManager::Get(int Index) {
-            return (CJob *) inherited::GetItem(Index);
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
-        void CJobManager::Set(int Index, CJob *Value) {
-            inherited::SetItem(Index, (CCollectionItem *) Value);
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
-        CJob *CJobManager::Add(CPQPollQuery *Query) {
-            auto pJob = new CJob(this);
-            pJob->PollQuery(Query);
-            return pJob;
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
-        CJob *CJobManager::FindJobById(const CString &Id) {
-            CJob *pJob = nullptr;
-            for (int I = 0; I < Count(); ++I) {
-                pJob = Get(I);
-                if (pJob->Identity() == Id)
-                    return pJob;
-            }
-            return nullptr;
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
-        CJob *CJobManager::FindJobByQuery(CPQPollQuery *Query) {
-            CJob *pJob = nullptr;
-            for (int I = 0; I < Count(); ++I) {
-                pJob = Get(I);
-                if (pJob->PollQuery() == Query)
-                    return pJob;
-            }
-            return nullptr;
-        }
-#endif
         //--------------------------------------------------------------------------------------------------------------
 
         //-- CApostolModule --------------------------------------------------------------------------------------------
@@ -197,19 +142,12 @@ namespace Apostol {
 
             m_ModuleStatus = msUnknown;
 
-            m_Version = -1;
-#ifdef WITH_POSTGRESQL
-            m_pJobs = new CJobManager();
-#endif
             m_pMethods = CStringList::Create(true);
             m_Headers.Add("Content-Type");
         }
         //--------------------------------------------------------------------------------------------------------------
 
         CApostolModule::~CApostolModule() {
-#ifdef WITH_POSTGRESQL
-            delete m_pJobs;
-#endif
             delete m_pMethods;
         }
         //--------------------------------------------------------------------------------------------------------------
@@ -762,37 +700,7 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CApostolModule::StartQuery(CHTTPServerConnection *AConnection, const CStringList& SQL) {
-
-            auto pQuery = m_Version == 2 ? GetQuery(nullptr) : GetQuery(AConnection);
-
-            if (pQuery == nullptr)
-                throw Delphi::Exception::Exception(_T("StartQuery: Get SQL query failed."));
-
-            pQuery->SQL() = SQL;
-
-            if (pQuery->Start() == POLL_QUERY_START_ERROR) {
-                delete pQuery;
-                throw Delphi::Exception::Exception(_T("StartQuery: Start SQL query failed."));
-            }
-
-            if (m_Version == 2) {
-                auto pJob = m_pJobs->Add(pQuery);
-                pJob->Data() = AConnection->Data();
-
-                auto pReply = AConnection->Reply();
-                pReply->Content = _T("{\"identity\":" "\"") + pJob->Identity() + _T("\"}");
-
-                AConnection->SendReply(CHTTPReply::accepted);
-                AConnection->CloseConnection(true);
-            } else {
-                // Wait query result...
-                AConnection->CloseConnection(false);
-            }
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
-        void CApostolModule::ExecSQL(const CStringList &SQL, CPollConnection *AConnection,
+        CPQPollQuery *CApostolModule::ExecSQL(const CStringList &SQL, CPollConnection *AConnection,
                 COnPQPollQueryExecutedEvent &&OnExecuted, COnPQPollQueryExceptionEvent &&OnException) {
 
             auto pQuery = GetQuery(AConnection);
@@ -812,6 +720,11 @@ namespace Apostol {
                 delete pQuery;
                 throw Delphi::Exception::Exception(_T("ExecSQL: Start SQL query failed."));
             }
+
+            if (AConnection != nullptr)
+                AConnection->CloseConnection(false);
+
+            return pQuery;
         }
         //--------------------------------------------------------------------------------------------------------------
 
