@@ -827,9 +827,9 @@ namespace Apostol {
 
             CString sPayload((LPCTSTR) ARequest->Payload()->Memory() + delta, size);
 
-            DebugMessage("[FIN: %#x; OP: %#x; MASK: %#x] [%d] [%d] Request:\n%s\n",
-                         ARequest->Frame().FIN, ARequest->Frame().Opcode, ARequest->Frame().Mask,
-                         ARequest->Size(), ARequest->Payload()->Size(), sPayload.c_str()
+            DebugMessage("[FIN: %#x; OP: %#x; MASK: %#x LEN: %d] [%d] [%d] [%d] [%d] Request:\n%s\n",
+                         ARequest->Frame().FIN, ARequest->Frame().Opcode, ARequest->Frame().Mask, ARequest->Frame().Length,
+                         ARequest->Size(), ARequest->Payload()->Size(), delta, size, sPayload.c_str()
             );
         }
         //--------------------------------------------------------------------------------------------------------------
