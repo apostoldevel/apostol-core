@@ -184,6 +184,8 @@ namespace Apostol {
 
             m_PQServer.OnEventHandlerException([this](auto && AHandler, auto && AException) { DoServerEventHandlerException(AHandler, AException); });
 
+            m_PQServer.OnNotify([this](auto && AConnection, auto && ANotify) { DoPQNotify(AConnection, ANotify); });
+
             m_PQServer.OnError([this](auto && AConnection) { DoPQError(AConnection); });
             m_PQServer.OnStatus([this](auto && AConnection) { DoPQStatus(AConnection); });
             m_PQServer.OnPollingStatus([this](auto && AConnection) { DoPQPollingStatus(AConnection); });
@@ -200,6 +202,8 @@ namespace Apostol {
             m_PQServer.OnServerException(std::bind(&CServerProcess::DoPQServerException, this, _1, _2));
 
             m_PQServer.OnEventHandlerException(std::bind(&CServerProcess::DoServerEventHandlerException, this, _1, _2));
+
+            m_PQServer.OnNotify(std::bind(&CServerProcess::DoPQNotify, this, _1, _2));
 
             m_PQServer.OnError(std::bind(&CServerProcess::DoPQError, this, _1));
             m_PQServer.OnStatus(std::bind(&CServerProcess::DoPQStatus, this, _1));
@@ -338,6 +342,17 @@ namespace Apostol {
                 AConnection->CloseConnection(false);
 
             return pQuery;
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CServerProcess::DoPQNotify(CPQConnection *AConnection, PGnotify *ANotify) {
+            const auto& Info = AConnection->ConnInfo();
+            if (Info.ConnInfo().IsEmpty()) {
+                Log()->Postgres(APP_LOG_NOTICE, _T("ASYNC NOTIFY of '%s' received from backend PID %d"), ANotify->relname, ANotify->be_pid);
+            } else {
+                Log()->Postgres(APP_LOG_NOTICE, "[%d] [postgresql://%s@%s:%s/%s] ASYNC NOTIFY of '%s' received from backend PID %d", AConnection->Socket(),
+                                Info["user"].c_str(), Info["host"].c_str(), Info["port"].c_str(), Info["dbname"].c_str(), ANotify->relname, ANotify->be_pid);
+            }
         }
         //--------------------------------------------------------------------------------------------------------------
 

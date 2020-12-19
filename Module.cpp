@@ -728,6 +728,10 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
+        void CApostolModule::DoPostgresNotify(CPQConnection *AConnection, PGnotify *ANotify) {
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
         void CApostolModule::DoPostgresQueryExecuted(CPQPollQuery *APollQuery) {
 
             auto pConnection = dynamic_cast<CHTTPServerConnection *> (APollQuery->PollConnection());

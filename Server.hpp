@@ -99,6 +99,8 @@ namespace Apostol {
             virtual void DoPQServerException(CPQServer *AServer, const Delphi::Exception::Exception &E);
             virtual void DoPQConnectException(CPQConnection *AConnection, const Delphi::Exception::Exception &E);
 
+            virtual void DoPQNotify(CPQConnection *AConnection, PGnotify *ANotify);
+
             virtual void DoPQError(CPQConnection *AConnection);
             virtual void DoPQStatus(CPQConnection *AConnection);
             virtual void DoPQPollingStatus(CPQConnection *AConnection);

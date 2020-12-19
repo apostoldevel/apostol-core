@@ -134,6 +134,7 @@ namespace Apostol {
             const CString& GetAllowedHeaders() const;
 
 #ifdef WITH_POSTGRESQL
+            virtual void DoPostgresNotify(CPQConnection *AConnection, PGnotify *ANotify);
             virtual void DoPostgresQueryExecuted(CPQPollQuery *APollQuery);
             virtual void DoPostgresQueryException(CPQPollQuery *APollQuery, const Delphi::Exception::Exception &E);
 #endif
@@ -188,8 +189,7 @@ namespace Apostol {
             static void QueryToResults(CPQPollQuery *APollQuery, CPQueryResults& AResults);
 
             CPQPollQuery *ExecSQL(const CStringList &SQL, CPollConnection *AConnection = nullptr,
-                         COnPQPollQueryExecutedEvent && OnExecuted = nullptr,
-                         COnPQPollQueryExceptionEvent && OnException = nullptr);
+                COnPQPollQueryExecutedEvent && OnExecuted = nullptr, COnPQPollQueryExceptionEvent && OnException = nullptr);
 
             static void PQResultToList(CPQResult *Result, CStringList &List);
             static void PQResultToJson(CPQResult *Result, CString &Json, bool DataArray = false, const CString &ObjectName = CString());
