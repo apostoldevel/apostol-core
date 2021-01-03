@@ -575,9 +575,9 @@ namespace Apostol {
             auto pConnection = dynamic_cast<CHTTPServerConnection *>(Sender);
             if (pConnection != nullptr) {
 #ifdef WITH_POSTGRESQL
-                auto LPollQuery = m_PQServer.FindQueryByConnection(pConnection);
-                if (LPollQuery != nullptr) {
-                    LPollQuery->PollConnection(nullptr);
+                auto pPollQuery = m_PQServer.FindQueryByConnection(pConnection);
+                if (pPollQuery != nullptr) {
+                    pPollQuery->PollConnection(nullptr);
                 }
 #endif
                 Log()->Message(_T("Client disconnected."));
