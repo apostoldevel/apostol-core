@@ -822,7 +822,7 @@ namespace Apostol {
         void CApostolModule::WSDebugRequest(CWebSocket *ARequest) {
 
             size_t delta = 0;
-            size_t size = ARequest->Size();
+            size_t size = ARequest->Payload()->Size();
 
             if (size > MaxFormatStringLength) {
                 delta = size - MaxFormatStringLength;
@@ -841,7 +841,7 @@ namespace Apostol {
         void CApostolModule::WSDebugReply(CWebSocket *AReply) {
 
             size_t delta = 0;
-            size_t size = AReply->Size();
+            size_t size = AReply->Payload()->Size();
 
             if (size > MaxFormatStringLength) {
                 delta = size - MaxFormatStringLength;
@@ -902,7 +902,7 @@ namespace Apostol {
             };
 
             AConnection->OnWaitRequest(OnWaitRequest);
-            //AConnection->OnRequest(OnRequest);
+            AConnection->OnRequest(OnRequest);
             AConnection->OnReply(OnReply);
         }
         //--------------------------------------------------------------------------------------------------------------
