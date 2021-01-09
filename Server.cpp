@@ -417,7 +417,7 @@ namespace Apostol {
 
         void CServerProcess::DoPQResult(CPQResult *AResult, ExecStatusType AExecStatus) {
 #ifdef _DEBUG
-            if (AExecStatus == PGRES_TUPLES_OK || AExecStatus == PGRES_SINGLE_TUPLE) {
+            if (AExecStatus == PGRES_TUPLES_OK || AExecStatus == PGRES_COMMAND_OK) {
                 if (AResult->nTuples() > 0) {
 
                     CString Print;
