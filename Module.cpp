@@ -819,40 +819,21 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CApostolModule::WSDebugRequest(CWebSocket *ARequest) {
+        void CApostolModule::WSDebug(CWebSocket *AData) {
 
             size_t delta = 0;
-            size_t size = ARequest->Payload()->Size();
+            size_t size = AData->Payload()->Size();
 
             if (size > MaxFormatStringLength) {
                 delta = size - MaxFormatStringLength;
                 size = MaxFormatStringLength;
             }
 
-            CString sPayload((LPCTSTR) ARequest->Payload()->Memory() + delta, size);
+            CString sPayload((LPCTSTR) AData->Payload()->Memory() + delta, size);
 
-            DebugMessage("[FIN: %#x; OP: %#x; MASK: %#x LEN: %d] [%d] [%d] [%d] [%d] Request:\n%s\n",
-                         ARequest->Frame().FIN, ARequest->Frame().Opcode, ARequest->Frame().Mask, ARequest->Frame().Length,
-                         ARequest->Size(), ARequest->Payload()->Size(), delta, size, sPayload.c_str()
-            );
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
-        void CApostolModule::WSDebugReply(CWebSocket *AReply) {
-
-            size_t delta = 0;
-            size_t size = AReply->Payload()->Size();
-
-            if (size > MaxFormatStringLength) {
-                delta = size - MaxFormatStringLength;
-                size = MaxFormatStringLength;
-            }
-
-            CString sPayload((LPCTSTR) AReply->Payload()->Memory() + delta, size);
-
-            DebugMessage("[FIN: %#x; OP: %#x; MASK: %#x] [%d] [%d] Request:\n%s\n",
-                         AReply->Frame().FIN, AReply->Frame().Opcode, AReply->Frame().Mask,
-                         AReply->Size(), AReply->Payload()->Size(), sPayload.c_str()
+            DebugMessage("[FIN: %#x; OP: %#x; MASK: %#x LEN: %d] [%d] [%d] [%d] [%d]\n%s\n",
+                         AData->Frame().FIN, AData->Frame().Opcode, AData->Frame().Mask, AData->Frame().Length,
+                         AData->Size(), AData->Payload()->Size(), delta, size, sPayload.c_str()
             );
         }
         //--------------------------------------------------------------------------------------------------------------
@@ -865,7 +846,7 @@ namespace Apostol {
             DebugMessage(_T("\n[%p] [%s:%d] [%d] [WebSocket] "), AConnection, AConnection->Socket()->Binding()->PeerIP(),
                          AConnection->Socket()->Binding()->PeerPort(), AConnection->Socket()->Binding()->Handle());
 
-            WSDebugRequest(AConnection->WSRequest());
+            WSDebug(AConnection->WSRequest());
 
             static auto OnRequest = [](CObject *Sender) {
                 auto pConnection = dynamic_cast<CHTTPServerConnection *> (Sender);
@@ -875,7 +856,7 @@ namespace Apostol {
                                  pBinding->PeerPort(), pBinding->Handle());
                 }
 
-                WSDebugRequest(pConnection->WSRequest());
+                WSDebug(pConnection->WSRequest());
             };
 
             static auto OnWaitRequest = [](CObject *Sender) {
@@ -887,7 +868,7 @@ namespace Apostol {
                                  pBinding->PeerPort(), pBinding->Handle());
                 }
 
-                WSDebugRequest(pConnection->WSRequest());
+                WSDebug(pConnection->WSRequest());
             };
 
             static auto OnReply = [](CObject *Sender) {
@@ -898,11 +879,11 @@ namespace Apostol {
                                  pBinding->PeerPort(), pBinding->Handle());
                 }
 
-                WSDebugReply(pConnection->WSReply());
+                WSDebug(pConnection->WSReply());
             };
 
             AConnection->OnWaitRequest(OnWaitRequest);
-            AConnection->OnRequest(OnRequest);
+            //AConnection->OnRequest(OnRequest);
             AConnection->OnReply(OnReply);
         }
         //--------------------------------------------------------------------------------------------------------------
