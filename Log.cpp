@@ -267,26 +267,25 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CLog::ErrorCore(u_int ALevel, int AError, LPCSTR AFormat, CLogType ALogType, va_list args)
-        {
-            char        *p, *last, *msg;
-            ssize_t      n;
-            uint_t       wrote_stderr;
-            bool         debug_connection;
-            char         errstr[LOG_MAX_ERROR_STR] = {0};
+        void CLog::ErrorCore(u_int ALevel, int AError, LPCSTR AFormat, CLogType ALogType, va_list args) {
+            TCHAR       *p, *last, *msg;
+            ssize_t     n;
+            bool        wrote_stderr;
 
-            char         timestr[LOG_MAX_ERROR_STR] = {0};
-            time_t       itime;
-            struct tm   *timeinfo;
+            TCHAR       errStr[LOG_MAX_ERROR_STR] = {0};
+            TCHAR       timeStr[LOG_MAX_ERROR_STR] = {0};
 
-            last = errstr + LOG_MAX_ERROR_STR;
+            time_t      itime;
+            struct tm   *timeInfo;
+
+            last = errStr + LOG_MAX_ERROR_STR;
 
             itime = time(&itime);
-            timeinfo = localtime(&itime);
+            timeInfo = localtime(&itime);
 
-            strftime(timestr, LOG_MAX_ERROR_STR, "%Y/%m/%d %H:%M:%S", timeinfo);
+            strftime(timeStr, LOG_MAX_ERROR_STR, "%Y/%m/%d %H:%M:%S", timeInfo);
 
-            p = MemCopy(errstr, timestr, strlen(timestr));
+            p = MemCopy(errStr, timeStr, strlen(timeStr));
             p = ld_slprintf(p, last, " [%V] ", &err_levels[ALevel]);
 
             /* pid#tid */
@@ -306,58 +305,30 @@ namespace Apostol {
 
             linefeed(p);
 
-            wrote_stderr = 0;
-            debug_connection = (Level() & APP_LOG_DEBUG_CONNECTION) != 0;
+            wrote_stderr = false;
 
             CLogFile *logfile = First();
+            while (Level() >= ALevel && logfile) {
+                if (logfile->LogType() == ALogType && logfile->Level() >= ALevel && itime != m_DiskFullTime) {
+                    n = write_fd(logfile->Handle(), errStr, p - errStr);
 
-            while (logfile) {
+                    if (n == -1 && errno == ENOSPC) {
+                        DiskFullTime(itime);
+                    }
 
-                if (!(logfile->LogType() == ALogType && logfile->Level() >= ALevel)) {
-                    goto next;
+                    wrote_stderr = logfile->Handle() == STDERR_FILENO;
                 }
-
-                if (Level() < ALevel && !debug_connection) {
-                    break;
-                }
-
-                if (itime == m_DiskFullTime) {
-
-                    /*
-                     * on FreeBSD writing to a full filesystem with enabled softupdates
-                     * may block process for much longer time than writing to non-full
-                     * filesystem, so we skip writing to a log for one second
-                     */
-
-                    goto next;
-                }
-
-                n = write_fd(logfile->Handle(), errstr, p - errstr);
-
-                if (n == -1 && errno == ENOSPC) {
-                    DiskFullTime(itime);
-                }
-
-                if (logfile->Handle() == STDERR_FILENO) {
-                    wrote_stderr = 1;
-                }
-
-                next:
 
                 logfile = Next();
             }
 
-            if (!UseStdErr() || ALevel > APP_LOG_WARN || wrote_stderr)
-            {
-                DebugMessage(errstr);
-                return;
+            DebugMessage(errStr);
+
+            if (UseStdErr() && ALevel <= APP_LOG_WARN && wrote_stderr) {
+                msg -= (9 + err_levels[ALevel].len + 3);
+                (void) ld_sprintf(msg, "apostol: [%V] ", &err_levels[ALevel]);
+                (void) write_console(STDERR_FILENO, msg, p - msg);
             }
-
-            msg -= (9 + err_levels[ALevel].len + 3);
-
-            (void) ld_sprintf(msg, "apostol: [%V] ", &err_levels[ALevel]);
-
-            (void) write_console(STDERR_FILENO, msg, p - msg);
         }
         //--------------------------------------------------------------------------------------------------------------
 
