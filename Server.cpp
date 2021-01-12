@@ -389,7 +389,7 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoPQError(CPQConnection *AConnection) {
-            Log()->Postgres(APP_LOG_EMERG, "Error: %s", AConnection->GetErrorMessage());
+            Log()->Postgres(APP_LOG_ERR, "Error: %s", AConnection->GetErrorMessage());
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -466,11 +466,11 @@ namespace Apostol {
                     Log()->Postgres(APP_LOG_DEBUG, "%s", Print.c_str());
                 }
             } else {
-                Log()->Postgres(APP_LOG_EMERG, "%s", AResult->GetErrorMessage());
+                Log()->Postgres(APP_LOG_ERR, "%s", AResult->GetErrorMessage());
             }
 #else
             if (!(AExecStatus == PGRES_TUPLES_OK || AExecStatus == PGRES_SINGLE_TUPLE)) {
-                Log()->Postgres(APP_LOG_EMERG, "%s", AResult->GetErrorMessage());
+                Log()->Postgres(APP_LOG_ERR, "%s", AResult->GetErrorMessage());
             }
 #endif
         }
@@ -481,7 +481,7 @@ namespace Apostol {
             if (pConnection != nullptr) {
                 const auto& Info = pConnection->ConnInfo();
                 if (!Info.ConnInfo().IsEmpty()) {
-                    Log()->Postgres(APP_LOG_EMERG, "[%d] [postgresql://%s@%s:%s/%s] Connected.", pConnection->PID(),
+                    Log()->Postgres(APP_LOG_INFO, "[%d] [postgresql://%s@%s:%s/%s] Connected.", pConnection->PID(),
                                     Info["user"].c_str(), Info["host"].c_str(), Info["port"].c_str(), Info["dbname"].c_str());
                 }
             }
@@ -493,7 +493,7 @@ namespace Apostol {
             if (pConnection != nullptr) {
                 const auto& Info = pConnection->ConnInfo();
                 if (!Info.ConnInfo().IsEmpty()) {
-                    Log()->Postgres(APP_LOG_EMERG, "[%d] [postgresql://%s@%s:%s/%s] Disconnected.", pConnection->PID(),
+                    Log()->Postgres(APP_LOG_INFO, "[%d] [postgresql://%s@%s:%s/%s] Disconnected.", pConnection->PID(),
                                     Info["user"].c_str(), Info["host"].c_str(), Info["port"].c_str(), Info["dbname"].c_str());
                 }
             }
@@ -598,10 +598,9 @@ namespace Apostol {
             auto pConnection = dynamic_cast<CHTTPClientConnection *>(Sender);
             if (pConnection != nullptr) {
                 if (pConnection->ClosedGracefully()) {
-                    auto LClient = dynamic_cast<CHTTPClient *> (pConnection->Client());
-                    if (LClient != nullptr) {
-                        Log()->Error(APP_LOG_EMERG, 0, "[%s:%d] Client closed connection.", LClient->Host().c_str(),
-                                     LClient->Port());
+                    auto pClient = dynamic_cast<CHTTPClient *> (pConnection->Client());
+                    if (pClient != nullptr) {
+                        Log()->Message("[%s:%d] Client closed connection.", pClient->Host().c_str(), pClient->Port());
                     }
                 } else {
                     Log()->Message(_T("[%s:%d] Client disconnected."), pConnection->Socket()->Binding()->PeerIP(),
@@ -733,7 +732,7 @@ namespace Apostol {
 
                 DebugReply(pConnection->Reply());
 
-                Log()->Error(APP_LOG_EMERG, 0, "[%s:%d] %s", pClient->Host().c_str(), pClient->Port(), E.what());
+                Log()->Error(APP_LOG_ERR, 0, "[%s:%d] %s", pClient->Host().c_str(), pClient->Port(), E.what());
             };
 
             CLocation token_uri(URI);
@@ -788,11 +787,11 @@ namespace Apostol {
                         if (providerName == "default")
                             Providers.Default() = Providers[Index];
                     } else {
-                        Log()->Error(APP_LOG_EMERG, 0, APP_FILE_NOT_FOUND, configFile.c_str());
+                        Log()->Error(APP_LOG_WARN, 0, APP_FILE_NOT_FOUND, configFile.c_str());
                     }
                 }
             } else {
-                Log()->Error(APP_LOG_EMERG, 0, APP_FILE_NOT_FOUND, FileName.c_str());
+                Log()->Error(APP_LOG_WARN, 0, APP_FILE_NOT_FOUND, FileName.c_str());
             }
 
             auto& defaultProvider = Providers.Default();
@@ -845,11 +844,11 @@ namespace Apostol {
                         if (siteName == "default" || siteName == "*")
                             Sites.Default() = Sites[Index];
                     } else {
-                        Log()->Error(APP_LOG_EMERG, 0, APP_FILE_NOT_FOUND, configFile.c_str());
+                        Log()->Error(APP_LOG_WARN, 0, APP_FILE_NOT_FOUND, configFile.c_str());
                     }
                 }
             } else {
-                Log()->Error(APP_LOG_EMERG, 0, APP_FILE_NOT_FOUND, FileName.c_str());
+                Log()->Error(APP_LOG_WARN, 0, APP_FILE_NOT_FOUND, FileName.c_str());
             }
 
             auto& defaultSite = Sites.Default();

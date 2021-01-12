@@ -98,7 +98,7 @@ public:
                 OnInitConfig(IniFile, Default.Name(), Default.Value());
             }
         } else {
-            Log()->Error(APP_LOG_EMERG, 0, APP_FILE_NOT_FOUND, ConfigFile.c_str());
+            Log()->Error(APP_LOG_WARN, 0, APP_FILE_NOT_FOUND, ConfigFile.c_str());
         }
     }
     //--------------------------------------------------------------------------------------------------------------

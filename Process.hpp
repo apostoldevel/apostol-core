@@ -34,7 +34,7 @@ Author:
 
 #define log_failure(msg) {                                  \
   if (GLog != nullptr)                                      \
-    GLog->Error(APP_LOG_EMERG, 0, msg);                     \
+    GLog->Error(APP_LOG_EMERG, 0, "%s", msg);               \
   else                                                      \
     std::cerr << APP_NAME << ": " << (msg) << std::endl;    \
   exit(2);                                                  \

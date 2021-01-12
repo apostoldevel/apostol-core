@@ -79,7 +79,7 @@ namespace Apostol {
             LogFile->LogType(ltAccess);
 
 #ifdef WITH_POSTGRESQL
-            LogFile = Log()->AddLogFile(Config()->PostgresLog().c_str(), APP_LOG_STDERR);
+            LogFile = Log()->AddLogFile(Config()->PostgresLog().c_str(), Level);
             LogFile->LogType(ltPostgres);
 #endif
 
@@ -87,6 +87,7 @@ namespace Apostol {
             const CString &Debug = Config()->LogFiles().Values(_T("debug"));
             if (Debug.IsEmpty()) {
                 Log()->AddLogFile(Config()->ErrorLog().c_str(), APP_LOG_DEBUG);
+                LogFile->LogType(ltDebug);
             }
 #endif
         }
@@ -302,17 +303,17 @@ namespace Apostol {
             if (Config()->Flags().test_config) {
 
                 if (!FileExists(Config()->ConfFile().c_str())) {
-                    Log()->Error(APP_LOG_EMERG, 0, "configuration file %s not found", Config()->ConfFile().c_str());
-                    Log()->Error(APP_LOG_EMERG, 0, "configuration file %s test failed", Config()->ConfFile().c_str());
+                    Log()->Error(APP_LOG_STDERR, 0, "configuration file %s not found", Config()->ConfFile().c_str());
+                    Log()->Error(APP_LOG_STDERR, 0, "configuration file %s test failed", Config()->ConfFile().c_str());
                     ExitRun(1);
                 }
 
                 if (Config()->ErrorCount() == 0) {
-                    Log()->Error(APP_LOG_EMERG, 0, "configuration file %s test is successful", Config()->ConfFile().c_str());
+                    Log()->Error(APP_LOG_STDERR, 0, "configuration file %s test is successful", Config()->ConfFile().c_str());
                     ExitRun(0);
                 }
 
-                Log()->Error(APP_LOG_EMERG, 0, "configuration file %s test failed", Config()->ConfFile().c_str());
+                Log()->Error(APP_LOG_STDERR, 0, "configuration file %s test failed", Config()->ConfFile().c_str());
                 ExitRun(1);
             }
 
@@ -323,11 +324,11 @@ namespace Apostol {
             CreateLogFile();
 
 #ifdef _DEBUG
-            Log()->Error(APP_LOG_EMERG, 0, "%s version: %s (%s build)", Description().c_str(), Version().c_str(), "debug");
+            Log()->Error(APP_LOG_INFO, 0, "%s version: %s (%s build)", Description().c_str(), Version().c_str(), "debug");
 #else
-            Log()->Error(APP_LOG_EMERG, 0, "%s version: %s (%s build)", Description().c_str(), Version().c_str(), "release");
+            Log()->Error(APP_LOG_INFO, 0, "%s version: %s (%s build)", Description().c_str(), Version().c_str(), "release");
 #endif
-            Log()->Error(APP_LOG_EMERG, 0, "Config file: %s", Config()->ConfFile().c_str());
+            Log()->Error(APP_LOG_INFO, 0, "Config file: %s", Config()->ConfFile().c_str());
 
             StartProcess();
         }
@@ -601,7 +602,7 @@ namespace Apostol {
                 }
                 catch (Delphi::Exception::Exception &E)
                 {
-                    Log()->Error(APP_LOG_EMERG, 0, E.what());
+                    Log()->Error(APP_LOG_ERR, 0, "%s", E.what());
                 }
 
                 DoExit();
@@ -1112,7 +1113,7 @@ namespace Apostol {
                 }
                 catch (Delphi::Exception::Exception &E)
                 {
-                    Log()->Error(APP_LOG_EMERG, 0, E.what());
+                    Log()->Error(APP_LOG_ERR, 0, "%s", E.what());
                 }
 
                 if (sig_terminate || sig_quit) {
@@ -1207,7 +1208,7 @@ namespace Apostol {
                 }
                 catch (Delphi::Exception::Exception &E)
                 {
-                    Log()->Error(APP_LOG_EMERG, 0, E.what());
+                    Log()->Error(APP_LOG_ERR, 0, "%s", E.what());
                 }
 
                 if (sig_terminate || sig_quit) {

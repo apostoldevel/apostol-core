@@ -226,7 +226,7 @@ namespace Apostol {
             m_uLevel = APP_LOG_NOTICE;
             m_CurrentIndex = -1;
             m_fUseStdErr = true;
-            m_DiskFullTime = time(nullptr);
+            m_DiskFullTime = 0;
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -308,7 +308,7 @@ namespace Apostol {
             wrote_stderr = false;
 
             CLogFile *logfile = First();
-            while (Level() >= ALevel && logfile) {
+            while (logfile) {
                 if (logfile->LogType() == ALogType && logfile->Level() >= ALevel && itime != m_DiskFullTime) {
                     n = write_fd(logfile->Handle(), errStr, p - errStr);
 

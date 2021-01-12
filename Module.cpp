@@ -424,7 +424,7 @@ namespace Apostol {
 
             AConnection->SendReply(ErrorCode, nullptr, true);
 
-            Log()->Error(ErrorCode == CHTTPReply::internal_server_error ? APP_LOG_EMERG : APP_LOG_NOTICE, 0, _T("ReplyError: %s"), Message.c_str());
+            Log()->Error(ErrorCode == CHTTPReply::internal_server_error ? APP_LOG_EMERG : APP_LOG_ERR, 0, _T("ReplyError: %s"), Message.c_str());
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -749,7 +749,7 @@ namespace Apostol {
                 Postgres::PQResultToJson(pResult, pReply->Content);
             } catch (Delphi::Exception::Exception &E) {
                 ExceptionToJson(status, E, pReply->Content);
-                Log()->Error(APP_LOG_EMERG, 0, E.what());
+                Log()->Error(APP_LOG_ERR, 0, "%s", E.what());
             }
 
             pConnection->SendReply(status, nullptr, true);
@@ -766,7 +766,7 @@ namespace Apostol {
             ExceptionToJson(status, E, pReply->Content);
             pConnection->SendStockReply(status, true);
 
-            Log()->Error(APP_LOG_EMERG, 0, E.what());
+            Log()->Error(APP_LOG_ERR, 0, "%s", E.what());
         }
         //--------------------------------------------------------------------------------------------------------------
 #endif
