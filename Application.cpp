@@ -59,35 +59,36 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CApplication::CreateLogFile() {
-            CLogFile *LogFile;
+            CLogFile *pLogFile;
 
-            Log()->Level(APP_LOG_STDERR);
+            Log()->Level(APP_LOG_DEBUG_CORE);
 
-            u_int Level;
-            for (int I = 0; I < Config()->LogFiles().Count(); ++I) {
+            u_int level;
+            for (int i = 0; i < Config()->LogFiles().Count(); ++i) {
 
-                const CString &Key = Config()->LogFiles().Names(I);
-                const CString &Value = Config()->LogFiles().Values(Key);
+                const auto &key = Config()->LogFiles().Names(i);
+                const auto &value = Config()->LogFiles().Values(key);
 
-                Level = GetLogLevelByName(Key.c_str());
-                if (Level > APP_LOG_STDERR && Level <= APP_LOG_DEBUG) {
-                    Log()->AddLogFile(Value.c_str(), Level);
+                level = GetLogLevelByName(key.c_str());
+                if (level > APP_LOG_STDERR && level <= APP_LOG_DEBUG) {
+                    pLogFile = Log()->AddLogFile(value.c_str(), level);
+                    pLogFile->LogType(ltError);
                 }
             }
 
-            LogFile = Log()->AddLogFile(Config()->AccessLog().c_str(), APP_LOG_STDERR);
-            LogFile->LogType(ltAccess);
+            pLogFile = Log()->AddLogFile(Config()->AccessLog().c_str(), APP_LOG_STDERR);
+            pLogFile->LogType(ltAccess);
 
 #ifdef WITH_POSTGRESQL
-            LogFile = Log()->AddLogFile(Config()->PostgresLog().c_str(), Level);
-            LogFile->LogType(ltPostgres);
+            pLogFile = Log()->AddLogFile(Config()->PostgresLog().c_str(), level);
+            pLogFile->LogType(ltPostgres);
 #endif
 
 #ifdef _DEBUG
-            const CString &Debug = Config()->LogFiles().Values(_T("debug"));
-            if (Debug.IsEmpty()) {
-                Log()->AddLogFile(Config()->ErrorLog().c_str(), APP_LOG_DEBUG);
-                LogFile->LogType(ltDebug);
+            const auto &debug = Config()->LogFiles().Values(_T("debug"));
+            if (debug.IsEmpty()) {
+                pLogFile = Log()->AddLogFile(Config()->ErrorLog().c_str(), APP_LOG_DEBUG);
+                pLogFile->LogType(ltError);
             }
 #endif
         }
@@ -654,7 +655,7 @@ namespace Apostol {
         void CProcessMaster::StartProcess(CProcessType Type, int Flag) {
             switch (Type) {
                 case ptWorker:
-                    for (int I = 0; I < Config()->Workers(); ++I) {
+                    for (int i = 0; i < Config()->Workers(); ++i) {
                         SwapProcess(Type, Flag);
                     }
                     break;
@@ -981,8 +982,8 @@ namespace Apostol {
             CSignal *Signal;
             LPCTSTR lpszSignal = Config()->Signal().c_str();
 
-            for (int I = 0; I < SignalsCount(); ++I) {
-                Signal = Signals(I);
+            for (int i = 0; i < SignalsCount(); ++i) {
+                Signal = Signals(i);
                 if (SameText(lpszSignal, Signal->Name())) {
                     if (kill(pid, Signal->SigNo()) == -1) {
                         Log()->Error(APP_LOG_ALERT, errno, _T("kill(%P, %d) failed"), pid, Signal->SigNo());
@@ -1048,7 +1049,7 @@ namespace Apostol {
             auto pParent = dynamic_cast<CServerProcess *>(AParent);
             if (pParent != nullptr) {
                 Server() = pParent->Server();
-                Log()->Error(APP_LOG_DEBUG, 0, "worker process: http server assigned by parent");
+                log_debug0(APP_LOG_DEBUG_EVENT, Log(), 0, "worker process: http server assigned by parent");
             } else {
                 InitializeServer(AApplication->Title());
             }
@@ -1151,7 +1152,7 @@ namespace Apostol {
             auto pParent = dynamic_cast<CServerProcess *>(AParent);
             if (pParent != nullptr) {
                 Server() = pParent->Server();
-                Log()->Error(APP_LOG_DEBUG, 0, "helper process: http server assigned by parent");
+                log_debug0(APP_LOG_DEBUG_EVENT, Log(), 0, "helper process: http server assigned by parent");
             } else {
                 InitializeServer(AApplication->Title());
             }

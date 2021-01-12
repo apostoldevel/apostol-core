@@ -365,13 +365,13 @@ namespace Apostol {
         void CLog::Debug(int AErrNo, LPCSTR AFormat, ...) {
             va_list args;
             va_start(args, AFormat);
-            ErrorCore(APP_LOG_DEBUG, AErrNo, AFormat, ltDebug, args);
+            ErrorCore(APP_LOG_DEBUG, AErrNo, AFormat, ltError, args);
             va_end(args);
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CLog::Debug(int AErrNo, LPCSTR AFormat, va_list args) {
-            ErrorCore(APP_LOG_DEBUG, AErrNo, AFormat, ltDebug, args);
+            ErrorCore(APP_LOG_DEBUG, AErrNo, AFormat, ltError, args);
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -411,10 +411,6 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         CLogFile *CLog::AddLogFile(LPCSTR AFileName, u_int ALevel) {
-
-            if (m_uLevel < ALevel)
-                m_uLevel = ALevel;
-
             CLogFile *LogFile = First();
             while (LogFile && !SameText(LogFile->FileName(), AFileName)) {
                 LogFile = Next();
@@ -489,9 +485,9 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CLog::RedirectStdErr() {
-            CLogFile *log = First();
+            CLogFile *log = Last();
             while (log && log->Handle() == STDERR_FILENO) {
-                log = Next();
+                log = Prior();
             }
 
             if (Assigned(log)) {

@@ -144,7 +144,7 @@ namespace Apostol {
 #endif
         //--------------------------------------------------------------------------------------------------------------
 
-        enum CLogType { ltDebug = 0, ltError, ltAccess, ltPostgres };
+        enum CLogType { ltError = 0, ltAccess, ltPostgres };
         //--------------------------------------------------------------------------------------------------------------
 
         class CFile: public CObject {
