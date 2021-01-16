@@ -486,7 +486,7 @@ namespace Apostol {
 
         void CLog::RedirectStdErr() {
             CLogFile *log = Last();
-            while (log && log->LogType() != ltError && log->Handle() == STDERR_FILENO) {
+            while (log && (log->LogType() != ltError || log->Handle() == STDERR_FILENO)) {
                 log = Prior();
             }
 
