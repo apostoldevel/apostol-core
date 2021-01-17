@@ -548,17 +548,17 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoServerListenException(CSocketEvent *Sender, const Delphi::Exception::Exception &E) {
-            Log()->Error(APP_LOG_EMERG, 0, "%s", E.what());
+            Log()->Error(APP_LOG_EMERG, 0, "ServerListenException: %s", E.what());
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoServerException(CTCPConnection *AConnection, const Delphi::Exception::Exception &E) {
-            Log()->Error(APP_LOG_EMERG, 0, "%s", E.what());
+            Log()->Error(APP_LOG_EMERG, 0, "ServerException: %s", E.what());
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoServerEventHandlerException(CPollEventHandler *AHandler, const Delphi::Exception::Exception &E) {
-            Log()->Error(APP_LOG_EMERG, 0, "%s", E.what());
+            Log()->Error(APP_LOG_EMERG, 0, "ServerEventHandlerException: %s", E.what());
         }
         //--------------------------------------------------------------------------------------------------------------
 
