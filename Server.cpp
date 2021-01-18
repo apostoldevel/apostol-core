@@ -554,11 +554,26 @@ namespace Apostol {
 
         void CServerProcess::DoServerException(CTCPConnection *AConnection, const Delphi::Exception::Exception &E) {
             Log()->Error(APP_LOG_EMERG, 0, "ServerException: %s", E.what());
+#ifdef WITH_POSTGRESQL
+            auto pPollQuery = m_PQServer.FindQueryByConnection(AConnection);
+            if (pPollQuery != nullptr) {
+                pPollQuery->PollConnection(nullptr);
+            }
+#endif
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoServerEventHandlerException(CPollEventHandler *AHandler, const Delphi::Exception::Exception &E) {
             Log()->Error(APP_LOG_EMERG, 0, "ServerEventHandlerException: %s", E.what());
+#ifdef WITH_POSTGRESQL
+            auto pConnection = dynamic_cast<CHTTPServerConnection *>(AHandler->Binding());
+            if (pConnection != nullptr) {
+                auto pPollQuery = m_PQServer.FindQueryByConnection(pConnection);
+                if (pPollQuery != nullptr) {
+                    pPollQuery->PollConnection(nullptr);
+                }
+            }
+#endif
         }
         //--------------------------------------------------------------------------------------------------------------
 

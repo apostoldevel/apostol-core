@@ -72,7 +72,8 @@ namespace Apostol {
                 level = GetLogLevelByName(key.c_str());
                 if (level > APP_LOG_STDERR && level <= APP_LOG_DEBUG) {
                     pLogFile = Log()->AddLogFile(value.c_str(), level);
-                    pLogFile->LogType(ltError);
+                    if (level == APP_LOG_DEBUG)
+                        pLogFile->LogType(ltDebug);
                 }
             }
 
@@ -88,7 +89,7 @@ namespace Apostol {
             const auto &debug = Config()->LogFiles().Values(_T("debug"));
             if (debug.IsEmpty()) {
                 pLogFile = Log()->AddLogFile(Config()->ErrorLog().c_str(), APP_LOG_DEBUG);
-                pLogFile->LogType(ltError);
+                pLogFile->LogType(ltDebug);
             }
 #endif
         }
@@ -270,7 +271,11 @@ namespace Apostol {
 
                     Log()->UseStdErr(false);
                     Log()->RedirectStdErr();
-                }
+                } else {
+#ifdef _DEBUG
+                    Log()->RedirectStdErr();
+#endif
+                };
             }
 
             if (m_ProcessType == ptCustom) {
