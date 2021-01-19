@@ -271,10 +271,6 @@ namespace Apostol {
 
                     Log()->UseStdErr(false);
                     Log()->RedirectStdErr();
-                } else {
-#ifdef _DEBUG
-                    Log()->RedirectStdErr();
-#endif
                 };
             }
 

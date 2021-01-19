@@ -920,14 +920,15 @@ namespace Apostol {
             static auto OnReply = [](CObject *Sender) {
                 auto pConnection = dynamic_cast<CHTTPServerConnection *> (Sender);
                 if (pConnection != nullptr && !pConnection->ClosedGracefully()) {
-                    auto pBinding = pConnection->Socket()->Binding();
-                    if (pBinding->HandleAllocated()) {
-                        DebugMessage(_T("\n[%p] [%s:%d] [%d] "), pConnection, pBinding->PeerIP(),
-                                     pBinding->PeerPort(), pBinding->Handle());
+                    if (!pConnection->ClosedGracefully()) {
+                        auto pBinding = pConnection->Socket()->Binding();
+                        if (pBinding->HandleAllocated()) {
+                            DebugMessage(_T("\n[%p] [%s:%d] [%d] "), pConnection, pBinding->PeerIP(),
+                                         pBinding->PeerPort(), pBinding->Handle());
+                        }
                     }
+                    DebugReply(pConnection->Reply());
                 }
-
-                DebugReply(pConnection->Reply());
             };
 
             AConnection->OnReply(OnReply);
