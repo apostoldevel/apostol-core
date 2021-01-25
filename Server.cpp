@@ -379,12 +379,12 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoPQConnectException(CPQConnection *AConnection, const Delphi::Exception::Exception &E) {
-            Log()->Postgres(APP_LOG_EMERG, "ConnectException: %s", E.what());
+            Log()->Postgres(APP_LOG_ERR, "ConnectException: %s", E.what());
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoPQServerException(CPQServer *AServer, const Delphi::Exception::Exception &E) {
-            Log()->Postgres(APP_LOG_EMERG, "ServerException: %s", E.what());
+            Log()->Postgres(APP_LOG_ERR, "ServerException: %s", E.what());
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -548,12 +548,12 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoServerListenException(CSocketEvent *Sender, const Delphi::Exception::Exception &E) {
-            Log()->Error(APP_LOG_EMERG, 0, "ServerListenException: %s", E.what());
+            Log()->Error(APP_LOG_ERR, 0, "ServerListenException: %s", E.what());
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoServerException(CTCPConnection *AConnection, const Delphi::Exception::Exception &E) {
-            Log()->Error(APP_LOG_EMERG, 0, "ServerException: %s", E.what());
+            Log()->Error(APP_LOG_ERR, 0, "ServerException: %s", E.what());
 #ifdef WITH_POSTGRESQL
             auto pPollQuery = m_PQServer.FindQueryByConnection(AConnection);
             if (pPollQuery != nullptr) {
@@ -564,7 +564,7 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoServerEventHandlerException(CPollEventHandler *AHandler, const Delphi::Exception::Exception &E) {
-            Log()->Error(APP_LOG_EMERG, 0, "ServerEventHandlerException: %s", E.what());
+            Log()->Error(APP_LOG_ERR, 0, "ServerEventHandlerException: %s", E.what());
 #ifdef WITH_POSTGRESQL
             auto pConnection = dynamic_cast<CHTTPServerConnection *>(AHandler->Binding());
             if (pConnection != nullptr) {
@@ -671,7 +671,7 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoNoCommandHandler(CSocketEvent *Sender, const CString &Data, CTCPConnection *AConnection) {
-            Log()->Error(APP_LOG_EMERG, 0, "No command handler: %s", Data.IsEmpty() ? "(null)" : Data.c_str());
+            Log()->Error(APP_LOG_ERR, 0, "No command handler: %s", Data.IsEmpty() ? "(null)" : Data.c_str());
         }
         //--------------------------------------------------------------------------------------------------------------
 
