@@ -829,9 +829,11 @@ namespace Apostol {
                 size = MaxFormatStringLength;
             }
 
+            CString sPayload((LPCTSTR) AData->Payload()->Memory() + delta, size);
+
             DebugMessage("[FIN: %#x; OP: %#x; MASK: %#x LEN: %d] [%d] [%d] [%d] [%d]\n%s\n",
                          AData->Frame().FIN, AData->Frame().Opcode, AData->Frame().Mask, AData->Frame().Length,
-                         AData->Size(), AData->Payload()->Size(), delta, size, size == 0 ? "<null>" : (LPCTSTR) AData->Payload()->Memory() + delta - 1
+                         AData->Size(), AData->Payload()->Size(), delta, size, sPayload.c_str()
             );
         }
         //--------------------------------------------------------------------------------------------------------------
