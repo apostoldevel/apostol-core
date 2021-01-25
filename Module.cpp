@@ -833,7 +833,7 @@ namespace Apostol {
 
             DebugMessage("[FIN: %#x; OP: %#x; MASK: %#x LEN: %d] [%d] [%d] [%d] [%d]\n%s\n",
                          AData->Frame().FIN, AData->Frame().Opcode, AData->Frame().Mask, AData->Frame().Length,
-                         AData->Size(), AData->Payload()->Size(), delta, size, sPayload.c_str()
+                         AData->Size(), AData->Payload()->Size(), delta, size, sPayload.IsEmpty() ? "<null>" : sPayload.c_str()
             );
         }
         //--------------------------------------------------------------------------------------------------------------
