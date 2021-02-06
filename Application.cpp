@@ -582,6 +582,7 @@ namespace Apostol {
             PQServerStop();
 #endif
             ServerStop();
+            ServerShutDown();
 
             CApplicationProcess::AfterRun();
         }
@@ -649,6 +650,7 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CProcessMaster::AfterRun() {
+            ServerShutDown();
             CApplicationProcess::AfterRun();
         }
         //--------------------------------------------------------------------------------------------------------------
