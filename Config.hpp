@@ -310,7 +310,7 @@ namespace Apostol {
 
             CStringList m_LogFiles;
 
-            TPairs<CStringList> m_PostgresConnInfo;
+            CStringListPairs m_PostgresConnInfo;
 
             CConfigFlags m_Flags;
 
@@ -453,8 +453,8 @@ namespace Apostol {
             CStringList& LogFiles() { return m_LogFiles; };
             const CStringList& LogFiles() const { return m_LogFiles; };
 
-            TPairs<CStringList>& PostgresConnInfo() { return m_PostgresConnInfo; };
-            const TPairs<CStringList>& PostgresConnInfo() const { return m_PostgresConnInfo; };
+            CStringListPairs& PostgresConnInfo() { return m_PostgresConnInfo; };
+            const CStringListPairs& PostgresConnInfo() const { return m_PostgresConnInfo; };
 
             const CIniFile& IniFile() const { return *m_pIniFile; }
 

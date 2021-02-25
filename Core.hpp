@@ -67,7 +67,7 @@ public:
         }
     };
 
-    static void LoadConfig(const CString &FileName, TPairs<CStringList> &Profiles, COnInitConfigEvent && OnInitConfig) {
+    static void LoadConfig(const CString &FileName, CStringListPairs &Profiles, COnInitConfigEvent && OnInitConfig) {
 
         const CString Prefix(Config()->Prefix());
         CString ConfigFile(FileName);
