@@ -879,6 +879,29 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
+        void CServerProcess::LoadOAuth2(const CString &FileName, const CString &ProviderName,
+                                        const CString &ApplicationName, CProviders &Providers) {
+
+            const auto& pathOAuth2 = Config()->Prefix() + "oauth2/";
+            CString configFile(FileName);
+
+            if (!path_separator(configFile.front())) {
+                configFile = pathOAuth2 + configFile;
+            }
+
+            if (FileExists(configFile.c_str())) {
+                int Index = Providers.AddPair(ProviderName, CProvider());
+                auto& Provider = Providers[Index].Value();
+                CJSONObject Json;
+                Json.LoadFromFile(configFile.c_str());
+                Provider.Name = ProviderName;
+                Provider.Params.Object().AddPair(ApplicationName, Json);
+            } else {
+                Log()->Error(APP_LOG_WARN, 0, APP_FILE_NOT_FOUND, configFile.c_str());
+            }
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
     }
 }
 

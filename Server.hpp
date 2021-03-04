@@ -160,9 +160,9 @@ namespace Apostol {
 
             static void LoadProviders(CProviders &Providers);
             static void LoadSites(CSites &Sites);
-
+            static void LoadOAuth2(const CString &FileName, const CString &ProviderName, const CString &ApplicationName,
+                CProviders &Providers);
         };
-
     }
 }
 
