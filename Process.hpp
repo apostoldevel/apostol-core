@@ -97,7 +97,7 @@ namespace Apostol {
 
             void SignalHandler(int signo, siginfo_t *siginfo, void *ucontext) override;
 
-            void ExitSigAlarm(uint_t AMsec);
+            void ExitSigAlarm(uint_t AMsec) const;
 
             virtual void SignalReload();
             virtual void SignalQuit();

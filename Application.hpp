@@ -99,7 +99,6 @@ namespace Apostol {
 
             CProcessType m_ProcessType;
 
-            static void CreateLogFile();
             void Daemonize();
 
             static void CreateDirectories();
@@ -140,6 +139,7 @@ namespace Apostol {
             void Run() override;
 
             static void MkDir(const CString &Dir);
+            static void CreateLogFiles();
 
         }; // class CApplication
 

@@ -159,7 +159,7 @@ namespace Apostol {
                      */
 
                     if (err == ECHILD) {
-                        Log()->Error(APP_LOG_INFO, err, "waitpid() failed");
+                        Log()->Error(APP_LOG_ALERT, err, "waitpid() failed");
                         return;
                     }
 
@@ -170,13 +170,13 @@ namespace Apostol {
                 one = true;
                 process = "unknown process";
 
-                CSignalProcess *LProcess = this;
+                CSignalProcess *pProcess = this;
                 for (i = 0; i < m_pProcessManager->ProcessCount(); ++i) {
-                    LProcess = m_pProcessManager->Processes(i);
-                    if (LProcess->Pid() == pid) {
-                        LProcess->Status(status);
-                        LProcess->Exited(true);
-                        process = LProcess->GetProcessName();
+                    pProcess = m_pProcessManager->Processes(i);
+                    if (pProcess->Pid() == pid) {
+                        pProcess->Status(status);
+                        pProcess->Exited(true);
+                        process = pProcess->GetProcessName();
                         break;
                     }
                 }
@@ -194,17 +194,14 @@ namespace Apostol {
 #endif
 
                 } else {
-                    Log()->Error(APP_LOG_NOTICE, 0,
-                                 "%s %P exited with code %d",
-                                 process, pid, WEXITSTATUS(status));
+                    Log()->Debug(APP_LOG_DEBUG_EVENT, _T("%s %P exited with code %d"), process, pid, WEXITSTATUS(status));
                 }
 
-                if (WEXITSTATUS(status) == 2 && LProcess->Respawn()) {
+                if (WEXITSTATUS(status) == 2 && pProcess->Respawn()) {
                     Log()->Error(APP_LOG_ALERT, 0,
-                                 "%s %P exited with fatal code %d "
-                                 "and cannot be respawned",
+                                 "%s %P exited with fatal code %d and cannot be respawned",
                                  process, pid, WEXITSTATUS(status));
-                    LProcess->Respawn(false);
+                    pProcess->Respawn(false);
                 }
             }
         }
@@ -288,7 +285,7 @@ namespace Apostol {
 
             action = _T("");
 
-            log_debug3(APP_LOG_DEBUG_CORE, Log(), 0, "signal handler %d (%s), process name: %s", signo, sigcode, GetProcessName());
+            Log()->Debug(APP_LOG_DEBUG_EVENT, _T("signal handler %d (%s), process name: %s"), signo, sigcode, GetProcessName());
 
             switch (Type()) {
                 case ptMaster:
@@ -417,25 +414,18 @@ namespace Apostol {
             }
 
             if (siginfo && siginfo->si_pid) {
-                Log()->Error(APP_LOG_NOTICE, 0,
-                             _T("signal %d (%s) received from %P%s"),
-                             signo, sigcode, siginfo->si_pid, action);
+                Log()->Debug(APP_LOG_DEBUG_EVENT, _T("signal %d (%s) received from %P%s"), signo, sigcode, siginfo->si_pid, action);
 
             } else {
-                Log()->Error(APP_LOG_NOTICE, 0,
-                             _T("signal %d (%s) received%s"),
-                             signo, sigcode, action);
+                Log()->Debug(APP_LOG_DEBUG_EVENT, _T("signal %d (%s) received%s"), signo, sigcode, action);
             }
 
             if (ignore) {
-                Log()->Error(APP_LOG_NOTICE, 0,
-                             _T("the changing binary signal is ignored: ")
-                             _T("you should shutdown or terminate ")
-                             _T("before either old or new binary's process"));
+                Log()->Debug(APP_LOG_DEBUG_EVENT, _T("the changing binary signal is ignored: you should shutdown or terminate before either old or new binary's process"));
             }
 
             if (signo == SIGCHLD) {
-                log_debug0(APP_LOG_DEBUG_CORE, Log(), 0, "child process get status");
+                Log()->Debug(APP_LOG_DEBUG_EVENT, _T("child process get status"));
                 ChildProcessGetStatus();
             }
 
@@ -443,7 +433,7 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CSignalProcess::ExitSigAlarm(uint_t AMsec) {
+        void CSignalProcess::ExitSigAlarm(uint_t AMsec) const {
 
             sigset_t set, wset;
             struct itimerval itv = {0};
@@ -464,7 +454,7 @@ namespace Apostol {
             /* Wait for a signal to arrive. */
             sigprocmask(SIG_BLOCK, &set, &wset);
 
-            log_debug1(APP_LOG_DEBUG_EVENT, Log(), 0, "exit alarm after %u msec", AMsec);
+            Log()->Debug(APP_LOG_DEBUG_EVENT, _T("exit alarm after %u msec"), AMsec);
 
             while (!(sig_terminate || sig_quit))
                 sigsuspend(&wset);

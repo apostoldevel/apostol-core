@@ -223,7 +223,7 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         CLog::CLog(): CSysErrorComponent(), CCollection(this) {
-            m_uLevel = APP_LOG_NOTICE;
+            m_uLevel = APP_LOG_DEBUG_CORE;
             m_CurrentIndex = -1;
             m_fUseStdErr = true;
             m_DiskFullTime = 0;
@@ -332,6 +332,49 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
+        void CLog::Error(u_int ALevel, int AErrNo, LPCSTR AFormat, ...) {
+            va_list args;
+            va_start(args, AFormat);
+            ErrorCore(ALevel, AErrNo, AFormat, ltError, args);
+            va_end(args);
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CLog::Error(u_int ALevel, int AErrNo, LPCSTR AFormat, va_list args) {
+            ErrorCore(ALevel, AErrNo, AFormat, ltError, args);
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CLog::Debug(u_int ALevel, LPCSTR AFormat, ...) {
+            if (Level() & ALevel) {
+                va_list args;
+                va_start(args, AFormat);
+                ErrorCore(APP_LOG_DEBUG, 0, AFormat, ltDebug, args);
+                va_end(args);
+            }
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CLog::Debug(u_int ALevel, LPCSTR AFormat, va_list args) {
+            if (Level() & ALevel) {
+                ErrorCore(APP_LOG_DEBUG, 0, AFormat, ltDebug, args);
+            }
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CLog::Notice(LPCSTR AFormat, ...) {
+            va_list args;
+            va_start(args, AFormat);
+            Error(APP_LOG_NOTICE, 0, AFormat, args);
+            va_end(args);
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CLog::Notice(LPCSTR AFormat, va_list args) {
+            Error(APP_LOG_NOTICE, 0, AFormat,  args);
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
         void CLog::Message(LPCSTR AFormat, ...) {
             va_list args;
             va_start(args, AFormat);
@@ -342,36 +385,6 @@ namespace Apostol {
 
         void CLog::Message(LPCSTR AFormat, va_list args) {
             Error(APP_LOG_INFO, 0, AFormat,  args);
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
-        void CLog::Error(u_int ALevel, int AErrNo, LPCSTR AFormat, ...) {
-            va_list args;
-            if (ALevel <= m_uLevel) {
-                va_start(args, AFormat);
-                ErrorCore(ALevel, AErrNo, AFormat, ltError, args);
-                va_end(args);
-            }
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
-        void CLog::Error(u_int ALevel, int AErrNo, LPCSTR AFormat, va_list args) {
-            if (ALevel <= m_uLevel) {
-                ErrorCore(ALevel, AErrNo, AFormat, ltError, args);
-            }
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
-        void CLog::Debug(int AErrNo, LPCSTR AFormat, ...) {
-            va_list args;
-            va_start(args, AFormat);
-            ErrorCore(APP_LOG_DEBUG, AErrNo, AFormat, ltDebug, args);
-            va_end(args);
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
-        void CLog::Debug(int AErrNo, LPCSTR AFormat, va_list args) {
-            ErrorCore(APP_LOG_DEBUG, AErrNo, AFormat, ltDebug, args);
         }
         //--------------------------------------------------------------------------------------------------------------
 

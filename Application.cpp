@@ -58,17 +58,19 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CApplication::CreateLogFile() {
+        void CApplication::CreateLogFiles() {
             CLogFile *pLogFile;
 
+            Log()->Clear();
+#ifdef _DEBUG
+            Log()->Level(APP_LOG_DEBUG_ALL & ~APP_LOG_DEBUG_EVENT);
+#else
             Log()->Level(APP_LOG_DEBUG_CORE);
-
+#endif
             u_int level;
             for (int i = 0; i < Config()->LogFiles().Count(); ++i) {
-
                 const auto &key = Config()->LogFiles().Names(i);
                 const auto &value = Config()->LogFiles().Values(key);
-
                 level = GetLogLevelByName(key.c_str());
                 if (level > APP_LOG_STDERR && level <= APP_LOG_DEBUG) {
                     pLogFile = Log()->AddLogFile(value.c_str(), level);
@@ -77,14 +79,12 @@ namespace Apostol {
                 }
             }
 
-            pLogFile = Log()->AddLogFile(Config()->AccessLog().c_str(), APP_LOG_STDERR);
+            pLogFile = Log()->AddLogFile(Config()->AccessLog().c_str());
             pLogFile->LogType(ltAccess);
-
 #ifdef WITH_POSTGRESQL
             pLogFile = Log()->AddLogFile(Config()->PostgresLog().c_str(), level);
             pLogFile->LogType(ltPostgres);
 #endif
-
 #ifdef _DEBUG
             const auto &debug = Config()->LogFiles().Values(_T("debug"));
             if (debug.IsEmpty()) {
@@ -211,7 +211,7 @@ namespace Apostol {
             {
                 char **e;
                 for (e = env; *e; e++) {
-                    log_debug1(APP_LOG_DEBUG_CORE, Log(), 0, "env: %s", *e);
+                    Log()->Debug(APP_LOG_DEBUG_EVENT, _T("env: %s"), *e);
                 }
             }
 #endif
@@ -258,7 +258,7 @@ namespace Apostol {
 
         void CApplication::StartProcess() {
 
-            Log()->Debug(0, MSG_PROCESS_START, GetProcessName(), CmdLine().c_str());
+            Log()->Debug(APP_LOG_DEBUG_CORE, MSG_PROCESS_START, GetProcessName(), CmdLine().c_str());
 
             if (m_ProcessType != ptSignaller) {
 
@@ -287,7 +287,7 @@ namespace Apostol {
 
             StopAll();
 
-            Log()->Debug(0, MSG_PROCESS_STOP, GetProcessName());
+            Log()->Debug(APP_LOG_DEBUG_CORE, MSG_PROCESS_STOP, GetProcessName());
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -323,7 +323,7 @@ namespace Apostol {
 
             DefaultLocale.SetLocale(Config()->Locale().c_str());
 
-            CreateLogFile();
+            CreateLogFiles();
 
 #ifdef _DEBUG
             Log()->Error(APP_LOG_INFO, 0, "%s version: %s (%s build)", Description().c_str(), Version().c_str(), "debug");
@@ -380,24 +380,24 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CApplicationProcess::BeforeRun() {
-            Log()->Debug(0, MSG_PROCESS_START, GetProcessName(), Application()->CmdLine().c_str());
+            Log()->Debug(APP_LOG_DEBUG_CORE, MSG_PROCESS_START, GetProcessName(), Application()->CmdLine().c_str());
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CApplicationProcess::AfterRun() {
-            Log()->Debug(0, MSG_PROCESS_STOP, GetProcessName());
+            Log()->Debug(APP_LOG_DEBUG_CORE, MSG_PROCESS_STOP, GetProcessName());
         }
         //--------------------------------------------------------------------------------------------------------------
 
         pid_t CApplicationProcess::SwapProcess(CProcessType Type, int Flag, Pointer Data) {
 
-            CSignalProcess *LProcess;
+            CSignalProcess *pProcess;
 
             if (Flag >= 0) {
-                LProcess = Application()->Processes(Flag);
+                pProcess = Application()->Processes(Flag);
             } else {
-                LProcess = CApplicationProcess::Create(this, m_pApplication, Type);
-                LProcess->Data(Data);
+                pProcess = CApplicationProcess::Create(this, m_pApplication, Type);
+                pProcess->Data(Data);
             }
 
             pid_t pid = fork();
@@ -405,32 +405,32 @@ namespace Apostol {
             switch (pid) {
 
                 case -1:
-                    throw EOSError(errno, _T("fork() failed while spawning \"%s process\""), LProcess->GetProcessName());
+                    throw EOSError(errno, _T("fork() failed while spawning \"%s process\""), pProcess->GetProcessName());
 
                 case 0:
 
-                    m_pApplication->Start(LProcess);
+                    m_pApplication->Start(pProcess);
                     exit(0);
 
                 default:
                     break;
             }
 
-            LProcess->Pid(pid);
+            pProcess->Pid(pid);
 
-            LProcess->Exited(false);
+            pProcess->Exited(false);
 
-            Log()->Error(APP_LOG_NOTICE, 0, _T("start %s %P"), LProcess->GetProcessName(), LProcess->Pid());
+            Log()->Debug(APP_LOG_DEBUG_EVENT, _T("start %s %P"), pProcess->GetProcessName(), pProcess->Pid());
 
             if (Flag >= 0) {
                 return pid;
             }
 
-            LProcess->Exiting(false);
+            pProcess->Exiting(false);
 
-            LProcess->Respawn(Flag == PROCESS_RESPAWN || Flag == PROCESS_JUST_RESPAWN);
-            LProcess->JustSpawn(Flag == PROCESS_JUST_SPAWN || Flag == PROCESS_JUST_RESPAWN);
-            LProcess->Detached(Flag == PROCESS_DETACHED);
+            pProcess->Respawn(Flag == PROCESS_RESPAWN || Flag == PROCESS_JUST_RESPAWN);
+            pProcess->JustSpawn(Flag == PROCESS_JUST_SPAWN || Flag == PROCESS_JUST_RESPAWN);
+            pProcess->Detached(Flag == PROCESS_DETACHED);
 
             return pid;
         }
@@ -556,7 +556,7 @@ namespace Apostol {
         void CProcessSingle::BeforeRun() {
             Application()->Header(Application()->Name() + ": single process " + Application()->CmdLine());
 
-            Log()->Debug(0, MSG_PROCESS_START, GetProcessName(), Application()->Header().c_str());
+            Log()->Debug(APP_LOG_DEBUG_CORE, MSG_PROCESS_START, GetProcessName(), Application()->Header().c_str());
 
             InitSignals();
 
@@ -597,7 +597,7 @@ namespace Apostol {
 
             while (!(sig_terminate || sig_quit)) {
 
-                log_debug0(APP_LOG_DEBUG_EVENT, Log(), 0, "single cycle");
+                Log()->Debug(APP_LOG_DEBUG_EVENT, _T("single cycle"));
 
                 try
                 {
@@ -612,19 +612,19 @@ namespace Apostol {
 
                 if (sig_reconfigure) {
                     sig_reconfigure = 0;
-                    Log()->Error(APP_LOG_NOTICE, 0, "reconfiguring");
+                    Log()->Debug(APP_LOG_DEBUG_EVENT, _T("reconfiguring"));
 
                     Reload();
                 }
 
                 if (sig_reopen) {
                     sig_reopen = 0;
-                    Log()->Error(APP_LOG_NOTICE, 0, "reopening logs");
+                    Log()->Debug(APP_LOG_DEBUG_EVENT, _T("reopening logs"));
                     Log()->RedirectStdErr();
                 }
             }
 
-            Log()->Error(APP_LOG_NOTICE, 0, "exiting single process");
+            Log()->Debug(APP_LOG_DEBUG_EVENT, _T("exiting single process"));
         }
 
         //--------------------------------------------------------------------------------------------------------------
@@ -643,7 +643,7 @@ namespace Apostol {
         void CProcessMaster::BeforeRun() {
             Application()->Header(Application()->Name() + ": master process " + Application()->CmdLine());
 
-            Log()->Debug(0, MSG_PROCESS_START, GetProcessName(), Application()->Header().c_str());
+            Log()->Debug(APP_LOG_DEBUG_CORE, MSG_PROCESS_START, GetProcessName(), Application()->Header().c_str());
 
             InitSignals();
         }
@@ -682,10 +682,10 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CProcessMaster::StartCustomProcesses() {
-            CCustomProcess *LProcess;
+            CCustomProcess *pProcess;
             for (int i = 0; i < Application()->ProcessCount(); ++i) {
-                LProcess = Application()->Processes(i);
-                if (LProcess->Type() == ptCustom)
+                pProcess = Application()->Processes(i);
+                if (pProcess->Type() == ptCustom)
                     StartProcess(ptCustom, i);
             }
         }
@@ -693,46 +693,46 @@ namespace Apostol {
 
         void CProcessMaster::SignalToProcess(CProcessType Type, int SigNo) {
             int err;
-            CCustomProcess *LProcess;
+            CCustomProcess *pProcess;
 
             for (int i = 0; i < Application()->ProcessCount(); ++i) {
-                LProcess = Application()->Processes(i);
+                pProcess = Application()->Processes(i);
 
-                if (LProcess->Type() != Type)
+                if (pProcess->Type() != Type)
                     continue;
 
-                log_debug7(APP_LOG_DEBUG_EVENT, Log(), 0,
-                           "signal child: %i %P e:%d t:%d d:%d r:%d j:%d",
-                           i,
-                           LProcess->Pid(),
-                           LProcess->Exiting() ? 1 : 0,
-                           LProcess->Exited() ? 1 : 0,
-                           LProcess->Detached() ? 1 : 0,
-                           LProcess->Respawn() ? 1 : 0,
-                           LProcess->JustSpawn() ? 1 : 0);
+                Log()->Debug(APP_LOG_DEBUG_EVENT, _T("signal child: %i %P e:%d t:%d d:%d r:%d j:%d"),
+                              i,
+                              pProcess->Pid(),
+                              pProcess->Exiting() ? 1 : 0,
+                              pProcess->Exited() ? 1 : 0,
+                              pProcess->Detached() ? 1 : 0,
+                              pProcess->Respawn() ? 1 : 0,
+                              pProcess->JustSpawn() ? 1 : 0
+                );
 
-                if (LProcess->Detached()) {
-                    continue;
-                }
-
-                if (LProcess->JustSpawn()) {
-                    LProcess->JustSpawn(false);
+                if (pProcess->Detached()) {
                     continue;
                 }
 
-                if (LProcess->Exiting() && (SigNo == signal_value(SIG_SHUTDOWN_SIGNAL))) {
+                if (pProcess->JustSpawn()) {
+                    pProcess->JustSpawn(false);
                     continue;
                 }
 
-                log_debug2(APP_LOG_DEBUG_CORE, Log(), 0, "kill (%P, %d)", LProcess->Pid(), SigNo);
+                if (pProcess->Exiting() && (SigNo == signal_value(SIG_SHUTDOWN_SIGNAL))) {
+                    continue;
+                }
 
-                if (kill(LProcess->Pid(), SigNo) == -1) {
+                Log()->Debug(APP_LOG_DEBUG_CORE, "kill (%P, %d)", pProcess->Pid(), SigNo);
+
+                if (kill(pProcess->Pid(), SigNo) == -1) {
                     err = errno;
-                    Log()->Error(APP_LOG_ALERT, err, "kill(%P, %d) failed", LProcess->Pid(), SigNo);
+                    Log()->Error(APP_LOG_ALERT, err, "kill(%P, %d) failed", pProcess->Pid(), SigNo);
 
                     if (err == ESRCH) {
-                        LProcess->Exited(true);
-                        LProcess->Exiting(false);
+                        pProcess->Exited(true);
+                        pProcess->Exiting(false);
                         sig_reap = 1;
                     }
 
@@ -740,7 +740,7 @@ namespace Apostol {
                 }
 
                 if (SigNo != signal_value(SIG_REOPEN_SIGNAL)) {
-                    LProcess->Exiting(true);
+                    pProcess->Exiting(true);
                 }
             }
         }
@@ -756,39 +756,39 @@ namespace Apostol {
         void CProcessMaster::DoExit() {
             DeletePidFile();
 
-            Log()->Error(APP_LOG_NOTICE, 0, _T("exiting master process"));
+            Log()->Debug(APP_LOG_DEBUG_EVENT, _T("exiting master process"));
         }
         //--------------------------------------------------------------------------------------------------------------
 
         bool CProcessMaster::ReapChildren() {
 
             bool live = false;
-            CSignalProcess *LProcess;
+            CSignalProcess *pProcess;
 
             for (int i = 0; i < Application()->ProcessCount(); ++i) {
 
-                LProcess = Application()->Processes(i);
+                pProcess = Application()->Processes(i);
 
-                if (LProcess->Type() == ptMain)
+                if (pProcess->Type() == ptMain)
                     continue;
 
-                log_debug7(APP_LOG_DEBUG_EVENT, Log(), 0,
-                           "reap child: %i %P e:%d t:%d d:%d r:%d j:%d",
-                           i,
-                           LProcess->Pid(),
-                           LProcess->Exiting() ? 1 : 0,
-                           LProcess->Exited() ? 1 : 0,
-                           LProcess->Detached() ? 1 : 0,
-                           LProcess->Respawn() ? 1 : 0,
-                           LProcess->JustSpawn() ? 1 : 0);
+                Log()->Debug(APP_LOG_DEBUG_EVENT, _T("reap child: %i %P e:%d t:%d d:%d r:%d j:%d"),
+                              i,
+                              pProcess->Pid(),
+                              pProcess->Exiting() ? 1 : 0,
+                              pProcess->Exited() ? 1 : 0,
+                              pProcess->Detached() ? 1 : 0,
+                              pProcess->Respawn() ? 1 : 0,
+                              pProcess->JustSpawn() ? 1 : 0
+                );
 
-                if (LProcess->Exited()) {
+                if (pProcess->Exited()) {
 
-                    if (LProcess->Respawn() && !LProcess->Exiting() && !(sig_terminate || sig_quit)) {
+                    if (pProcess->Respawn() && !pProcess->Exiting() && !(sig_terminate || sig_quit)) {
 
-                        if (LProcess->Type() >= ptWorker) {
-                            if (SwapProcess(LProcess->Type(), i) == -1) {
-                                Log()->Error(APP_LOG_ALERT, 0, "could not respawn %s", LProcess->GetProcessName());
+                        if (pProcess->Type() >= ptWorker) {
+                            if (SwapProcess(pProcess->Type(), i) == -1) {
+                                Log()->Error(APP_LOG_ALERT, 0, "could not respawn %s", pProcess->GetProcessName());
                                 continue;
                             }
                         }
@@ -798,7 +798,7 @@ namespace Apostol {
                         continue;
                     }
 
-                    if (LProcess->Pid() == NewBinary()) {
+                    if (pProcess->Pid() == NewBinary()) {
 
                         RenamePidFile(true, "rename() %s back to %s failed after the new binary process \"%s\" exited");
 
@@ -812,7 +812,7 @@ namespace Apostol {
 
                     Application()->DeleteProcess(i);
 
-                } else if (LProcess->Exiting() || !LProcess->Detached()) {
+                } else if (pProcess->Exiting() || !pProcess->Detached()) {
                     live = true;
                 }
 
@@ -841,21 +841,21 @@ namespace Apostol {
             delay = 0;
             sigio = 0;
 
-            CSignalProcess *LProcess;
+            CSignalProcess *pProcess;
             for (int i = 0; i < Application()->ProcessCount(); ++i) {
-                LProcess = Application()->Processes(i);
+                pProcess = Application()->Processes(i);
 
-                log_debug9(APP_LOG_DEBUG_EVENT, Log(), 0,
-                           "process (%s)\t: %P - %i %P e:%d t:%d d:%d r:%d j:%d",
-                           LProcess->GetProcessName(),
-                           Pid(),
-                           i,
-                           LProcess->Pid(),
-                           LProcess->Exiting() ? 1 : 0,
-                           LProcess->Exited() ? 1 : 0,
-                           LProcess->Detached() ? 1 : 0,
-                           LProcess->Respawn() ? 1 : 0,
-                           LProcess->JustSpawn() ? 1 : 0);
+                Log()->Debug(APP_LOG_DEBUG_EVENT, _T("process (%s)\t: %P - %i %P e:%d t:%d d:%d r:%d j:%d"),
+                              pProcess->GetProcessName(),
+                              Pid(),
+                              i,
+                              pProcess->Pid(),
+                              pProcess->Exiting() ? 1 : 0,
+                              pProcess->Exited() ? 1 : 0,
+                              pProcess->Detached() ? 1 : 0,
+                              pProcess->Respawn() ? 1 : 0,
+                              pProcess->JustSpawn() ? 1 : 0
+                );
             }
 
             live = true;
@@ -868,7 +868,7 @@ namespace Apostol {
                         sig_sigalrm = 0;
                     }
 
-                    log_debug1(APP_LOG_DEBUG_EVENT, Log(), 0, "termination cycle: %M", delay);
+                    Log()->Debug(APP_LOG_DEBUG_EVENT, _T("termination cycle: %M"), delay);
 
                     itv.it_interval.tv_sec = 0;
                     itv.it_interval.tv_usec = 0;
@@ -876,19 +876,19 @@ namespace Apostol {
                     itv.it_value.tv_usec = (delay % 1000 ) * 1000;
 
                     if (setitimer(ITIMER_REAL, &itv, nullptr) == -1) {
-                        Log()->Error(APP_LOG_ALERT, errno, "setitimer() failed");
+                        Log()->Error(APP_LOG_ALERT, errno, _T("setitimer() failed"));
                     }
                 }
 
-                log_debug0(APP_LOG_DEBUG_EVENT, Log(), 0, "sigsuspend");
+                Log()->Debug(APP_LOG_DEBUG_EVENT, _T("sigsuspend"));
 
                 sigsuspend(&wset);
 
-                log_debug1(APP_LOG_DEBUG_EVENT, Log(), 0, "wake up, sigio %i", sigio);
+                Log()->Debug(APP_LOG_DEBUG_EVENT, _T("wake up, sigio %i"), sigio);
 
                 if (sig_reap) {
                     sig_reap = 0;
-                    log_debug0(APP_LOG_DEBUG_EVENT, Log(), 0, "reap children");
+                    Log()->Debug(APP_LOG_DEBUG_EVENT, _T("reap children"));
 
                     live = ReapChildren();
                 }
@@ -929,7 +929,7 @@ namespace Apostol {
                         continue;
                     }
 
-                    Log()->Error(APP_LOG_NOTICE, 0, "reconfiguring");
+                    Log()->Debug(APP_LOG_DEBUG_EVENT, _T("reconfiguring"));
 
                     Reload();
 
@@ -952,15 +952,16 @@ namespace Apostol {
                 if (sig_reopen) {
                     sig_reopen = 0;
 
-                    Log()->Error(APP_LOG_NOTICE, 0, "reopening logs");
-                    // TODO: reopen files;
+                    Log()->Debug(APP_LOG_DEBUG_EVENT, _T("reopening logs"));
+
+                    Application()->CreateLogFiles();
 
                     SignalToProcesses(signal_value(SIG_REOPEN_SIGNAL));
                 }
 
                 if (sig_change_binary) {
                     sig_change_binary = 0;
-                    Log()->Error(APP_LOG_NOTICE, 0, "changing binary");
+                    Log()->Debug(APP_LOG_DEBUG_EVENT, _T("changing binary"));
                     Application()->SetNewBinary(this, Server().Bindings());
                 }
 
@@ -1052,7 +1053,7 @@ namespace Apostol {
             auto pParent = dynamic_cast<CServerProcess *>(AParent);
             if (pParent != nullptr) {
                 Server() = pParent->Server();
-                log_debug0(APP_LOG_DEBUG_EVENT, Log(), 0, "worker process: http server assigned by parent");
+                Log()->Debug(APP_LOG_DEBUG_EVENT, _T("worker process: http server assigned by parent"));
             } else {
                 InitializeServer(AApplication->Title());
             }
@@ -1067,7 +1068,7 @@ namespace Apostol {
 
             Application()->Header(Application()->Name() + ": worker process (" + CModuleProcess::ModulesNames() + ")");
 
-            Log()->Debug(0, MSG_PROCESS_START, GetProcessName(), Application()->Header().c_str());
+            Log()->Debug(APP_LOG_DEBUG_CORE, MSG_PROCESS_START, GetProcessName(), Application()->Header().c_str());
 
             InitSignals();
 
@@ -1091,17 +1092,17 @@ namespace Apostol {
             Finalization();
 #ifdef WITH_POSTGRESQL
             PQServerStop();
-            Log()->Error(APP_LOG_NOTICE, 0, "worker process: postgres server stopped");
+            Log()->Debug(APP_LOG_DEBUG_EVENT, _T("worker process: postgres server stopped"));
 #endif
             ServerStop();
-            Log()->Error(APP_LOG_NOTICE, 0, "worker process: http server stopped");
+            Log()->Debug(APP_LOG_DEBUG_EVENT, _T("worker process: http server stopped"));
 
             CApplicationProcess::AfterRun();
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CProcessWorker::DoExit() {
-            Log()->Error(APP_LOG_NOTICE, 0, "exiting worker process");
+            Log()->Debug(APP_LOG_DEBUG_EVENT, _T("exiting worker process"));
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -1109,7 +1110,7 @@ namespace Apostol {
 
             while (!sig_exiting) {
 
-                log_debug0(APP_LOG_DEBUG_EVENT, Log(), 0, "worker cycle");
+                Log()->Debug(APP_LOG_DEBUG_EVENT, _T("worker cycle"));
 
                 try
                 {
@@ -1123,8 +1124,8 @@ namespace Apostol {
                 if (sig_terminate || sig_quit) {
                     if (sig_quit) {
                         sig_quit = 0;
-                        Log()->Error(APP_LOG_NOTICE, 0, "gracefully shutting down");
-                        Application()->Header("worker process is shutting down");
+                        Log()->Debug(APP_LOG_DEBUG_EVENT, _T("gracefully shutting down"));
+                        Application()->Header(_T("worker process is shutting down"));
                     }
 
                     DoExit();
@@ -1136,12 +1137,12 @@ namespace Apostol {
 
                 if (sig_reopen) {
                     sig_reopen = 0;
-                    Log()->Error(APP_LOG_NOTICE, 0, "reopening logs");
+                    Log()->Debug(APP_LOG_DEBUG_EVENT, _T("reopening logs"));
                     //ReopenFiles(-1);
                 }
             }
 
-            Log()->Error(APP_LOG_NOTICE, 0, "stop worker process");
+            Log()->Debug(APP_LOG_DEBUG_EVENT, _T("stop worker process"));
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -1155,7 +1156,7 @@ namespace Apostol {
             auto pParent = dynamic_cast<CServerProcess *>(AParent);
             if (pParent != nullptr) {
                 Server() = pParent->Server();
-                log_debug0(APP_LOG_DEBUG_EVENT, Log(), 0, "helper process: http server assigned by parent");
+                Log()->Debug(APP_LOG_DEBUG_EVENT, _T("helper process: http server assigned by parent"));
             } else {
                 InitializeServer(AApplication->Title());
             }
@@ -1166,7 +1167,7 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CProcessHelper::DoExit() {
-            Log()->Error(APP_LOG_NOTICE, 0, "exiting helper process");
+            Log()->Debug(APP_LOG_DEBUG_EVENT, _T("exiting helper process"));
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -1175,7 +1176,7 @@ namespace Apostol {
 
             Application()->Header(Application()->Name() + ": helper process (" + CModuleProcess::ModulesNames() + ")");
 
-            Log()->Debug(0, MSG_PROCESS_START, GetProcessName(), Application()->Header().c_str());
+            Log()->Debug(APP_LOG_DEBUG_CORE, MSG_PROCESS_START, GetProcessName(), Application()->Header().c_str());
 
             InitSignals();
 
@@ -1204,7 +1205,7 @@ namespace Apostol {
         void CProcessHelper::Run() {
             while (!sig_exiting) {
 
-                log_debug0(APP_LOG_DEBUG_EVENT, Log(), 0, "helper cycle");
+                Log()->Debug(APP_LOG_DEBUG_EVENT, _T("helper cycle"));
 
                 try
                 {
@@ -1218,8 +1219,8 @@ namespace Apostol {
                 if (sig_terminate || sig_quit) {
                     if (sig_quit) {
                         sig_quit = 0;
-                        Log()->Error(APP_LOG_NOTICE, 0, "gracefully shutting down");
-                        Application()->Header("helper process is shutting down");
+                        Log()->Debug(APP_LOG_DEBUG_EVENT, _T("gracefully shutting down"));
+                        Application()->Header(_T("helper process is shutting down"));
                     }
 
                     DoExit();
@@ -1231,12 +1232,12 @@ namespace Apostol {
 
                 if (sig_reopen) {
                     sig_reopen = 0;
-                    Log()->Error(APP_LOG_NOTICE, 0, "reopening logs");
+                    Log()->Debug(APP_LOG_DEBUG_EVENT, _T("reopening logs"));
                     //ReopenFiles(-1);
                 }
             }
 
-            Log()->Error(APP_LOG_NOTICE, 0, "stop helper process");
+            Log()->Debug(APP_LOG_DEBUG_EVENT, _T("stop helper process"));
         }
         //--------------------------------------------------------------------------------------------------------------
     }

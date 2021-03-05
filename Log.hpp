@@ -62,10 +62,8 @@ Author:
 #define APP_LOG_DEBUG_MUTEX       0x040u
 #define APP_LOG_DEBUG_EVENT       0x080u
 #define APP_LOG_DEBUG_HTTP        0x100u
-//----------------------------------------------------------------------------------------------------------------------
-
-#define APP_LOG_DEBUG_CONNECTION  0x80000000u
-#define APP_LOG_DEBUG_ALL         0x7ffffff0u
+#define APP_LOG_DEBUG_ALL         0x7f0u
+#define APP_LOG_DEBUG_CONNECTION  0x800u
 //----------------------------------------------------------------------------------------------------------------------
 
 #ifndef log_pid
@@ -265,16 +263,19 @@ namespace Apostol {
 
             ~CLog() override = default;
 
-            CLogFile *AddLogFile(LPCSTR AFileName, u_int ALevel);
-
-            void Message(LPCSTR AFormat, ...);
-            void Message(LPCSTR AFormat, va_list args);
+            CLogFile *AddLogFile(LPCSTR AFileName, u_int ALevel = APP_LOG_STDERR);
 
             void Error(u_int ALevel, int AErrNo, LPCSTR AFormat, ...);
             void Error(u_int ALevel, int AErrNo, LPCSTR AFormat, va_list args);
 
-            void Debug(int AErrNo, LPCSTR AFormat, ...);
-            void Debug(int AErrNo, LPCSTR AFormat, va_list args);
+            void Debug(u_int ALevel, LPCSTR AFormat, ...);
+            void Debug(u_int ALevel, LPCSTR AFormat, va_list args);
+
+            void Notice(LPCSTR AFormat, ...);
+            void Notice(LPCSTR AFormat, va_list args);
+
+            void Message(LPCSTR AFormat, ...);
+            void Message(LPCSTR AFormat, va_list args);
 
             void Access(LPCSTR AFormat, ...);
             void Access(LPCSTR AFormat, va_list args);
@@ -312,72 +313,5 @@ namespace Apostol {
 using namespace Apostol::Log;
 }
 //----------------------------------------------------------------------------------------------------------------------
-
-#if (_DEBUG)
-
-#define log_debug0(level, log, err, fmt)                                     \
-    if ((log)->Level() & (level))                                            \
-        (log)->Debug(err, fmt)
-
-#define log_debug1(level, log, err, fmt, arg1)                               \
-    if ((log)->Level() & (level))                                            \
-        (log)->Debug(err, fmt, arg1)
-
-#define log_debug2(level, log, err, fmt, arg1, arg2)                         \
-    if ((log)->Level() & (level))                                            \
-        (log)->Debug(err, fmt, arg1, arg2)
-
-#define log_debug3(level, log, err, fmt, arg1, arg2, arg3)                   \
-    if ((log)->Level() & (level))                                            \
-        (log)->Debug(err, fmt, arg1, arg2, arg3)
-
-#define log_debug4(level, log, err, fmt, arg1, arg2, arg3, arg4)             \
-    if ((log)->Level() & (level))                                            \
-        (log)->Debug(err, fmt, arg1, arg2, arg3, arg4)
-
-#define log_debug5(level, log, err, fmt, arg1, arg2, arg3, arg4, arg5)       \
-    if ((log)->Level() & (level))                                            \
-        (log)->Debug(err, fmt, arg1, arg2, arg3, arg4, arg5)
-
-#define log_debug6(level, log, err, fmt,                                     \
-                       arg1, arg2, arg3, arg4, arg5, arg6)                   \
-    if ((log)->Level() & (level))                                            \
-        (log)->Debug(err, fmt, arg1, arg2, arg3, arg4, arg5, arg6)
-
-#define log_debug7(level, log, err, fmt,                                     \
-                       arg1, arg2, arg3, arg4, arg5, arg6, arg7)             \
-    if ((log)->Level() & (level))                                            \
-        (log)->Debug(err, fmt,                                               \
-                       arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-
-#define log_debug8(level, log, err, fmt,                                     \
-                       arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)       \
-    if ((log)->Level() & (level))                                            \
-        (log)->Debug(err, fmt,                                               \
-                       arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
-
-#define log_debug9(level, log, err, fmt,                                     \
-                       arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) \
-    if ((log)->Level() & (level))                                            \
-        (log)->Debug(err, fmt,                                               \
-                       arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg8)
-#else /* !_DEBUG */
-
-#define log_debug0(level, log, err, fmt)
-#define log_debug1(level, log, err, fmt, arg1)
-#define log_debug2(level, log, err, fmt, arg1, arg2)
-#define log_debug3(level, log, err, fmt, arg1, arg2, arg3)
-#define log_debug4(level, log, err, fmt, arg1, arg2, arg3, arg4)
-#define log_debug5(level, log, err, fmt, arg1, arg2, arg3, arg4, arg5)
-#define log_debug6(level, log, err, fmt, arg1, arg2, arg3, arg4, arg5, arg6)
-#define log_debug7(level, log, err, fmt, arg1, arg2, arg3, arg4, arg5,    \
-                       arg6, arg7)
-#define log_debug8(level, log, err, fmt, arg1, arg2, arg3, arg4, arg5,    \
-                       arg6, arg7, arg8)
-
-#define log_debug9(level, log, err, fmt, arg1, arg2, arg3, arg4, arg5,    \
-                       arg6, arg7, arg8, arg9)
-
-#endif
 
 #endif // APOSTOL_LOG_HPP

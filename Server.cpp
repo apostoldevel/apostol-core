@@ -626,7 +626,7 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoVerbose(CSocketEvent *Sender, CTCPConnection *AConnection, LPCTSTR AFormat, va_list args) {
-            Log()->Debug(0, AFormat, args);
+            Log()->Debug(APP_LOG_DEBUG_CORE, AFormat, args);
         }
         //--------------------------------------------------------------------------------------------------------------
 
