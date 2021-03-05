@@ -518,16 +518,15 @@ namespace Apostol {
         CProcessSingle::CProcessSingle(CCustomProcess *AParent, CApplication *AApplication):
                 inherited(AParent, AApplication, ptSingle, "single"), CModuleProcess() {
 
+            InitializeServer(AApplication->Title());
+#ifdef WITH_POSTGRESQL
+            InitializePQServer(AApplication->Title());
+#endif
             if (Config()->Helper()) {
                 CreateHelpers(this);
             } else {
                 CreateWorkers(this);
             }
-
-            InitializeServer(AApplication->Title());
-#ifdef WITH_POSTGRESQL
-            InitializePQServer(AApplication->Title());
-#endif
         }
         //--------------------------------------------------------------------------------------------------------------
 
