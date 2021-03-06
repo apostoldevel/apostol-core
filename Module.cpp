@@ -294,8 +294,8 @@ namespace Apostol {
         CString CApostolModule::GetUserAgent(CHTTPServerConnection *AConnection) {
             auto pServer = dynamic_cast<CHTTPServer *> (AConnection->Server());
             auto pRequest = AConnection->Request();
-            const auto& LAgent = pRequest->Headers[_T("User-Agent")];
-            return LAgent.IsEmpty() ? pServer->ServerName() : LAgent;
+            const auto& agent = pRequest->Headers[_T("User-Agent")];
+            return agent.IsEmpty() ? pServer->ServerName() : agent;
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -313,7 +313,7 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        CString CApostolModule::GetHost(CHTTPServerConnection *AConnection) {
+        CString CApostolModule::GetRealIP(CHTTPServerConnection *AConnection) {
             auto pRequest = AConnection->Request();
             CString sHost;
 
@@ -328,6 +328,13 @@ namespace Apostol {
             }
 
             return sHost;
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        CString CApostolModule::GetHost(CHTTPServerConnection *AConnection) {
+            auto pRequest = AConnection->Request();
+            const CString sHost(pRequest->Headers[_T("Host")]);
+            return sHost.IsEmpty() ? "localhost" : sHost;
         }
         //--------------------------------------------------------------------------------------------------------------
 
