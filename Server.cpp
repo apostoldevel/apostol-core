@@ -418,6 +418,10 @@ namespace Apostol {
         void CServerProcess::DoPQResult(CPQResult *AResult, ExecStatusType AExecStatus) {
 #ifdef _DEBUG
             if (AExecStatus == PGRES_TUPLES_OK || AExecStatus == PGRES_COMMAND_OK) {
+                CString jsonString;
+                PQResultToJson(AResult, jsonString);
+                Log()->Postgres(APP_LOG_DEBUG, "%s", jsonString.c_str());
+/*
                 if (AResult->nTuples() > 0) {
 
                     CString Print;
@@ -465,12 +469,13 @@ namespace Apostol {
 
                     Log()->Postgres(APP_LOG_DEBUG, "%s", Print.c_str());
                 }
+*/
             } else {
-                Log()->Postgres(APP_LOG_ERR, "%s", AResult->GetErrorMessage());
+                Log()->Postgres(APP_LOG_ERR, "PQResult: %s", AResult->GetErrorMessage());
             }
 #else
-            if (!(AExecStatus == PGRES_TUPLES_OK || AExecStatus == PGRES_SINGLE_TUPLE)) {
-                Log()->Postgres(APP_LOG_ERR, "%s", AResult->GetErrorMessage());
+            if (!(AExecStatus == PGRES_TUPLES_OK || AExecStatus == PGRES_COMMAND_OK)) {
+                Log()->Postgres(APP_LOG_ERR, "PQResult: %s", AResult->GetErrorMessage());
             }
 #endif
         }
