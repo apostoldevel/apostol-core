@@ -310,7 +310,7 @@ namespace Apostol {
                 pQuery->OnResultStatus(std::bind(&CServerProcess::DoPQResultStatus, this, _1));
                 pQuery->OnResult(std::bind(&CServerProcess::DoPQResult, this, _1, _2));
 #endif
-                pQuery->PollConnection(AConnection);
+                pQuery->Binding(AConnection);
             }
 
             return pQuery;
@@ -517,13 +517,15 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DebugReply(CHTTPReply *AReply) {
-            DebugMessage("[%p] Reply:\nHTTP/%d.%d %d %s\n", AReply, AReply->VMajor, AReply->VMinor, AReply->Status, AReply->StatusText.c_str());
+            if (!AReply->StatusText.IsEmpty()) {
+                DebugMessage("[%p] Reply:\nHTTP/%d.%d %d %s\n", AReply, AReply->VMajor, AReply->VMinor, AReply->Status, AReply->StatusText.c_str());
 
-            for (int i = 0; i < AReply->Headers.Count(); i++)
-                DebugMessage("%s: %s\n", AReply->Headers[i].Name().c_str(), AReply->Headers[i].Value().c_str());
+                for (int i = 0; i < AReply->Headers.Count(); i++)
+                    DebugMessage("%s: %s\n", AReply->Headers[i].Name().c_str(), AReply->Headers[i].Value().c_str());
 
-            if (!AReply->Content.IsEmpty())
-                DebugMessage("\n%s\n", AReply->Content.c_str());
+                if (!AReply->Content.IsEmpty())
+                    DebugMessage("\n%s\n", AReply->Content.c_str());
+            }
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -559,33 +561,18 @@ namespace Apostol {
 
         void CServerProcess::DoServerException(CTCPConnection *AConnection, const Delphi::Exception::Exception &E) {
             Log()->Error(APP_LOG_ERR, 0, "ServerException: %s", E.what());
-#ifdef WITH_POSTGRESQL
-            auto pPollQuery = m_PQServer.FindQueryByConnection(AConnection);
-            if (pPollQuery != nullptr) {
-                pPollQuery->PollConnection(nullptr);
-            }
-#endif
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoServerEventHandlerException(CPollEventHandler *AHandler, const Delphi::Exception::Exception &E) {
             Log()->Error(APP_LOG_ERR, 0, "ServerEventHandlerException: %s", E.what());
-#ifdef WITH_POSTGRESQL
-            auto pConnection = dynamic_cast<CHTTPServerConnection *>(AHandler->Binding());
-            if (pConnection != nullptr) {
-                auto pPollQuery = m_PQServer.FindQueryByConnection(pConnection);
-                if (pPollQuery != nullptr) {
-                    pPollQuery->PollConnection(nullptr);
-                }
-            }
-#endif
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoServerConnected(CObject *Sender) {
             auto pConnection = dynamic_cast<CHTTPServerConnection *>(Sender);
             if (pConnection != nullptr) {
-                Log()->Message(_T("[%s:%d] Client opened connection."), pConnection->Socket()->Binding()->PeerIP(),
+                Log()->Message(_T("[%s:%d] Connected."), pConnection->Socket()->Binding()->PeerIP(),
                                pConnection->Socket()->Binding()->PeerPort());
             }
         }
@@ -594,13 +581,12 @@ namespace Apostol {
         void CServerProcess::DoServerDisconnected(CObject *Sender) {
             auto pConnection = dynamic_cast<CHTTPServerConnection *>(Sender);
             if (pConnection != nullptr) {
-#ifdef WITH_POSTGRESQL
-                auto pPollQuery = m_PQServer.FindQueryByConnection(pConnection);
-                if (pPollQuery != nullptr) {
-                    pPollQuery->PollConnection(nullptr);
+                auto pSocket = pConnection->Socket()->Binding();
+                if (pSocket != nullptr) {
+                    Log()->Message("[%s:%d] Disconnected.", pSocket->PeerIP(), pSocket->PeerPort());
+                } else {
+                    Log()->Message("Disconnected.");
                 }
-#endif
-                Log()->Message(_T("Client disconnected."));
             }
         }
         //--------------------------------------------------------------------------------------------------------------

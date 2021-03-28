@@ -741,7 +741,7 @@ namespace Apostol {
 
         void CApostolModule::DoPostgresQueryExecuted(CPQPollQuery *APollQuery) {
 
-            auto pConnection = dynamic_cast<CHTTPServerConnection *> (APollQuery->PollConnection());
+            auto pConnection = dynamic_cast<CHTTPServerConnection *> (APollQuery->Binding());
 
             auto pReply = pConnection->Reply();
             auto pResult = APollQuery->Results(0);
@@ -765,7 +765,7 @@ namespace Apostol {
 
         void CApostolModule::DoPostgresQueryException(CPQPollQuery *APollQuery, const Delphi::Exception::Exception &E) {
 
-            auto pConnection = dynamic_cast<CHTTPServerConnection *> (APollQuery->PollConnection());
+            auto pConnection = dynamic_cast<CHTTPServerConnection *> (APollQuery->Binding());
             auto pReply = pConnection->Reply();
 
             CHTTPReply::CStatusType status = CHTTPReply::internal_server_error;
@@ -907,13 +907,15 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CApostolModule::DebugReply(CHTTPReply *AReply) {
-            DebugMessage(_T("[%p] Reply:\nHTTP/%d.%d %d %s\n"), AReply, AReply->VMajor, AReply->VMinor, AReply->Status, AReply->StatusText.c_str());
+            if (!AReply->StatusText.IsEmpty()) {
+                DebugMessage(_T("[%p] Reply:\nHTTP/%d.%d %d %s\n"), AReply, AReply->VMajor, AReply->VMinor, AReply->Status, AReply->StatusText.c_str());
 
-            for (int i = 0; i < AReply->Headers.Count(); i++)
-                DebugMessage(_T("%s: %s\n"), AReply->Headers[i].Name().c_str(), AReply->Headers[i].Value().c_str());
+                for (int i = 0; i < AReply->Headers.Count(); i++)
+                    DebugMessage(_T("%s: %s\n"), AReply->Headers[i].Name().c_str(), AReply->Headers[i].Value().c_str());
 
-            if (!AReply->Content.IsEmpty())
-                DebugMessage(_T("\n%s\n"), AReply->Content.c_str());
+                if (!AReply->Content.IsEmpty())
+                    DebugMessage(_T("\n%s\n"), AReply->Content.c_str());
+            }
         }
         //--------------------------------------------------------------------------------------------------------------
 
