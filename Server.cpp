@@ -572,8 +572,15 @@ namespace Apostol {
         void CServerProcess::DoServerConnected(CObject *Sender) {
             auto pConnection = dynamic_cast<CHTTPServerConnection *>(Sender);
             if (pConnection != nullptr) {
-                Log()->Message(_T("[%s:%d] Connected."), pConnection->Socket()->Binding()->PeerIP(),
-                               pConnection->Socket()->Binding()->PeerPort());
+                auto pSocket = pConnection->Socket();
+                if (pSocket != nullptr) {
+                    auto pHandle = pSocket->Binding();
+                    if (pHandle != nullptr) {
+                        Log()->Message(_T("[%s:%d] Connected."), pHandle->PeerIP(), pHandle->PeerPort());
+                    } else {
+                        Log()->Message("Connected.");
+                    }
+                }
             }
         }
         //--------------------------------------------------------------------------------------------------------------
@@ -581,11 +588,14 @@ namespace Apostol {
         void CServerProcess::DoServerDisconnected(CObject *Sender) {
             auto pConnection = dynamic_cast<CHTTPServerConnection *>(Sender);
             if (pConnection != nullptr) {
-                auto pSocket = pConnection->Socket()->Binding();
+                auto pSocket = pConnection->Socket();
                 if (pSocket != nullptr) {
-                    Log()->Message("[%s:%d] Disconnected.", pSocket->PeerIP(), pSocket->PeerPort());
-                } else {
-                    Log()->Message("Disconnected.");
+                    auto pHandle = pSocket->Binding();
+                    if (pHandle != nullptr) {
+                        Log()->Message(_T("[%s:%d] Disconnected."), pHandle->PeerIP(), pHandle->PeerPort());
+                    } else {
+                        Log()->Message("Disconnected.");
+                    }
                 }
             }
         }
@@ -594,8 +604,15 @@ namespace Apostol {
         void CServerProcess::DoClientConnected(CObject *Sender) {
             auto pConnection = dynamic_cast<CHTTPClientConnection *>(Sender);
             if (pConnection != nullptr) {
-                Log()->Message(_T("[%s:%d] Client connected."), pConnection->Socket()->Binding()->PeerIP(),
-                               pConnection->Socket()->Binding()->PeerPort());
+                auto pSocket = pConnection->Socket();
+                if (pSocket != nullptr) {
+                    auto pHandle = pSocket->Binding();
+                    if (pHandle != nullptr) {
+                        Log()->Message(_T("[%s:%d] Client connected."), pHandle->PeerIP(), pHandle->PeerPort());
+                    } else {
+                        Log()->Message(_T("Client connected."));
+                    }
+                }
             }
         }
         //--------------------------------------------------------------------------------------------------------------
@@ -603,14 +620,14 @@ namespace Apostol {
         void CServerProcess::DoClientDisconnected(CObject *Sender) {
             auto pConnection = dynamic_cast<CHTTPClientConnection *>(Sender);
             if (pConnection != nullptr) {
-                if (pConnection->ClosedGracefully()) {
-                    auto pClient = dynamic_cast<CHTTPClient *> (pConnection->Client());
-                    if (pClient != nullptr) {
-                        Log()->Message("[%s:%d] Client closed connection.", pClient->Host().c_str(), pClient->Port());
+                auto pSocket = pConnection->Socket();
+                if (pSocket != nullptr) {
+                    auto pHandle = pSocket->Binding();
+                    if (pHandle != nullptr) {
+                        Log()->Message(_T("[%s:%d] Client disconnected."), pHandle->PeerIP(), pHandle->PeerPort());
+                    } else {
+                        Log()->Message("Client disconnected.");
                     }
-                } else {
-                    Log()->Message(_T("[%s:%d] Client disconnected."), pConnection->Socket()->Binding()->PeerIP(),
-                                   pConnection->Socket()->Binding()->PeerPort());
                 }
             }
         }
@@ -626,9 +643,6 @@ namespace Apostol {
             auto pConnection = dynamic_cast<CHTTPServerConnection *> (AConnection);
 
             if (pConnection == nullptr)
-                return;
-
-            if (pConnection->ClosedGracefully())
                 return;
 
             auto pRequest = pConnection->Request();
@@ -647,15 +661,19 @@ namespace Apostol {
                 const auto& referer = pRequest->Headers[_T("Referer")];
                 const auto& user_agent = pRequest->Headers[_T("User-Agent")];
 
-                auto pBinding = pConnection->Socket()->Binding();
-                if (pBinding != nullptr) {
-                    Log()->Access(_T("%s %d %.3f [%s] \"%s %s HTTP/%d.%d\" %d %d \"%s\" \"%s\"\r\n"),
-                                  pBinding->PeerIP(), pBinding->PeerPort(),
-                                  (Now() - AConnection->Clock()) * MSecsPerDay / MSecsPerSec, szTime,
-                                  pRequest->Method.c_str(), pRequest->URI.c_str(), pRequest->VMajor, pRequest->VMinor,
-                                  pReply->Status, pReply->Content.Size(),
-                                  referer.IsEmpty() ? "-" : referer.c_str(),
-                                  user_agent.IsEmpty() ? "-" : user_agent.c_str());
+                auto pSocket = pConnection->Socket();
+                if (pSocket != nullptr) {
+                    auto pHandle = pSocket->Binding();
+                    if (pHandle != nullptr) {
+                        Log()->Access(_T("%s %d %.3f [%s] \"%s %s HTTP/%d.%d\" %d %d \"%s\" \"%s\"\r\n"),
+                                      pHandle->PeerIP(), pHandle->PeerPort(),
+                                      (Now() - AConnection->Clock()) * MSecsPerDay / MSecsPerSec, szTime,
+                                      pRequest->Method.c_str(), pRequest->URI.c_str(), pRequest->VMajor,
+                                      pRequest->VMinor,
+                                      pReply->Status, pReply->Content.Size(),
+                                      referer.IsEmpty() ? "-" : referer.c_str(),
+                                      user_agent.IsEmpty() ? "-" : user_agent.c_str());
+                    }
                 }
             }
         }

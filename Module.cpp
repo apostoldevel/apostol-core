@@ -321,9 +321,12 @@ namespace Apostol {
             if (!caRealIP.IsEmpty()) {
                 sHost = caRealIP;
             } else {
-                auto pBinding = AConnection->Socket()->Binding();
-                if (pBinding != nullptr) {
-                    sHost = pBinding->PeerIP();
+                auto pSocket = AConnection->Socket();
+                if (pSocket != nullptr) {
+                    auto pHandle = pSocket->Binding();
+                    if (pHandle != nullptr) {
+                        sHost = pHandle->PeerIP();
+                    }
                 }
             }
 
@@ -847,51 +850,71 @@ namespace Apostol {
 
         void CApostolModule::WSDebugConnection(CHTTPServerConnection *AConnection) {
 
-            if (AConnection->ClosedGracefully())
-                return;
+            if (AConnection != nullptr) {
 
-            DebugMessage(_T("\n[%p] [%s:%d] [%d] [WebSocket] "), AConnection, AConnection->Socket()->Binding()->PeerIP(),
-                         AConnection->Socket()->Binding()->PeerPort(), AConnection->Socket()->Binding()->Handle());
-
-            WSDebug(AConnection->WSRequest());
-
-            static auto OnRequest = [](CObject *Sender) {
-                auto pConnection = dynamic_cast<CHTTPServerConnection *> (Sender);
-                if (pConnection->Socket()->Connected()) {
-                    auto pBinding = pConnection->Socket()->Binding();
-                    DebugMessage(_T("\n[%p] [%s:%d] [%d] [WebSocket] [OnRequest] "), pConnection, pBinding->PeerIP(),
-                                 pBinding->PeerPort(), pBinding->Handle());
+                auto pSocket = AConnection->Socket();
+                if (pSocket != nullptr) {
+                    auto pHandle = pSocket->Binding();
+                    if (pHandle != nullptr) {
+                        DebugMessage(_T("\n[%p] [%s:%d] [%d] [WebSocket] [OnRequest] "), AConnection,
+                                     pHandle->PeerIP(), pHandle->PeerPort(), pHandle->Handle());
+                    }
                 }
 
-                WSDebug(pConnection->WSRequest());
-            };
+                WSDebug(AConnection->WSRequest());
 
-            static auto OnWaitRequest = [](CObject *Sender) {
-                auto pConnection = dynamic_cast<CHTTPServerConnection *> (Sender);
-                if (pConnection->Socket()->Connected()) {
-                    auto pBinding = pConnection->Socket()->Binding();
-                    DebugMessage(_T("\n[%p] [%s:%d] [%d] [WebSocket] [OnWaitRequest] "), pConnection,
-                                 pBinding->PeerIP(),
-                                 pBinding->PeerPort(), pBinding->Handle());
-                }
+                static auto OnRequest = [](CObject *Sender) {
+                    auto pConnection = dynamic_cast<CHTTPServerConnection *> (Sender);
+                    if (pConnection != nullptr) {
+                        auto pSocket = pConnection->Socket();
+                        if (pSocket != nullptr) {
+                            auto pHandle = pSocket->Binding();
+                            if (pHandle != nullptr) {
+                                DebugMessage(_T("\n[%p] [%s:%d] [%d] [WebSocket] [OnRequest] "), pConnection,
+                                             pHandle->PeerIP(), pHandle->PeerPort(), pHandle->Handle());
+                            }
+                        }
 
-                WSDebug(pConnection->WSRequest());
-            };
+                        WSDebug(pConnection->WSRequest());
+                    }
+                };
 
-            static auto OnReply = [](CObject *Sender) {
-                auto pConnection = dynamic_cast<CHTTPServerConnection *> (Sender);
-                if (pConnection->Socket()->Connected()) {
-                    auto pBinding = pConnection->Socket()->Binding();
-                    DebugMessage(_T("\n[%p] [%s:%d] [%d] [WebSocket] [OnReply] "), pConnection, pBinding->PeerIP(),
-                                 pBinding->PeerPort(), pBinding->Handle());
-                }
+                static auto OnWaitRequest = [](CObject *Sender) {
+                    auto pConnection = dynamic_cast<CHTTPServerConnection *> (Sender);
+                    if (pConnection != nullptr) {
+                        auto pSocket = pConnection->Socket();
+                        if (pSocket != nullptr) {
+                            auto pHandle = pSocket->Binding();
+                            if (pHandle != nullptr) {
+                                DebugMessage(_T("\n[%p] [%s:%d] [%d] [WebSocket] [OnWaitRequest] "), pConnection,
+                                             pHandle->PeerIP(), pHandle->PeerPort(), pHandle->Handle());
+                            }
+                        }
 
-                WSDebug(pConnection->WSReply());
-            };
+                        WSDebug(pConnection->WSRequest());
+                    }
+                };
 
-            AConnection->OnWaitRequest(OnWaitRequest);
-            //AConnection->OnRequest(OnRequest);
-            AConnection->OnReply(OnReply);
+                static auto OnReply = [](CObject *Sender) {
+                    auto pConnection = dynamic_cast<CHTTPServerConnection *> (Sender);
+                    if (pConnection != nullptr) {
+                        auto pSocket = pConnection->Socket();
+                        if (pSocket != nullptr) {
+                            auto pHandle = pSocket->Binding();
+                            if (pHandle != nullptr) {
+                                DebugMessage(_T("\n[%p] [%s:%d] [%d] [WebSocket] [OnReply] "), pConnection,
+                                             pHandle->PeerIP(), pHandle->PeerPort(), pHandle->Handle());
+                            }
+                        }
+
+                        WSDebug(pConnection->WSReply());
+                    }
+                };
+
+                AConnection->OnWaitRequest(OnWaitRequest);
+                //AConnection->OnRequest(OnRequest);
+                AConnection->OnReply(OnReply);
+            }
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -921,26 +944,43 @@ namespace Apostol {
 
         void CApostolModule::DebugConnection(CHTTPServerConnection *AConnection) {
 
-            DebugMessage(_T("\n[%p] [%s:%d] [%d] "), AConnection, AConnection->Socket()->Binding()->PeerIP(),
-                         AConnection->Socket()->Binding()->PeerPort(), AConnection->Socket()->Binding()->Handle());
+            if (AConnection != nullptr) {
 
-            DebugRequest(AConnection->Request());
-
-            static auto OnReply = [](CObject *Sender) {
-                auto pConnection = dynamic_cast<CHTTPServerConnection *> (Sender);
-                if (pConnection != nullptr && !pConnection->ClosedGracefully()) {
-                    if (!pConnection->ClosedGracefully()) {
-                        auto pBinding = pConnection->Socket()->Binding();
-                        if (pBinding->HandleAllocated()) {
-                            DebugMessage(_T("\n[%p] [%s:%d] [%d] "), pConnection, pBinding->PeerIP(),
-                                         pBinding->PeerPort(), pBinding->Handle());
+                auto pSocket = AConnection->Socket();
+                if (pSocket != nullptr) {
+                    auto pHandle = pSocket->Binding();
+                    if (pHandle != nullptr) {
+                        if (pHandle->HandleAllocated()) {
+                            DebugMessage(_T("\n[%p] [%s:%d] [%d] "), AConnection,
+                                         pHandle->PeerIP(), pHandle->PeerPort(), pHandle->Handle());
                         }
                     }
-                    DebugReply(pConnection->Reply());
                 }
-            };
 
-            AConnection->OnReply(OnReply);
+                DebugRequest(AConnection->Request());
+
+                static auto OnReply = [](CObject *Sender) {
+
+                    auto pConnection = dynamic_cast<CHTTPServerConnection *> (Sender);
+
+                    if (pConnection != nullptr) {
+                        auto pSocket = pConnection->Socket();
+                        if (pSocket != nullptr) {
+                            auto pHandle = pSocket->Binding();
+                            if (pHandle != nullptr) {
+                                if (pHandle->HandleAllocated()) {
+                                    DebugMessage(_T("\n[%p] [%s:%d] [%d] "), pConnection, pHandle->PeerIP(),
+                                                 pHandle->PeerPort(), pHandle->Handle());
+                                }
+                            }
+                        }
+
+                        DebugReply(pConnection->Reply());
+                    }
+                };
+
+                AConnection->OnReply(OnReply);
+            }
         }
 
         //--------------------------------------------------------------------------------------------------------------
