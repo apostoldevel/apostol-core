@@ -830,21 +830,35 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CApostolModule::WSDebug(CWebSocket *AData) {
+            CString Hex;
+            CMemoryStream Stream;
+
+            TCHAR szZero[1] = { 0x00 };
 
             size_t delta = 0;
-            size_t size = AData->Payload()->Size();
+            size_t size = AData->Payload().Position();
+
+            Stream.SetSize((ssize_t) size);
+            Stream.Write(AData->Payload().Memory(), size);
+
+            Hex.SetLength(size * 3 + 1);
+            ByteToHexStr((LPSTR) Hex.Data(), Hex.Size(), (LPCBYTE) Stream.Memory(), size, 32);
 
             if (size > MaxFormatStringLength) {
                 delta = size - MaxFormatStringLength;
                 size = MaxFormatStringLength;
             }
 
-            CString sPayload((LPCTSTR) AData->Payload()->Memory() + delta, size);
-
-            DebugMessage("[FIN: %#x; OP: %#x; MASK: %#x LEN: %d] [%d] [%d] [%d] [%d]\n%s\n",
+            DebugMessage("[FIN: %#x; OP: %#x; MASK: %#x LEN: %d] [%d-%d=%d] [%d] [%d]\n",
                          AData->Frame().FIN, AData->Frame().Opcode, AData->Frame().Mask, AData->Frame().Length,
-                         AData->Size(), AData->Payload()->Size(), delta, size, sPayload.IsEmpty() ? "<null>" : sPayload.c_str()
+                         AData->Payload().Size(), AData->Payload().Position(), AData->Payload().Size() - AData->Payload().Position(), delta, size
             );
+
+            if (Stream.Size() != 0) {
+                Stream.Write(&szZero, sizeof(szZero));
+                DebugMessage("HEX: %s", Hex.c_str());
+                DebugMessage("\nSTR: %s\n", (LPCTSTR) Stream.Memory() + delta);
+            }
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -912,7 +926,7 @@ namespace Apostol {
                 };
 
                 AConnection->OnWaitRequest(OnWaitRequest);
-                //AConnection->OnRequest(OnRequest);
+                AConnection->OnRequest(OnRequest);
                 AConnection->OnReply(OnReply);
             }
         }
