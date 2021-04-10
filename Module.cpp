@@ -222,14 +222,17 @@ namespace Apostol {
                 Data.AddPair("root", Config["root"].AsString());
                 Data.AddPair("listen", Config["listen"].AsString());
 
-                const auto& Identifier = Config["oauth2"]["identifier"].AsString();
-                Data.AddPair("oauth2.identifier", Identifier.IsEmpty() ? "/oauth/identifier" : Identifier);
+                const auto& caIdentifier = Config["oauth2"]["identifier"].AsString();
+                Data.AddPair("oauth2.identifier", caIdentifier.IsEmpty() ? "/oauth/identifier" : caIdentifier);
 
-                const auto& Callback = Config["oauth2"]["callback"].AsString();
-                Data.AddPair("oauth2.callback", Callback.IsEmpty() ? "/oauth/callback" : Callback);
+                const auto& caCallback = Config["oauth2"]["callback"].AsString();
+                Data.AddPair("oauth2.callback", caCallback.IsEmpty() ? "/oauth/callback" : caCallback);
 
-                const auto& Error = Config["oauth2"]["error"].AsString();
-                Data.AddPair("oauth2.error", Error.IsEmpty() ? "/oauth/error" : Error);
+                const auto& caError = Config["oauth2"]["error"].AsString();
+                Data.AddPair("oauth2.error", caError.IsEmpty() ? "/oauth/error" : caError);
+
+                const auto& caDebug = Config["oauth2"]["debug"].AsString();
+                Data.AddPair("oauth2.debug", caDebug.IsEmpty() ? "/oauth/debug" : caDebug);
             };
 
             int Index;
