@@ -142,7 +142,7 @@ namespace Apostol {
 #endif
         //--------------------------------------------------------------------------------------------------------------
 
-        enum CLogType { ltError = 0, ltAccess, ltPostgres, ltDebug };
+        enum CLogType { ltError = 0, ltAccess, ltPostgres, ltStream, ltDebug };
         //--------------------------------------------------------------------------------------------------------------
 
         class CFile: public CObject {
@@ -279,6 +279,9 @@ namespace Apostol {
 
             void Access(LPCSTR AFormat, ...);
             void Access(LPCSTR AFormat, va_list args);
+
+            void Stream(LPCSTR AFormat, ...);
+            void Stream(LPCSTR AFormat, va_list args);
 
             void Postgres(u_int ALevel, LPCSTR AFormat, ...);
             void Postgres(u_int ALevel, LPCSTR AFormat, va_list args);

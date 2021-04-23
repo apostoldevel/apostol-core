@@ -410,6 +410,19 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
+        void CLog::Stream(LPCSTR AFormat, ...) {
+            va_list args;
+            va_start(args, AFormat);
+            Stream(AFormat, args);
+            va_end(args);
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CLog::Stream(LPCSTR AFormat, va_list args) {
+            ErrorCore(APP_LOG_DEBUG, 0, AFormat, ltStream, args);
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
         void CLog::Postgres(u_int ALevel, LPCSTR AFormat, ...) {
             va_list args;
             va_start(args, AFormat);

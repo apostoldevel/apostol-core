@@ -307,6 +307,7 @@ namespace Apostol {
             CString m_sErrorLog;
             CString m_sAccessLog;
             CString m_sPostgresLog;
+            CString m_sStreamLog;
 
             CStringList m_LogFiles;
 
@@ -338,6 +339,7 @@ namespace Apostol {
             void SetErrorLog(LPCTSTR AValue);
             void SetAccessLog(LPCTSTR AValue);
             void SetPostgresLog(LPCTSTR AValue);
+            void SetStreamLog(LPCTSTR AValue);
 
             bool CheckLogFiles();
 
@@ -445,6 +447,10 @@ namespace Apostol {
             const CString& PostgresLog() const { return m_sPostgresLog; };
             void PostgresLog(const CString& AValue) { SetPostgresLog(AValue.c_str()); };
             void PostgresLog(LPCTSTR AValue) { SetPostgresLog(AValue); };
+
+            const CString& StreamLog() const { return m_sStreamLog; };
+            void StreamLog(const CString& AValue) { SetStreamLog(AValue.c_str()); };
+            void StreamLog(LPCTSTR AValue) { SetStreamLog(AValue); };
 
             const CString& DocRoot() const { return m_sDocRoot; };
             void DocRoot(const CString& AValue) { SetDocRoot(AValue.c_str()); };

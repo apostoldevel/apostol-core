@@ -81,6 +81,9 @@ namespace Apostol {
 
             pLogFile = Log()->AddLogFile(Config()->AccessLog().c_str());
             pLogFile->LogType(ltAccess);
+
+            pLogFile = Log()->AddLogFile(Config()->StreamLog().c_str(), level);
+            pLogFile->LogType(ltStream);
 #ifdef WITH_POSTGRESQL
             pLogFile = Log()->AddLogFile(Config()->PostgresLog().c_str(), level);
             pLogFile->LogType(ltPostgres);

@@ -362,6 +362,16 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
+        void CConfig::SetStreamLog(LPCTSTR AValue) {
+            if (m_sStreamLog != AValue) {
+                m_sStreamLog = AValue;
+                if (!path_separator(m_sStreamLog.front())) {
+                    m_sStreamLog = m_sPrefix + m_sStreamLog;
+                }
+            }
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
         void CConfig::SetDocRoot(LPCTSTR AValue) {
             if (m_sDocRoot != AValue) {
                 m_sDocRoot = AValue;
@@ -418,6 +428,7 @@ namespace Apostol {
             SetErrorLog(m_sErrorLog.empty() ? APP_ERROR_LOG_FILE : m_sErrorLog.c_str());
             SetAccessLog(m_sAccessLog.empty() ? APP_ACCESS_LOG_FILE : m_sAccessLog.c_str());
             SetPostgresLog(m_sPostgresLog.empty() ? APP_POSTGRES_LOG_FILE : m_sPostgresLog.c_str());
+            SetStreamLog(m_sStreamLog.empty() ? APP_STREAM_LOG_FILE : m_sStreamLog.c_str());
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -447,6 +458,7 @@ namespace Apostol {
             Add(new CConfigCommand(_T("cache"), _T("prefix"), m_sCachePrefix.c_str(), [this](auto && AValue) { SetCachePrefix(AValue); }));
 
             Add(new CConfigCommand(_T("log"), _T("error"), m_sErrorLog.c_str(), [this](auto && AValue) { SetErrorLog(AValue); }));
+            Add(new CConfigCommand(_T("log"), _T("stream"), m_sStreamLog.c_str(), [this](auto && AValue) { SetStreamLog(AValue); }));
             Add(new CConfigCommand(_T("server"), _T("log"), m_sAccessLog.c_str(), [this](auto && AValue) { SetAccessLog(AValue); }));
             Add(new CConfigCommand(_T("postgres"), _T("log"), m_sPostgresLog.c_str(), [this](auto && AValue) { SetPostgresLog(AValue); }));
 
@@ -479,6 +491,7 @@ namespace Apostol {
             Add(new CConfigCommand(_T("cache"), _T("prefix"), m_sCachePrefix.c_str(), std::bind(&CConfig::SetCachePrefix, this, _1)));
 
             Add(new CConfigCommand(_T("log"), _T("error"), m_sErrorLog.c_str(), std::bind(&CConfig::SetErrorLog, this, _1)));
+            Add(new CConfigCommand(_T("log"), _T("stream"), m_sStreamLog.c_str(), std::bind(&CConfig::SetStreamLog, this, _1)));
             Add(new CConfigCommand(_T("server"), _T("log"), m_sAccessLog.c_str(), std::bind(&CConfig::SetAccessLog, this, _1)));
             Add(new CConfigCommand(_T("postgres"), _T("log"), m_sPostgresLog.c_str(), std::bind(&CConfig::SetPostgresLog, this, _1)));
 
@@ -494,6 +507,8 @@ namespace Apostol {
 
         void CConfig::LoadLogFilesDefault() {
             m_LogFiles.AddPair(_T("error"), m_sErrorLog.c_str());
+            m_LogFiles.AddPair(_T("stream"), m_sStreamLog.c_str());
+            m_LogFiles.AddPair(_T("postgres"), m_sPostgresLog.c_str());
         };
         //--------------------------------------------------------------------------------------------------------------
 
