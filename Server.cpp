@@ -803,11 +803,11 @@ namespace Apostol {
                     if (FileExists(configFile.c_str())) {
                         int Index = Providers.AddPair(providerName, CProvider());
                         auto& Provider = Providers[Index].Value();
-                        Provider.Name = providerName;
-                        Provider.Params.LoadFromFile(configFile.c_str());
+                        Provider.Name() = providerName;
+                        Provider.Params().LoadFromFile(configFile.c_str());
                         const auto& certsFile = pathCerts + providerName;
                         if (FileExists(certsFile.c_str()))
-                            Provider.Keys.LoadFromFile(certsFile.c_str());
+                            Provider.Keys().LoadFromFile(certsFile.c_str());
                         if (providerName == "default")
                             Providers.Default() = Providers[Index];
                     } else {
@@ -831,7 +831,7 @@ namespace Apostol {
                 web.AddPair(_T("token_uri"), _T("/oauth2/token"));
                 web.AddPair(_T("redirect_uris"), CJSONArray(CString().Format("[\"http://localhost:%d/oauth2/code\"]", Config()->Port())));
 
-                auto& apps = defaultProvider.Value().Params.Object();
+                auto& apps = defaultProvider.Value().Applications();
                 apps.AddPair("web", web);
             }
         }
@@ -889,7 +889,9 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::LoadOAuth2(const CString &FileName, const CString &ProviderName,
-                                        const CString &ApplicationName, CProviders &Providers) {
+                const CString &ApplicationName, CProviders &Providers) {
+
+            int index;
 
             const auto& pathOAuth2 = Config()->Prefix() + "oauth2/";
             CString configFile(FileName);
@@ -899,12 +901,14 @@ namespace Apostol {
             }
 
             if (FileExists(configFile.c_str())) {
-                int Index = Providers.AddPair(ProviderName, CProvider());
-                auto& Provider = Providers[Index].Value();
                 CJSONObject Json;
                 Json.LoadFromFile(configFile.c_str());
-                Provider.Name = ProviderName;
-                Provider.Params.Object().AddPair(ApplicationName, Json);
+
+                index = Providers.IndexOfName(ProviderName);
+                if (index == -1)
+                    index = Providers.AddPair(ProviderName, CProvider(ProviderName));
+                auto& Provider = Providers[index].Value();
+                Provider.Applications().AddPair(ApplicationName, Json);
             } else {
                 Log()->Error(APP_LOG_WARN, 0, APP_FILE_NOT_FOUND, configFile.c_str());
             }
