@@ -169,4 +169,4 @@ namespace Apostol {
 using namespace Apostol::Server;
 };
 
-#endif //APOSTOL_SSS_SERVER_HPP
+#endif //APOSTOL_SERVER_HPP
