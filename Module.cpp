@@ -620,23 +620,26 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CApostolModule::PQResultToJson(CPQResult *Result, CString &Json, bool DataArray, const CString &ObjectName) {
+        void CApostolModule::PQResultToJson(CPQResult *Result, CString &Json, const CString &Format, const CString &ObjectName) {
 
             const auto bResultObject = !ObjectName.IsEmpty();
-
-            DataArray = bResultObject || DataArray || Result->nTuples() > 1;
-
-            const auto emptyData = DataArray ? _T("[]") : _T("{}");
+            const auto bDataArray = bResultObject || Format == "array" || Result->nTuples() > 1;
+            const auto emptyData = bDataArray ? _T("[]") : _T("{}");
 
             if (Result->nTuples() == 0) {
-                Json = bResultObject ? CString().Format("{\"%s\": %s}", ObjectName.c_str(), emptyData) : emptyData;
+                if (Format == "null") {
+                    Json = Format;
+                } else {
+                    Json = bResultObject ? CString().Format("{\"%s\": %s}", ObjectName.c_str(), emptyData) : emptyData;
+                }
+
                 return;
             }
 
             if (bResultObject)
                 Json.Format("{\"%s\": ", ObjectName.c_str());
 
-            if (DataArray)
+            if (bDataArray)
                 Json += _T("[");
 
             for (int Row = 0; Row < Result->nTuples(); ++Row) {
@@ -645,11 +648,11 @@ namespace Apostol {
                         Json += _T(",");
                     Json += Result->GetValue(Row, 0);
                 } else {
-                    Json += DataArray ? _T("null") : _T("{}");
+                    Json += bDataArray ? _T("null") : _T("{}");
                 }
             }
 
-            if (DataArray)
+            if (bDataArray)
                 Json += _T("]");
 
             if (bResultObject)

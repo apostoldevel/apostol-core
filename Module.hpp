@@ -193,7 +193,7 @@ namespace Apostol {
                 COnPQPollQueryExecutedEvent && OnExecuted = nullptr, COnPQPollQueryExceptionEvent && OnException = nullptr);
 
             static void PQResultToList(CPQResult *Result, CStringList &List);
-            static void PQResultToJson(CPQResult *Result, CString &Json, bool DataArray = false, const CString &ObjectName = CString());
+            static void PQResultToJson(CPQResult *Result, CString &Json, const CString &Format = CString(), const CString &ObjectName = CString());
 #endif
             static void ContentToJson(CHTTPRequest *ARequest, CJSON& Json);
             static void ListToJson(const CStringList &List, CString &Json, bool DataArray = false, const CString &ObjectName = CString());
