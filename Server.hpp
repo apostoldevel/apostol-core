@@ -60,9 +60,9 @@ namespace Apostol {
 
             void InitializeCommandHandlers(CCommandHandlers *AHandlers, bool ADisconnect = false);
 
-            void InitializeServer(const CString &Title);
+            void InitializeServer(const CString &Title, const CString &Listen = Config()->Listen(), u_short Port = Config()->Port());
 #ifdef WITH_POSTGRESQL
-            void InitializePQServer(const CString &Title);
+            void InitializePQServer(const CString &Title, u_int Min = Config()->PostgresPollMin(), u_int Max = Config()->PostgresPollMax());
 #endif
             virtual void DoOptions(CCommand *ACommand);
             virtual void DoGet(CCommand *ACommand);

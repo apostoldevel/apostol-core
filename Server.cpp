@@ -238,11 +238,11 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CServerProcess::InitializeServer(const CString &Title) {
+        void CServerProcess::InitializeServer(const CString &Title, const CString &Listen, u_short Port) {
             m_Server.ServerName() = Title;
 
-            m_Server.DefaultIP() = Config()->Listen();
-            m_Server.DefaultPort(Config()->Port());
+            m_Server.DefaultIP() = Listen;
+            m_Server.DefaultPort(Port);
 
             LoadSites(m_Server.Sites());
             LoadProviders(m_Server.Providers());
@@ -253,10 +253,10 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
 #ifdef WITH_POSTGRESQL
-        void CServerProcess::InitializePQServer(const CString &Title) {
+        void CServerProcess::InitializePQServer(const CString &Title, u_int Min, u_int Max) {
             m_PQServer.ConnInfo().ApplicationName() = "'" + Title + "'"; //application_name;
-            m_PQServer.SizeMin(Config()->PostgresPollMin());
-            m_PQServer.SizeMax(Config()->PostgresPollMax());
+            m_PQServer.SizeMin(Min);
+            m_PQServer.SizeMax(Max);
         }
         //--------------------------------------------------------------------------------------------------------------
 #endif
