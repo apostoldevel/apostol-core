@@ -474,17 +474,22 @@ namespace Apostol {
             const auto &caRoot = GetRoot(pRequest->Location.Host());
 
             CString sResource(caRoot);
+
+            if (!path_separator(sResource.front())) {
+                sResource = Config()->Prefix() + sResource;
+            }
+
             sResource += Path;
 
             if (TryFiles.Count() != 0) {
                 sResource = CApostolModule::TryFiles(caRoot, TryFiles, Path);
             }
 
-            if (sResource.back() != '/' && DirectoryExists(sResource.c_str())) {
+            if (!path_separator(sResource.back()) && DirectoryExists(sResource.c_str())) {
                 sResource += '/';
             }
 
-            if (sResource.back() == '/') {
+            if (path_separator(sResource.back())) {
                 sResource += APOSTOL_INDEX_FILE;
             }
 
@@ -499,9 +504,9 @@ namespace Apostol {
                     AContentType = Mapping::ExtToType(sFileExt.c_str());
                 }
 
-                auto LModified = StrWebTime(FileAge(sResource.c_str()), szBuffer, sizeof(szBuffer));
-                if (LModified != nullptr) {
-                    pReply->AddHeader(_T("Last-Modified"), LModified);
+                auto sModified = StrWebTime(FileAge(sResource.c_str()), szBuffer, sizeof(szBuffer));
+                if (sModified != nullptr) {
+                    pReply->AddHeader(_T("Last-Modified"), sModified);
                 }
 
                 pReply->Content.LoadFromFile(sResource.c_str());
