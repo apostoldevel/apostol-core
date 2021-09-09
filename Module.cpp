@@ -479,10 +479,10 @@ namespace Apostol {
                 sResource = Config()->Prefix() + sResource;
             }
 
-            sResource += Path;
-
             if (TryFiles.Count() != 0) {
-                sResource = CApostolModule::TryFiles(caRoot, TryFiles, Path);
+                sResource = CApostolModule::TryFiles(sResource, TryFiles, Path);
+            } else {
+                sResource += Path;
             }
 
             if (!path_separator(sResource.back()) && DirectoryExists(sResource.c_str())) {
