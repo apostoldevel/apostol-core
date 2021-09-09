@@ -471,19 +471,15 @@ namespace Apostol {
             auto pRequest = AConnection->Request();
             auto pReply = AConnection->Reply();
 
-            const auto &caRoot = GetRoot(pRequest->Location.Host());
+            CString sRoot(GetRoot(pRequest->Location.Host()));
 
-            CString sResource(caRoot);
-
-            if (!path_separator(sResource.front())) {
-                sResource = Config()->Prefix() + sResource;
+            if (!path_separator(sRoot.front())) {
+                sRoot = Config()->Prefix() + sRoot;
             }
 
-            if (TryFiles.Count() != 0) {
-                sResource = CApostolModule::TryFiles(sResource, TryFiles, Path);
-            } else {
-                sResource += Path;
-            }
+            CString sResource(sRoot);
+
+            sResource += Path;
 
             if (!path_separator(sResource.back()) && DirectoryExists(sResource.c_str())) {
                 sResource += '/';
@@ -493,29 +489,31 @@ namespace Apostol {
                 sResource += APOSTOL_INDEX_FILE;
             }
 
-            if (FileExists(sResource.c_str())) {
+            if (TryFiles.Count() != 0 && !FileExists(sResource.c_str())) {
+                sResource = CApostolModule::TryFiles(sRoot, TryFiles, Path);
+            }
 
-                CString sFileExt;
-                TCHAR szBuffer[MAX_BUFFER_SIZE + 1] = {0};
-
-                sFileExt = ExtractFileExt(szBuffer, sResource.c_str());
-
-                if (AContentType == nullptr) {
-                    AContentType = Mapping::ExtToType(sFileExt.c_str());
-                }
-
-                auto sModified = StrWebTime(FileAge(sResource.c_str()), szBuffer, sizeof(szBuffer));
-                if (sModified != nullptr) {
-                    pReply->AddHeader(_T("Last-Modified"), sModified);
-                }
-
-                pReply->Content.LoadFromFile(sResource.c_str());
-                AConnection->SendReply(CHTTPReply::ok, AContentType, SendNow);
-
+            if (!FileExists(sResource.c_str())) {
+                AConnection->SendStockReply(CHTTPReply::not_found, SendNow);
                 return;
             }
 
-            AConnection->SendStockReply(CHTTPReply::not_found, SendNow);
+            CString sFileExt;
+            TCHAR szBuffer[MAX_BUFFER_SIZE + 1] = {0};
+
+            sFileExt = ExtractFileExt(szBuffer, sResource.c_str());
+
+            if (AContentType == nullptr) {
+                AContentType = Mapping::ExtToType(sFileExt.c_str());
+            }
+
+            auto sModified = StrWebTime(FileAge(sResource.c_str()), szBuffer, sizeof(szBuffer));
+            if (sModified != nullptr) {
+                pReply->AddHeader(_T("Last-Modified"), sModified);
+            }
+
+            pReply->Content.LoadFromFile(sResource.c_str());
+            AConnection->SendReply(CHTTPReply::ok, AContentType, SendNow);
         }
         //--------------------------------------------------------------------------------------------------------------
 
