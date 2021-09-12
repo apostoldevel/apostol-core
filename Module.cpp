@@ -225,6 +225,9 @@ namespace Apostol {
                 const auto& caIdentifier = Config["oauth2"]["identifier"].AsString();
                 Data.AddPair("oauth2.identifier", caIdentifier.IsEmpty() ? "/oauth/identifier" : caIdentifier);
 
+                const auto& caSecret = Config["oauth2"]["secret"].AsString();
+                Data.AddPair("oauth2.secret", caSecret.IsEmpty() ? "/oauth/secret" : caSecret);
+
                 const auto& caCallback = Config["oauth2"]["callback"].AsString();
                 Data.AddPair("oauth2.callback", caCallback.IsEmpty() ? "/oauth/callback" : caCallback);
 
