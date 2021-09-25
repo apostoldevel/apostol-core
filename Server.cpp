@@ -823,9 +823,9 @@ namespace Apostol {
                 defaultProvider.Name() = _T("default");
 
                 CJSONObject web;
-                web.AddPair(_T("issuers"), CJSONArray("[\"accounts.apostol-web-service.ru\"]"));
-                web.AddPair(_T("client_id"), _T("apostol-web-service.ru"));
-                web.AddPair(_T("client_secret"), _T("apostol-web-service.ru"));
+                web.AddPair(_T("issuers"), CJSONArray("[\"accounts.apostol-crm.ru\"]"));
+                web.AddPair(_T("client_id"), _T("apostol-crm.ru"));
+                web.AddPair(_T("client_secret"), _T("apostol-crm.ru"));
                 web.AddPair(_T("algorithm"), _T("HS256"));
                 web.AddPair(_T("auth_uri"), _T("/oauth2/authorize"));
                 web.AddPair(_T("token_uri"), _T("/oauth2/token"));
