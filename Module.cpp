@@ -652,7 +652,7 @@ namespace Apostol {
                 if (!Result->GetIsNull(Row, 0)) {
                     if (Row > 0)
                         Json += _T(",");
-                    Json += Result->GetValue(Row, 0);
+                    Json.Append(Result->GetValue(Row, 0), Result->GetLength(Row, 0));
                 } else {
                     Json += bDataArray ? _T("null") : _T("{}");
                 }
