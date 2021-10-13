@@ -591,7 +591,7 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CProcessSingle::DoExit() {
-
+            Log()->Debug(APP_LOG_DEBUG_EVENT, _T("exiting single process"));
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -610,8 +610,6 @@ namespace Apostol {
                     Log()->Error(APP_LOG_ERR, 0, "%s", E.what());
                 }
 
-                DoExit();
-
                 if (sig_reconfigure) {
                     sig_reconfigure = 0;
                     Log()->Debug(APP_LOG_DEBUG_EVENT, _T("reconfiguring"));
@@ -626,7 +624,7 @@ namespace Apostol {
                 }
             }
 
-            Log()->Debug(APP_LOG_DEBUG_EVENT, _T("exiting single process"));
+            DoExit();
         }
 
         //--------------------------------------------------------------------------------------------------------------
