@@ -200,14 +200,6 @@ namespace Apostol {
 
             static void ExceptionToJson(int ErrorCode, const Delphi::Exception::Exception &E, CString& Json);
 
-            static void WSDebug(CWebSocket *AData);
-            static void WSDebugConnection(CHTTPServerConnection *AConnection);
-
-            static void DebugRequest(CHTTPRequest *ARequest);
-            static void DebugReply(CHTTPReply *AReply);
-
-            static void DebugConnection(CHTTPServerConnection *AConnection);
-
             static void ReplyError(CHTTPServerConnection *AConnection, CHTTPReply::CStatusType ErrorCode, const CString &Message);
 
             static void Redirect(CHTTPServerConnection *AConnection, const CString& Location, bool SendNow = false);

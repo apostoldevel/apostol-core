@@ -505,30 +505,6 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 #endif
-        void CServerProcess::DebugRequest(CHTTPRequest *ARequest) {
-            DebugMessage("[%p] Request:\n%s %s HTTP/%d.%d\n", ARequest, ARequest->Method.c_str(), ARequest->URI.c_str(), ARequest->VMajor, ARequest->VMinor);
-
-            for (int i = 0; i < ARequest->Headers.Count(); i++)
-                DebugMessage("%s: %s\n", ARequest->Headers[i].Name().c_str(), ARequest->Headers[i].Value().c_str());
-
-            if (!ARequest->Content.IsEmpty())
-                DebugMessage("\n%s\n", ARequest->Content.c_str());
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
-        void CServerProcess::DebugReply(CHTTPReply *AReply) {
-            if (!AReply->StatusText.IsEmpty()) {
-                DebugMessage("[%p] Reply:\nHTTP/%d.%d %d %s\n", AReply, AReply->VMajor, AReply->VMinor, AReply->Status, AReply->StatusText.c_str());
-
-                for (int i = 0; i < AReply->Headers.Count(); i++)
-                    DebugMessage("%s: %s\n", AReply->Headers[i].Name().c_str(), AReply->Headers[i].Value().c_str());
-
-                if (!AReply->Content.IsEmpty())
-                    DebugMessage("\n%s\n", AReply->Content.c_str());
-            }
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
         CHTTPClientItem *CServerProcess::GetClient(const CString &Host, uint16_t Port) {
             auto pClient = m_ClientManager.Add(Host.c_str(), Port);
 
@@ -726,52 +702,6 @@ namespace Apostol {
 
         void CServerProcess::DoConnect(CCommand *ACommand) {
 
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
-        void CServerProcess::FetchAccessToken(const CString &URI, const CString &Assertion,
-                COnSocketExecuteEvent && OnDone, COnSocketExceptionEvent && OnFailed) {
-
-            auto OnRequest = [](CHTTPClient *Sender, CHTTPRequest *ARequest) {
-
-                const auto &token_uri = Sender->Data()["token_uri"];
-                const auto &grant_type = Sender->Data()["grant_type"];
-                const auto &assertion = Sender->Data()["assertion"];
-
-                ARequest->Content = _T("grant_type=");
-                ARequest->Content << CHTTPServer::URLEncode(grant_type);
-
-                ARequest->Content << _T("&assertion=");
-                ARequest->Content << CHTTPServer::URLEncode(assertion);
-
-                CHTTPRequest::Prepare(ARequest, _T("POST"), token_uri.c_str(), _T("application/x-www-form-urlencoded"));
-
-                DebugRequest(ARequest);
-            };
-
-            auto OnException = [](CTCPConnection *Sender, const Delphi::Exception::Exception &E) {
-
-                auto pConnection = dynamic_cast<CHTTPClientConnection *> (Sender);
-                auto pClient = dynamic_cast<CHTTPClient *> (pConnection->Client());
-
-                DebugReply(pConnection->Reply());
-
-                Log()->Error(APP_LOG_ERR, 0, "[%s:%d] %s", pClient->Host().c_str(), pClient->Port(), E.what());
-            };
-
-            CLocation token_uri(URI);
-
-            auto pClient = GetClient(token_uri.hostname, token_uri.port);
-
-            pClient->Data().Values("token_uri", token_uri.pathname);
-            pClient->Data().Values("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer");
-            pClient->Data().Values("assertion", Assertion);
-
-            pClient->OnRequest(OnRequest);
-            pClient->OnExecute(static_cast<COnSocketExecuteEvent &&>(OnDone));
-            pClient->OnException(OnFailed == nullptr ? OnException : static_cast<COnSocketExceptionEvent &&>(OnFailed));
-
-            pClient->Active(true);
         }
         //--------------------------------------------------------------------------------------------------------------
 

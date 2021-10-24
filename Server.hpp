@@ -37,6 +37,9 @@ namespace Apostol {
 
         //--------------------------------------------------------------------------------------------------------------
 
+        typedef std::function<CHTTPClient * (const CLocation &URL)> COnGetHTTPClientEvent;
+        //--------------------------------------------------------------------------------------------------------------
+
         class CServerProcess: public CObject, public CGlobalComponent {
         private:
 
@@ -149,14 +152,8 @@ namespace Apostol {
 
             CPollStack PollStack() const { return m_PollStack; }
 
-            static void DebugRequest(CHTTPRequest *ARequest);
-            static void DebugReply(CHTTPReply *AReply);
-
             int TimerInterval() const { return m_TimerInterval; }
             void TimerInterval(int Value) { SetTimerInterval(Value); }
-
-            void FetchAccessToken(const CString &URI, const CString &Assertion,
-                COnSocketExecuteEvent && OnDone, COnSocketExceptionEvent && OnFailed = nullptr);
 
             static void LoadProviders(CProviders &Providers);
             static void LoadSites(CSites &Sites);

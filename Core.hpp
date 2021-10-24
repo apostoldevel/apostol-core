@@ -48,6 +48,7 @@ public:
     CGlobalComponent(): CLogComponent(), CConfigComponent() {
 
     };
+    //------------------------------------------------------------------------------------------------------------------
 
     static void OnIniFileParseError (CCustomIniFile *Sender, LPCTSTR lpszSectionName, LPCTSTR lpszKeyName,
                                      LPCTSTR lpszValue, LPCTSTR lpszDefault, int Line) {
@@ -66,6 +67,7 @@ public:
                              LConfFile.c_str(), Line, lpszDefault);
         }
     };
+    //------------------------------------------------------------------------------------------------------------------
 
     static void LoadConfig(const CString &FileName, CStringListPairs &Profiles, COnInitConfigEvent && OnInitConfig) {
 
@@ -101,7 +103,176 @@ public:
             Log()->Error(APP_LOG_WARN, 0, APP_FILE_NOT_FOUND, ConfigFile.c_str());
         }
     }
-    //--------------------------------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------------------------------------------
+
+    static void WSDebug(CWebSocket *AData) {
+        CString Hex;
+        CMemoryStream Stream;
+
+        TCHAR szZero[1] = { 0x00 };
+
+        size_t delta = 0;
+        size_t size = AData->Payload().Position();
+
+        Stream.SetSize((ssize_t) size);
+        Stream.Write(AData->Payload().Memory(), size);
+
+        Hex.SetLength(size * 3 + 1);
+        ByteToHexStr((LPSTR) Hex.Data(), Hex.Size(), (LPCBYTE) Stream.Memory(), size, 32);
+
+        if (size > MaxFormatStringLength) {
+            delta = size - MaxFormatStringLength;
+            size = MaxFormatStringLength;
+        }
+
+        DebugMessage("[FIN: %#x; OP: %#x; MASK: %#x LEN: %d] [%d-%d=%d] [%d] [%d]\n",
+                     AData->Frame().FIN, AData->Frame().Opcode, AData->Frame().Mask, AData->Frame().Length,
+                     AData->Payload().Size(), AData->Payload().Position(), AData->Payload().Size() - AData->Payload().Position(), delta, size
+        );
+
+        if (Stream.Size() != 0) {
+            Stream.Write(&szZero, sizeof(szZero));
+            DebugMessage("HEX: %s", Hex.c_str());
+            DebugMessage("\nSTR: %s\n", (LPCTSTR) Stream.Memory() + delta);
+        }
+    }
+    //------------------------------------------------------------------------------------------------------------------
+
+    static void WSDebugConnection(CHTTPServerConnection *AConnection) {
+
+        if (AConnection != nullptr) {
+
+            auto pSocket = AConnection->Socket();
+            if (pSocket != nullptr) {
+                auto pHandle = pSocket->Binding();
+                if (pHandle != nullptr) {
+                    DebugMessage(_T("\n[%p] [%s:%d] [%d] [WebSocket] [OnRequest] "), AConnection,
+                                 pHandle->PeerIP(), pHandle->PeerPort(), pHandle->Handle());
+                }
+            }
+
+            WSDebug(AConnection->WSRequest());
+
+            static auto OnRequest = [](CObject *Sender) {
+                auto pConnection = dynamic_cast<CHTTPServerConnection *> (Sender);
+                if (pConnection != nullptr) {
+                    auto pSocket = pConnection->Socket();
+                    if (pSocket != nullptr) {
+                        auto pHandle = pSocket->Binding();
+                        if (pHandle != nullptr) {
+                            DebugMessage(_T("\n[%p] [%s:%d] [%d] [WebSocket] [OnRequest] "), pConnection,
+                                         pHandle->PeerIP(), pHandle->PeerPort(), pHandle->Handle());
+                        }
+                    }
+
+                    WSDebug(pConnection->WSRequest());
+                }
+            };
+
+            static auto OnWaitRequest = [](CObject *Sender) {
+                auto pConnection = dynamic_cast<CHTTPServerConnection *> (Sender);
+                if (pConnection != nullptr) {
+                    auto pSocket = pConnection->Socket();
+                    if (pSocket != nullptr) {
+                        auto pHandle = pSocket->Binding();
+                        if (pHandle != nullptr) {
+                            DebugMessage(_T("\n[%p] [%s:%d] [%d] [WebSocket] [OnWaitRequest] "), pConnection,
+                                         pHandle->PeerIP(), pHandle->PeerPort(), pHandle->Handle());
+                        }
+                    }
+
+                    WSDebug(pConnection->WSRequest());
+                }
+            };
+
+            static auto OnReply = [](CObject *Sender) {
+                auto pConnection = dynamic_cast<CHTTPServerConnection *> (Sender);
+                if (pConnection != nullptr) {
+                    auto pSocket = pConnection->Socket();
+                    if (pSocket != nullptr) {
+                        auto pHandle = pSocket->Binding();
+                        if (pHandle != nullptr) {
+                            DebugMessage(_T("\n[%p] [%s:%d] [%d] [WebSocket] [OnReply] "), pConnection,
+                                         pHandle->PeerIP(), pHandle->PeerPort(), pHandle->Handle());
+                        }
+                    }
+
+                    WSDebug(pConnection->WSReply());
+                }
+            };
+
+            AConnection->OnWaitRequest(OnWaitRequest);
+            AConnection->OnRequest(OnRequest);
+            AConnection->OnReply(OnReply);
+        }
+    }
+    //------------------------------------------------------------------------------------------------------------------
+
+    static void DebugRequest(CHTTPRequest *ARequest) {
+        DebugMessage(_T("[%p] Request:\n%s %s HTTP/%d.%d\n"), ARequest, ARequest->Method.c_str(), ARequest->URI.c_str(), ARequest->VMajor, ARequest->VMinor);
+
+        for (int i = 0; i < ARequest->Headers.Count(); i++)
+            DebugMessage(_T("%s: %s\n"), ARequest->Headers[i].Name().c_str(), ARequest->Headers[i].Value().c_str());
+
+        if (!ARequest->Content.IsEmpty())
+            DebugMessage(_T("\n%s\n"), ARequest->Content.c_str());
+    }
+    //------------------------------------------------------------------------------------------------------------------
+
+    static void DebugReply(CHTTPReply *AReply) {
+        if (!AReply->StatusText.IsEmpty()) {
+            DebugMessage(_T("[%p] Reply:\nHTTP/%d.%d %d %s\n"), AReply, AReply->VMajor, AReply->VMinor, AReply->Status, AReply->StatusText.c_str());
+
+            for (int i = 0; i < AReply->Headers.Count(); i++)
+                DebugMessage(_T("%s: %s\n"), AReply->Headers[i].Name().c_str(), AReply->Headers[i].Value().c_str());
+
+            if (!AReply->Content.IsEmpty())
+                DebugMessage(_T("\n%s\n"), AReply->Content.c_str());
+        }
+    }
+    //------------------------------------------------------------------------------------------------------------------
+
+    static void DebugConnection(CHTTPServerConnection *AConnection) {
+
+        if (AConnection != nullptr) {
+
+            auto pSocket = AConnection->Socket();
+            if (pSocket != nullptr) {
+                auto pHandle = pSocket->Binding();
+                if (pHandle != nullptr) {
+                    if (pHandle->HandleAllocated()) {
+                        DebugMessage(_T("\n[%p] [%s:%d] [%d] "), AConnection,
+                                     pHandle->PeerIP(), pHandle->PeerPort(), pHandle->Handle());
+                    }
+                }
+            }
+
+            DebugRequest(AConnection->Request());
+
+            static auto OnReply = [](CObject *Sender) {
+
+                auto pConnection = dynamic_cast<CHTTPServerConnection *> (Sender);
+
+                if (pConnection != nullptr) {
+                    auto pSocket = pConnection->Socket();
+                    if (pSocket != nullptr) {
+                        auto pHandle = pSocket->Binding();
+                        if (pHandle != nullptr) {
+                            if (pHandle->HandleAllocated()) {
+                                DebugMessage(_T("\n[%p] [%s:%d] [%d] "), pConnection, pHandle->PeerIP(),
+                                             pHandle->PeerPort(), pHandle->Handle());
+                            }
+                        }
+                    }
+
+                    DebugReply(pConnection->Reply());
+                }
+            };
+
+            AConnection->OnReply(OnReply);
+        }
+    }
+    //------------------------------------------------------------------------------------------------------------------
 
     static CConfig *Config() { return GConfig; };
 
@@ -112,6 +283,7 @@ public:
 
 #include "Process.hpp"
 #include "Server.hpp"
+#include "Token.hpp"
 #include "Module.hpp"
 #include "Modules.hpp"
 #include "Application.hpp"
