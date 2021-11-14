@@ -138,7 +138,7 @@ public:
     }
     //------------------------------------------------------------------------------------------------------------------
 
-    static void WSDebugConnection(CHTTPServerConnection *AConnection) {
+    static void WSDebugConnection(CWebSocketConnection *AConnection) {
 
         if (AConnection != nullptr) {
 
