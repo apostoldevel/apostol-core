@@ -277,9 +277,9 @@ namespace Apostol {
 
             err = errno;
 
-            int I = IndexOfSigNo(signo);
-            if (I >= 0)
-                sigcode = Signals(I)->Code();
+            int i = IndexOfSigNo(signo);
+            if (i >= 0)
+                sigcode = Signals(i)->Code();
             else
                 sigcode = _T("signal code not found");
 
@@ -288,6 +288,7 @@ namespace Apostol {
             Log()->Debug(APP_LOG_DEBUG_EVENT, _T("signal handler %d (%s), process name: %s"), signo, sigcode, GetProcessName());
 
             switch (Type()) {
+                case ptMain:
                 case ptMaster:
                 case ptSingle:
                     switch (signo) {
@@ -415,7 +416,6 @@ namespace Apostol {
 
             if (siginfo && siginfo->si_pid) {
                 Log()->Debug(APP_LOG_DEBUG_EVENT, _T("signal %d (%s) received from %P%s"), signo, sigcode, siginfo->si_pid, action);
-
             } else {
                 Log()->Debug(APP_LOG_DEBUG_EVENT, _T("signal %d (%s) received%s"), signo, sigcode, action);
             }
@@ -500,8 +500,8 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CProcessManager::StopAll() {
-            for (int I = 1; I < ProcessCount(); I++)
-                Stop(I);
+            for (int i = 1; i < ProcessCount(); i++)
+                Stop(i);
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -511,16 +511,16 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CProcessManager::TerminateAll() {
-            for (int I = 1; I < ProcessCount(); I++)
-                Terminate(I);
+            for (int i = 1; i < ProcessCount(); i++)
+                Terminate(i);
         }
         //--------------------------------------------------------------------------------------------------------------
 
         CSignalProcess *CProcessManager::FindProcessById(pid_t Pid) {
             CSignalProcess *Item;
 
-            for (int I = 0; I < ProcessCount(); I++) {
-                Item = Processes(I);
+            for (int i = 0; i < ProcessCount(); i++) {
+                Item = Processes(i);
                 if (Item->Pid() == Pid)
                     return Item;
             }

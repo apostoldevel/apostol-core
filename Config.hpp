@@ -462,7 +462,7 @@ namespace Apostol {
             CStringListPairs& PostgresConnInfo() { return m_PostgresConnInfo; };
             const CStringListPairs& PostgresConnInfo() const { return m_PostgresConnInfo; };
 
-            const CIniFile& IniFile() const { return *m_pIniFile; }
+            const CIniFile& IniFile() const;
 
         };
 

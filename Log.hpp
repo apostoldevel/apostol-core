@@ -76,7 +76,7 @@ Author:
 //----------------------------------------------------------------------------------------------------------------------
 
 static string_t err_levels[] = {
-        CreateNullString,
+        CreateString("stderr"),
         CreateString("emerg"),
         CreateString("alert"),
         CreateString("crit"),

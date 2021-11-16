@@ -298,6 +298,13 @@ namespace Apostol {
 
             ParseCmdLine();
 
+#ifdef _DEBUG
+            Log()->Error(APP_LOG_STDERR, 0, "%s version: %s (%s build)", Description().c_str(), Version().c_str(), "debug");
+#else
+            Log()->Error(APP_LOG_STDERR, 0, "%s version: %s (%s build)", Description().c_str(), Version().c_str(), "release");
+#endif
+            Log()->Error(APP_LOG_STDERR, 0, "Config file: %s", Config()->ConfFile().c_str());
+
             if (Config()->Flags().show_version) {
                 ShowVersionInfo();
                 ExitRun(0);
@@ -327,13 +334,6 @@ namespace Apostol {
             DefaultLocale.SetLocale(Config()->Locale().c_str());
 
             CreateLogFiles();
-
-#ifdef _DEBUG
-            Log()->Error(APP_LOG_INFO, 0, "%s version: %s (%s build)", Description().c_str(), Version().c_str(), "debug");
-#else
-            Log()->Error(APP_LOG_INFO, 0, "%s version: %s (%s build)", Description().c_str(), Version().c_str(), "release");
-#endif
-            Log()->Error(APP_LOG_INFO, 0, "Config file: %s", Config()->ConfFile().c_str());
 
             StartProcess();
         }
@@ -1112,13 +1112,10 @@ namespace Apostol {
 
                 Log()->Debug(APP_LOG_DEBUG_EVENT, _T("worker cycle"));
 
-                try
-                {
+                try {
                     Server().Wait();
-                }
-                catch (Delphi::Exception::Exception &E)
-                {
-                    Log()->Error(APP_LOG_ERR, 0, "%s", E.what());
+                } catch (std::exception &e) {
+                    Log()->Error(APP_LOG_ERR, 0, "%s", e.what());
                 }
 
                 if (sig_terminate || sig_quit) {

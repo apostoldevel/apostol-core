@@ -321,14 +321,15 @@ namespace Apostol {
 
                 logfile = Next();
             }
-
+#ifdef _DEBUG
             DebugMessage(errStr);
-
-            if (UseStdErr() && ALevel <= APP_LOG_WARN && wrote_stderr) {
-                msg -= (9 + err_levels[ALevel].len + 3);
-                (void) ld_sprintf(msg, "apostol: [%V] ", &err_levels[ALevel]);
+#else
+            if (UseStdErr() && ALevel < APP_LOG_DEBUG && !wrote_stderr) {
+                msg -= (err_levels[ALevel].len + 3);
+                (void) ld_sprintf(msg, "[%V] ", &err_levels[ALevel]);
                 (void) write_console(STDERR_FILENO, msg, p - msg);
             }
+#endif
         }
         //--------------------------------------------------------------------------------------------------------------
 

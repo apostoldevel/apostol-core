@@ -112,7 +112,7 @@ public:
         TCHAR szZero[1] = { 0x00 };
 
         size_t delta = 0;
-        size_t size = AData->Payload().Position();
+        size_t size = AData->Payload().Size();
 
         Stream.SetSize((ssize_t) size);
         Stream.Write(AData->Payload().Memory(), size);
@@ -154,7 +154,7 @@ public:
             WSDebug(AConnection->WSRequest());
 
             static auto OnRequest = [](CObject *Sender) {
-                auto pConnection = dynamic_cast<CHTTPServerConnection *> (Sender);
+                auto pConnection = dynamic_cast<CWebSocketConnection *> (Sender);
                 if (pConnection != nullptr) {
                     auto pSocket = pConnection->Socket();
                     if (pSocket != nullptr) {
@@ -170,7 +170,7 @@ public:
             };
 
             static auto OnWaitRequest = [](CObject *Sender) {
-                auto pConnection = dynamic_cast<CHTTPServerConnection *> (Sender);
+                auto pConnection = dynamic_cast<CWebSocketConnection *> (Sender);
                 if (pConnection != nullptr) {
                     auto pSocket = pConnection->Socket();
                     if (pSocket != nullptr) {
@@ -186,7 +186,7 @@ public:
             };
 
             static auto OnReply = [](CObject *Sender) {
-                auto pConnection = dynamic_cast<CHTTPServerConnection *> (Sender);
+                auto pConnection = dynamic_cast<CWebSocketConnection *> (Sender);
                 if (pConnection != nullptr) {
                     auto pSocket = pConnection->Socket();
                     if (pSocket != nullptr) {

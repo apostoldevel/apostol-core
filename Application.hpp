@@ -122,9 +122,8 @@ namespace Apostol {
             inline void Destroy() override { delete this; };
 
             template <class ClassProcess>
-            inline CApplication &AddProcess() {
-                new ClassProcess(SignalProcess(), this);
-                return *this;
+            inline ClassProcess *AddProcess() {
+                return new ClassProcess(SignalProcess(), this);
             };
 
             CString ProcessesNames();

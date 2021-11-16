@@ -97,6 +97,7 @@ namespace Apostol {
             CSignalProcess(CCustomProcess *AParent, CProcessManager *AManager, CProcessType AType, LPCTSTR AName);
 
             virtual CSignalProcess *SignalProcess() { return m_pSignalProcess; };
+            void SignalProcess(CSignalProcess *Value) { SetSignalProcess(Value); };
 
             void SignalHandler(int signo, siginfo_t *siginfo, void *ucontext) override;
 

@@ -505,6 +505,13 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
+        const CIniFile &CConfig::IniFile() const {
+            if (m_pIniFile == nullptr)
+                throw Delphi::Exception::Exception(_T("Not initialized"));
+            return *m_pIniFile;
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
         void CConfig::LoadLogFilesDefault() {
             m_LogFiles.AddPair(_T("error"), m_sErrorLog.c_str());
             m_LogFiles.AddPair(_T("stream"), m_sStreamLog.c_str());
@@ -520,78 +527,80 @@ namespace Apostol {
             CConfigCommand *C;
             CVariant V;
 
-            if (FileExists(m_sConfFile.c_str())) {
+            if (!FileExists(m_sConfFile.c_str())) {
+                Log()->Error(APP_LOG_STDERR, 0, APP_FILE_NOT_FOUND, m_sConfFile.c_str());
+                return;
+            }
 
-                if (m_pIniFile == nullptr) {
-                    m_pIniFile = new CIniFile(m_sConfFile.c_str());
-                } else {
-                    m_pIniFile->Rename(m_sConfFile.c_str(), true);
-                }
+            if (m_pIniFile == nullptr) {
+                m_pIniFile = new CIniFile(m_sConfFile.c_str());
+            } else {
+                m_pIniFile->Rename(m_sConfFile.c_str(), true);
+            }
 
 #if defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE >= 9)
-                m_pIniFile->OnIniFileParseError([this](auto && Sender, auto && lpszSectionName, auto && lpszKeyName, auto && lpszValue, auto && lpszDefault, auto && Line) {
-                    OnIniFileParseError(Sender, lpszSectionName, lpszKeyName, lpszValue, lpszDefault, Line);
-                });
+            m_pIniFile->OnIniFileParseError([this](auto && Sender, auto && lpszSectionName, auto && lpszKeyName, auto && lpszValue, auto && lpszDefault, auto && Line) {
+                OnIniFileParseError(Sender, lpszSectionName, lpszKeyName, lpszValue, lpszDefault, Line);
+            });
 #else
-                m_pIniFile->OnIniFileParseError(std::bind(&CConfig::OnIniFileParseError, this, _1, _2, _3, _4, _5, _6));
+            m_pIniFile->OnIniFileParseError(std::bind(&CConfig::OnIniFileParseError, this, _1, _2, _3, _4, _5, _6));
 #endif
-                for (int i = 0; i < Count(); ++i) {
-                    C = Commands(i);
+            for (int i = 0; i < Count(); ++i) {
+                C = Commands(i);
 
-                    switch (C->Type()) {
-                        case ctInteger:
-                            V = m_pIniFile->ReadInteger(C->Section(), C->Ident(), C->Default().vasInteger);
-                            break;
+                switch (C->Type()) {
+                    case ctInteger:
+                        V = m_pIniFile->ReadInteger(C->Section(), C->Ident(), C->Default().vasInteger);
+                        break;
 
-                        case ctUInteger:
-                            V = ((uint32_t) m_pIniFile->ReadInteger(C->Section(), C->Ident(), C->Default().vasUnsigned));
-                            break;
+                    case ctUInteger:
+                        V = ((uint32_t) m_pIniFile->ReadInteger(C->Section(), C->Ident(), C->Default().vasUnsigned));
+                        break;
 
-                        case ctDouble:
-                            V = m_pIniFile->ReadFloat(C->Section(), C->Ident(), C->Default().vasDouble);
-                            break;
+                    case ctDouble:
+                        V = m_pIniFile->ReadFloat(C->Section(), C->Ident(), C->Default().vasDouble);
+                        break;
 
-                        case ctBoolean:
-                            V = m_pIniFile->ReadBool(C->Section(), C->Ident(), C->Default().vasBoolean);
-                            break;
+                    case ctBoolean:
+                        V = m_pIniFile->ReadBool(C->Section(), C->Ident(), C->Default().vasBoolean);
+                        break;
 
-                        case ctDateTime:
-                            V = m_pIniFile->ReadDateTime(C->Section(), C->Ident(), C->Default().vasDouble);
-                            break;
+                    case ctDateTime:
+                        V = m_pIniFile->ReadDateTime(C->Section(), C->Ident(), C->Default().vasDouble);
+                        break;
 
-                        default:
-                            V = new CString();
-                            m_pIniFile->ReadString(C->Section(), C->Ident(), C->Default().vasStr, *V.vasCString);
-                            break;
-                    }
-
-                    C->Value(V);
+                    default:
+                        V = new CString();
+                        m_pIniFile->ReadString(C->Section(), C->Ident(), C->Default().vasStr, *V.vasCString);
+                        break;
                 }
 
-                m_LogFiles.Clear();
-                m_pIniFile->ReadSectionValues(_T("log"), &m_LogFiles);
-                if ((m_LogFiles.Count() == 0) || !CheckLogFiles())
-                    LoadLogFilesDefault();
+                C->Value(V);
+            }
 
-                m_PostgresConnInfo.Clear();
+            m_LogFiles.Clear();
+            m_pIniFile->ReadSectionValues(_T("log"), &m_LogFiles);
+            if ((m_LogFiles.Count() == 0) || !CheckLogFiles())
+                LoadLogFilesDefault();
 
-                m_PostgresConnInfo.AddPair("worker", CStringList());
-                m_PostgresConnInfo.AddPair("helper", CStringList());
+            m_PostgresConnInfo.Clear();
 
-                auto &worker = m_PostgresConnInfo["worker"];
-                auto &helper = m_PostgresConnInfo["helper"];
+            m_PostgresConnInfo.AddPair("worker", CStringList());
+            m_PostgresConnInfo.AddPair("helper", CStringList());
 
-                m_pIniFile->ReadSectionValues(_T("postgres/worker"), &worker);
-                m_pIniFile->ReadSectionValues(_T("postgres/helper"), &helper);
+            auto &worker = m_PostgresConnInfo["worker"];
+            auto &helper = m_PostgresConnInfo["helper"];
 
-                if (worker.Count() == 0) {
-                    m_pIniFile->ReadSectionValues(_T("postgres/conninfo"), &worker);
-                    helper = worker;
-                }
+            m_pIniFile->ReadSectionValues(_T("postgres/worker"), &worker);
+            m_pIniFile->ReadSectionValues(_T("postgres/helper"), &helper);
 
-                if (worker.Count() == 0) {
-                    m_fPostgresConnect = false;
-                }
+            if (worker.Count() == 0) {
+                m_pIniFile->ReadSectionValues(_T("postgres/conninfo"), &worker);
+                helper = worker;
+            }
+
+            if (worker.Count() == 0) {
+                m_fPostgresConnect = false;
             }
         }
         //--------------------------------------------------------------------------------------------------------------
