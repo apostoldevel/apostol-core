@@ -303,14 +303,14 @@ namespace Apostol {
 #else
             Log()->Error(APP_LOG_STDERR, 0, "%s version: %s (%s build)", Description().c_str(), Version().c_str(), "release");
 #endif
-            Log()->Error(APP_LOG_STDERR, 0, "Config file: %s", Config()->ConfFile().c_str());
-
             if (Config()->Flags().show_version) {
                 ShowVersionInfo();
                 ExitRun(0);
             }
 
             Config()->Reload();
+
+            Log()->Error(APP_LOG_STDERR, 0, "Config file: %s", Config()->ConfFile().c_str());
 
             if (Config()->Flags().test_config) {
 
