@@ -461,6 +461,12 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
+        void CSignalProcess::SignalRestart() {
+            sig_restart = 1;
+            sig_exiting = 1;
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
         void CSignalProcess::SignalReload() {
             sig_reconfigure = 1;
         }
@@ -484,8 +490,8 @@ namespace Apostol {
                     AProcess->BeforeRun();
                     AProcess->Run();
                     AProcess->AfterRun();
-                } catch (Delphi::Exception::Exception &E) {
-                    log_failure(E.what())
+                } catch (std::exception &e) {
+                    log_failure(e.what())
                 } catch (...) {
                     log_failure("Unknown error...")
                 }

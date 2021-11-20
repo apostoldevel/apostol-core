@@ -103,6 +103,7 @@ namespace Apostol {
 
             void ExitSigAlarm(uint_t AMsec) const;
 
+            virtual void SignalRestart();
             virtual void SignalReload();
             virtual void SignalQuit();
 

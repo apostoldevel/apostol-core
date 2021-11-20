@@ -398,6 +398,7 @@ namespace Apostol {
 
             if (Flag >= 0) {
                 pProcess = Application()->Processes(Flag);
+                pProcess->Respawn(true);
             } else {
                 pProcess = CApplicationProcess::Create(this, m_pApplication, Type);
                 pProcess->Data(Data);
@@ -601,13 +602,10 @@ namespace Apostol {
 
                 Log()->Debug(APP_LOG_DEBUG_EVENT, _T("single cycle"));
 
-                try
-                {
+                try {
                     Server().Wait();
-                }
-                catch (Delphi::Exception::Exception &E)
-                {
-                    Log()->Error(APP_LOG_ERR, 0, "%s", E.what());
+                } catch (std::exception &e) {
+                    Log()->Error(APP_LOG_ERR, 0, "%s", e.what());
                 }
 
                 if (sig_reconfigure) {
@@ -772,14 +770,15 @@ namespace Apostol {
                 if (pProcess->Type() == ptMain)
                     continue;
 
-                Log()->Debug(APP_LOG_DEBUG_EVENT, _T("reap child: %i %P e:%d t:%d d:%d r:%d j:%d"),
+                Log()->Debug(APP_LOG_DEBUG_EVENT, _T("reap child: %i %P:\texiting: %d\texited: %d\tdetached: %d\trespawn: %d\tjustSpawn: %d\tname: %s"),
                               i,
                               pProcess->Pid(),
                               pProcess->Exiting() ? 1 : 0,
                               pProcess->Exited() ? 1 : 0,
                               pProcess->Detached() ? 1 : 0,
                               pProcess->Respawn() ? 1 : 0,
-                              pProcess->JustSpawn() ? 1 : 0
+                              pProcess->JustSpawn() ? 1 : 0,
+                              pProcess->GetProcessName()
                 );
 
                 if (pProcess->Exited()) {
@@ -787,14 +786,15 @@ namespace Apostol {
                     if (pProcess->Respawn() && !pProcess->Exiting() && !(sig_terminate || sig_quit)) {
 
                         if (pProcess->Type() >= ptWorker) {
-                            if (SwapProcess(pProcess->Type(), i) == -1) {
+                            try {
+                                SwapProcess(pProcess->Type(), i);
+                            } catch (std::exception &e) {
                                 Log()->Error(APP_LOG_ALERT, 0, "could not respawn %s", pProcess->GetProcessName());
                                 continue;
                             }
                         }
 
                         live = true;
-
                         continue;
                     }
 
@@ -845,16 +845,16 @@ namespace Apostol {
             for (int i = 0; i < Application()->ProcessCount(); ++i) {
                 pProcess = Application()->Processes(i);
 
-                Log()->Debug(APP_LOG_DEBUG_EVENT, _T("process (%s)\t: %P - %i %P e:%d t:%d d:%d r:%d j:%d"),
-                              pProcess->GetProcessName(),
-                              Pid(),
+                Log()->Debug(APP_LOG_DEBUG_EVENT, _T("process: %i %P:%P\texiting: %d\texited: %d\tdetached: %d\trespawn: %d\tjustSpawn: %d\tname: %s"),
                               i,
+                              Pid(),
                               pProcess->Pid(),
                               pProcess->Exiting() ? 1 : 0,
                               pProcess->Exited() ? 1 : 0,
                               pProcess->Detached() ? 1 : 0,
                               pProcess->Respawn() ? 1 : 0,
-                              pProcess->JustSpawn() ? 1 : 0
+                              pProcess->JustSpawn() ? 1 : 0,
+                              pProcess->GetProcessName()
                 );
             }
 
@@ -903,7 +903,7 @@ namespace Apostol {
                         continue;
                     }
 
-                    sigio = Config()->Workers();
+                    sigio = (int) Config()->Workers();
 
                     if (delay > 1000) {
                         SignalToProcesses(SIGKILL);
