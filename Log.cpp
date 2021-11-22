@@ -268,49 +268,64 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CLog::ErrorCore(u_int ALevel, int AError, LPCSTR AFormat, CLogType ALogType, va_list args) {
-            TCHAR       *p, *last, *msg;
+            TCHAR       *f, *last_f;
+            TCHAR       *c, *last_c;
+            TCHAR       *last_a;
+
             ssize_t     n;
+
             bool        wrote_stderr;
 
-            TCHAR       errStr[LOG_MAX_ERROR_STR] = {0};
-            TCHAR       timeStr[LOG_MAX_ERROR_STR] = {0};
+            TCHAR       time_str [LOG_MAX_ERROR_STR] = {0};
+            TCHAR       args_str [LOG_MAX_ERROR_STR] = {0};
+            TCHAR       file_str [LOG_MAX_ERROR_STR] = {0};
+            TCHAR       cons_str [LOG_MAX_ERROR_STR] = {0};
 
             time_t      itime;
             struct tm   *timeInfo;
 
-            last = errStr + LOG_MAX_ERROR_STR;
+            last_f = file_str + LOG_MAX_ERROR_STR * sizeof(TCHAR);
+            last_c = cons_str + LOG_MAX_ERROR_STR * sizeof(TCHAR);
+            last_a = args_str + LOG_MAX_ERROR_STR * sizeof(TCHAR);
 
             itime = time(&itime);
             timeInfo = localtime(&itime);
 
-            strftime(timeStr, LOG_MAX_ERROR_STR, "%Y/%m/%d %H:%M:%S", timeInfo);
+            strftime(time_str, LOG_MAX_ERROR_STR, "%Y/%m/%d %H:%M:%S", timeInfo);
 
-            p = MemCopy(errStr, timeStr, strlen(timeStr));
-            p = ld_slprintf(p, last, " [%V] ", &err_levels[ALevel]);
-
+            f = ld_slprintf(file_str, last_f, "[%s] ", time_str);
+            c = ld_slprintf(cons_str, last_c, COLOR_WHITE "[%s] ", time_str);
+#ifdef _DEBUG
             /* pid#tid */
-            p = ld_slprintf(p, last, "%P#" LOG_TID_T_FMT ": ", log_pid, log_tid);
+            f = ld_slprintf(f, last_f, "[%P#" LOG_TID_T_FMT "] ", log_pid, log_tid);
+            c = ld_slprintf(c, last_c, "[%P#" LOG_TID_T_FMT "] ", log_pid, log_tid);
+#endif
+            f = ld_slprintf(f, last_f, "%V: ", &err_levels[ALevel]);
+            c = ld_slprintf(c, last_c, "%V", &level_colors[ALevel]);
 
-            msg = p;
+            ld_vslprintf(args_str, last_a, AFormat, args);
 
-            p = ld_vslprintf(p, last, AFormat, args);
+            f = ld_slprintf(f, last_f, "%s", args_str);
+            c = ld_slprintf(c, last_c, "%s", args_str);
 
             if (AError) {
-                p = ErrNo(p, last, AError);
+                f = ErrNo(f, last_f, AError);
+                c = ErrNo(c, last_c, AError);
             }
 
-            if (p > last - LINEFEED_SIZE) {
-                p = last - LINEFEED_SIZE;
+            if (f > last_f - LINEFEED_SIZE) {
+                f = last_f - LINEFEED_SIZE;
             }
 
-            linefeed(p);
+            linefeed(f);
+            c = ld_slprintf(c, last_c, COLOR_OFF "\n");
 
             wrote_stderr = false;
 
             CLogFile *logfile = First();
             while (logfile) {
                 if (logfile->LogType() == ALogType && logfile->Level() >= ALevel && itime != m_DiskFullTime) {
-                    n = write_fd(logfile->Handle(), errStr, p - errStr);
+                    n = write_fd(logfile->Handle(), file_str, f - file_str);
 
                     if (n == -1 && errno == ENOSPC) {
                         DiskFullTime(itime);
@@ -322,12 +337,10 @@ namespace Apostol {
                 logfile = Next();
             }
 #ifdef _DEBUG
-            DebugMessage(errStr);
+            DebugMessage(UseStdErr() ? cons_str : file_str);
 #else
             if (UseStdErr() && ALevel < APP_LOG_DEBUG && !wrote_stderr) {
-                msg -= (err_levels[ALevel].len + 3);
-                (void) ld_sprintf(msg, "[%V] ", &err_levels[ALevel]);
-                (void) write_console(STDERR_FILENO, msg, p - msg);
+                (void) write_console(STDERR_FILENO, cons_str, c - cons_str);
             }
 #endif
         }
@@ -360,6 +373,19 @@ namespace Apostol {
             if (Level() & ALevel) {
                 ErrorCore(APP_LOG_DEBUG, 0, AFormat, ltDebug, args);
             }
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CLog::Warning(LPCSTR AFormat, ...) {
+            va_list args;
+            va_start(args, AFormat);
+            Error(APP_LOG_WARN, 0, AFormat, args);
+            va_end(args);
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CLog::Warning(LPCSTR AFormat, va_list args) {
+            Error(APP_LOG_WARN, 0, AFormat,  args);
         }
         //--------------------------------------------------------------------------------------------------------------
 

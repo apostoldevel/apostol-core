@@ -308,24 +308,26 @@ namespace Apostol {
                 ExitRun(0);
             }
 
-            Config()->Reload();
+            if (!Config()->ConfFile().IsEmpty()) {
+                Log()->Error(APP_LOG_NOTICE, 0, "Config file: %s", Config()->ConfFile().c_str());
+            }
 
-            Log()->Error(APP_LOG_STDERR, 0, "Config file: %s", Config()->ConfFile().c_str());
+            Config()->Reload();
 
             if (Config()->Flags().test_config) {
 
                 if (!FileExists(Config()->ConfFile().c_str())) {
-                    Log()->Error(APP_LOG_STDERR, 0, "configuration file %s not found", Config()->ConfFile().c_str());
-                    Log()->Error(APP_LOG_STDERR, 0, "configuration file %s test failed", Config()->ConfFile().c_str());
+                    Log()->Error(APP_LOG_EMERG, 0, "configuration file %s not found", Config()->ConfFile().c_str());
+                    Log()->Error(APP_LOG_EMERG, 0, "configuration file %s test failed", Config()->ConfFile().c_str());
                     ExitRun(1);
                 }
 
                 if (Config()->ErrorCount() == 0) {
-                    Log()->Error(APP_LOG_STDERR, 0, "configuration file %s test is successful", Config()->ConfFile().c_str());
+                    Log()->Error(APP_LOG_EMERG, 0, "configuration file %s test is successful", Config()->ConfFile().c_str());
                     ExitRun(0);
                 }
 
-                Log()->Error(APP_LOG_STDERR, 0, "configuration file %s test failed", Config()->ConfFile().c_str());
+                Log()->Error(APP_LOG_EMERG, 0, "configuration file %s test failed", Config()->ConfFile().c_str());
                 ExitRun(1);
             }
 

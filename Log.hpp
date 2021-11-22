@@ -66,6 +66,37 @@ Author:
 #define APP_LOG_DEBUG_CONNECTION  0x800u
 //----------------------------------------------------------------------------------------------------------------------
 
+#define COLOR_OFF    "\e[0m"
+
+#define CC_BEGIN     "\e["
+#define CC_END       "m"
+
+#define CC_BOLD      "1;"
+#define CC_UNDERLINE "1;"
+
+#define CC_NORMAL    "3"
+#define CC_LIGHT     "9"
+
+#define CC_BLACK     "0"
+#define CC_RED       "1"
+#define CC_GREEN     "2"
+#define CC_YELLOW    "3"
+#define CC_BLUE      "4"
+#define CC_MAGENTA   "5"
+#define CC_CYAN      "6"
+#define CC_WHITE     "7"
+
+#define COLOR_BLACK   CC_BEGIN CC_NORMAL CC_BLACK   CC_END
+#define COLOR_RED     CC_BEGIN CC_NORMAL CC_RED     CC_END
+#define COLOR_GREEN   CC_BEGIN CC_NORMAL CC_GREEN   CC_END
+#define COLOR_YELLOW  CC_BEGIN CC_NORMAL CC_YELLOW  CC_END
+#define COLOR_BLUE    CC_BEGIN CC_NORMAL CC_BLUE    CC_END
+#define COLOR_MAGENTA CC_BEGIN CC_NORMAL CC_MAGENTA CC_END
+#define COLOR_CYAN    CC_BEGIN CC_NORMAL CC_CYAN    CC_END
+#define COLOR_WHITE   CC_BEGIN CC_NORMAL CC_WHITE   CC_END
+
+//----------------------------------------------------------------------------------------------------------------------
+
 #ifndef log_pid
 #define log_pid                  MainThreadID
 #endif
@@ -85,6 +116,19 @@ static string_t err_levels[] = {
         CreateString("notice"),
         CreateString("info"),
         CreateString("debug")
+};
+//----------------------------------------------------------------------------------------------------------------------
+
+static string_t level_colors[] = {
+        CreateString(CC_BEGIN         CC_LIGHT  CC_WHITE   CC_END),
+        CreateString(CC_BEGIN         CC_LIGHT  CC_BLUE    CC_END),
+        CreateString(CC_BEGIN         CC_LIGHT  CC_MAGENTA CC_END),
+        CreateString(CC_BEGIN CC_BOLD CC_LIGHT  CC_RED     CC_END),
+        CreateString(CC_BEGIN         CC_LIGHT  CC_RED     CC_END),
+        CreateString(CC_BEGIN         CC_LIGHT  CC_YELLOW  CC_END),
+        CreateString(CC_BEGIN         CC_NORMAL CC_CYAN    CC_END),
+        CreateString(CC_BEGIN         CC_NORMAL CC_GREEN   CC_END),
+        CreateString(CC_BEGIN         CC_NORMAL CC_WHITE   CC_END)
 };
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -270,6 +314,9 @@ namespace Apostol {
 
             void Debug(u_int ALevel, LPCSTR AFormat, ...);
             void Debug(u_int ALevel, LPCSTR AFormat, va_list args);
+
+            void Warning(LPCSTR AFormat, ...);
+            void Warning(LPCSTR AFormat, va_list args);
 
             void Notice(LPCSTR AFormat, ...);
             void Notice(LPCSTR AFormat, va_list args);

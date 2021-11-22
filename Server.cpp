@@ -552,9 +552,9 @@ namespace Apostol {
                 if (pSocket != nullptr) {
                     auto pHandle = pSocket->Binding();
                     if (pHandle != nullptr) {
-                        Log()->Message(_T("[%s:%d] Connected."), pHandle->PeerIP(), pHandle->PeerPort());
+                        Log()->Notice(_T("[%s:%d] Connected."), pHandle->PeerIP(), pHandle->PeerPort());
                     } else {
-                        Log()->Message("Connected.");
+                        Log()->Notice("Connected.");
                     }
                 }
             }
@@ -568,9 +568,9 @@ namespace Apostol {
                 if (pSocket != nullptr) {
                     auto pHandle = pSocket->Binding();
                     if (pHandle != nullptr) {
-                        Log()->Message(_T("[%s:%d] Disconnected."), pHandle->PeerIP(), pHandle->PeerPort());
+                        Log()->Notice(_T("[%s:%d] Disconnected."), pHandle->PeerIP(), pHandle->PeerPort());
                     } else {
-                        Log()->Message("Disconnected.");
+                        Log()->Notice("Disconnected.");
                     }
                 }
             }
@@ -584,9 +584,9 @@ namespace Apostol {
                 if (pSocket != nullptr) {
                     auto pHandle = pSocket->Binding();
                     if (pHandle != nullptr) {
-                        Log()->Message(_T("[%s:%d] Client connected."), pHandle->PeerIP(), pHandle->PeerPort());
+                        Log()->Notice(_T("[%s:%d] Client connected."), pHandle->PeerIP(), pHandle->PeerPort());
                     } else {
-                        Log()->Message(_T("Client connected."));
+                        Log()->Notice(_T("Client connected."));
                     }
                 }
             }
@@ -600,9 +600,9 @@ namespace Apostol {
                 if (pSocket != nullptr) {
                     auto pHandle = pSocket->Binding();
                     if (pHandle != nullptr) {
-                        Log()->Message(_T("[%s:%d] Client disconnected."), pHandle->PeerIP(), pHandle->PeerPort());
+                        Log()->Notice(_T("[%s:%d] Client disconnected."), pHandle->PeerIP(), pHandle->PeerPort());
                     } else {
-                        Log()->Message("Client disconnected.");
+                        Log()->Notice("Client disconnected.");
                     }
                 }
             }

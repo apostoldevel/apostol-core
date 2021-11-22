@@ -528,7 +528,7 @@ namespace Apostol {
             CVariant V;
 
             if (!FileExists(m_sConfFile.c_str())) {
-                Log()->Error(APP_LOG_STDERR, 0, APP_FILE_NOT_FOUND, m_sConfFile.c_str());
+                Log()->Error(APP_LOG_ERR, 0, APP_FILE_NOT_FOUND, m_sConfFile.c_str());
                 return;
             }
 
