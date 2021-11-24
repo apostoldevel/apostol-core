@@ -337,7 +337,7 @@ namespace Apostol {
                 logfile = Next();
             }
 #ifdef _DEBUG
-            DebugMessage(UseStdErr() ? cons_str : file_str);
+            DebugMessage(_T("%s"), UseStdErr() ? cons_str : file_str);
 #else
             if (UseStdErr() && ALevel < APP_LOG_DEBUG && !wrote_stderr) {
                 (void) write_console(STDERR_FILENO, cons_str, c - cons_str);
