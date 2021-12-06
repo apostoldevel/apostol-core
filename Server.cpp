@@ -187,6 +187,7 @@ namespace Apostol {
             m_PQServer.OnNotify([this](auto && AConnection, auto && ANotify) { DoPQNotify(AConnection, ANotify); });
 
             m_PQServer.OnError([this](auto && AConnection) { DoPQError(AConnection); });
+            m_PQServer.OnTimeOut([this](auto && AConnection) { DoPQTimeOut(AConnection); });
             m_PQServer.OnStatus([this](auto && AConnection) { DoPQStatus(AConnection); });
             m_PQServer.OnPollingStatus([this](auto && AConnection) { DoPQPollingStatus(AConnection); });
 
@@ -206,6 +207,7 @@ namespace Apostol {
             m_PQServer.OnNotify(std::bind(&CServerProcess::DoPQNotify, this, _1, _2));
 
             m_PQServer.OnError(std::bind(&CServerProcess::DoPQError, this, _1));
+            m_PQServer.OnTimeOut(std::bind(&CServerProcess::DoPQTimeOut, this, _1));
             m_PQServer.OnStatus(std::bind(&CServerProcess::DoPQStatus, this, _1));
             m_PQServer.OnPollingStatus(std::bind(&CServerProcess::DoPQPollingStatus, this, _1));
 
@@ -346,40 +348,50 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoPQNotify(CPQConnection *AConnection, PGnotify *ANotify) {
-            const auto& Info = AConnection->ConnInfo();
-            if (Info.ConnInfo().IsEmpty()) {
+            const auto& conInfo = AConnection->ConnInfo();
+            if (conInfo.ConnInfo().IsEmpty()) {
                 Log()->Postgres(APP_LOG_NOTICE, _T("ASYNC NOTIFY of '%s' received from backend PID %d"), ANotify->relname, ANotify->be_pid);
             } else {
-                Log()->Postgres(APP_LOG_NOTICE, "[%d] [postgresql://%s@%s:%s/%s] ASYNC NOTIFY of '%s' received from backend PID %d", AConnection->Socket(),
-                                Info["user"].c_str(), Info["host"].c_str(), Info["port"].c_str(), Info["dbname"].c_str(), ANotify->relname, ANotify->be_pid);
+                Log()->Postgres(APP_LOG_NOTICE, "[%d] [%d] [postgresql://%s@%s:%s/%s] ASYNC NOTIFY of '%s' received from backend PID %d",
+                                AConnection->PID(), AConnection->Socket(),
+                                conInfo["user"].c_str(), conInfo["host"].c_str(), conInfo["port"].c_str(), conInfo["dbname"].c_str(), ANotify->relname, ANotify->be_pid);
             }
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoPQReceiver(CPQConnection *AConnection, const PGresult *AResult) {
-            const auto& Info = AConnection->ConnInfo();
-            if (Info.ConnInfo().IsEmpty()) {
+            const auto& conInfo = AConnection->ConnInfo();
+            if (conInfo.ConnInfo().IsEmpty()) {
                 Log()->Postgres(APP_LOG_NOTICE, _T("Receiver message: %s"), PQresultErrorMessage(AResult));
             } else {
-                Log()->Postgres(APP_LOG_NOTICE, "[%d] [postgresql://%s@%s:%s/%s] Receiver message: %s", AConnection->Socket(),
-                                Info["user"].c_str(), Info["host"].c_str(), Info["port"].c_str(), Info["dbname"].c_str(), PQresultErrorMessage(AResult));
+                Log()->Postgres(APP_LOG_NOTICE, "[%d] [%d] [postgresql://%s@%s:%s/%s] Receiver message: %s",
+                                AConnection->PID(), AConnection->Socket(),
+                                conInfo["user"].c_str(), conInfo["host"].c_str(), conInfo["port"].c_str(), conInfo["dbname"].c_str(), PQresultErrorMessage(AResult));
             }
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoPQProcessor(CPQConnection *AConnection, LPCSTR AMessage) {
-            const auto& Info = AConnection->ConnInfo();
-            if (Info.ConnInfo().IsEmpty()) {
+            const auto& conInfo = AConnection->ConnInfo();
+            if (conInfo.ConnInfo().IsEmpty()) {
                 Log()->Postgres(APP_LOG_NOTICE, _T("Processor message: %s"), AMessage);
             } else {
-                Log()->Postgres(APP_LOG_NOTICE, "[%d] [postgresql://%s@%s:%s/%s] Processor message: %s", AConnection->Socket(),
-                                Info["user"].c_str(), Info["host"].c_str(), Info["port"].c_str(), Info["dbname"].c_str(), AMessage);
+                Log()->Postgres(APP_LOG_NOTICE, "[%d] [%d] [postgresql://%s@%s:%s/%s] Processor message: %s",
+                                AConnection->PID(), AConnection->Socket(),
+                                conInfo["user"].c_str(), conInfo["host"].c_str(), conInfo["port"].c_str(), conInfo["dbname"].c_str(), AMessage);
             }
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoPQConnectException(CPQConnection *AConnection, const Delphi::Exception::Exception &E) {
-            Log()->Postgres(APP_LOG_ERR, "ConnectException: %s", E.what());
+            const auto& conInfo = AConnection->ConnInfo();
+            if (conInfo.ConnInfo().IsEmpty()) {
+                Log()->Postgres(APP_LOG_ERR, _T("[%d] [%d] ConnectException: %s"), AConnection->PID(), AConnection->Socket(), E.what());
+            } else {
+                Log()->Postgres(APP_LOG_ERR, "[%d] [%d] [postgresql://%s@%s:%s/%s] ConnectException: %s",
+                                AConnection->PID(), AConnection->Socket(),
+                                conInfo["user"].c_str(), conInfo["host"].c_str(), conInfo["port"].c_str(), conInfo["dbname"].c_str(), E.what());
+            }
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -389,38 +401,83 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoPQError(CPQConnection *AConnection) {
-            Log()->Postgres(APP_LOG_ERR, "Error: %s", AConnection->GetErrorMessage());
+            const auto& conInfo = AConnection->ConnInfo();
+            if (conInfo.ConnInfo().IsEmpty()) {
+                Log()->Postgres(APP_LOG_ERR, _T("[%d] [%d] Error: %s"), AConnection->PID(), AConnection->Socket(), AConnection->GetErrorMessage());
+            } else {
+                Log()->Postgres(APP_LOG_ERR, "[%d] [%d] [postgresql://%s@%s:%s/%s] Error: %s",
+                                AConnection->PID(), AConnection->Socket(),
+                                conInfo["user"].c_str(), conInfo["host"].c_str(), conInfo["port"].c_str(), conInfo["dbname"].c_str(), AConnection->GetErrorMessage());
+            }
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoPQStatus(CPQConnection *AConnection) {
-            Log()->Postgres(APP_LOG_DEBUG, "Status: %s", AConnection->StatusString());
+            const auto& conInfo = AConnection->ConnInfo();
+            if (conInfo.ConnInfo().IsEmpty()) {
+                Log()->Postgres(APP_LOG_DEBUG, _T("[%d] [%d] Status: %s"), AConnection->PID(), AConnection->Socket(), AConnection->StatusString());
+            } else {
+                Log()->Postgres(APP_LOG_DEBUG, "[%d] [%d] [postgresql://%s@%s:%s/%s] Status: %s",
+                                AConnection->PID(), AConnection->Socket(),
+                                conInfo["user"].c_str(), conInfo["host"].c_str(), conInfo["port"].c_str(), conInfo["dbname"].c_str(), AConnection->StatusString());
+            }
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoPQPollingStatus(CPQConnection *AConnection) {
-            Log()->Postgres(APP_LOG_DEBUG, "PollingStatus: %s", AConnection->PollingStatusString());
+            const auto& conInfo = AConnection->ConnInfo();
+            if (conInfo.ConnInfo().IsEmpty()) {
+                Log()->Postgres(APP_LOG_DEBUG, _T("[%d] [%d] PollingStatus: %s"), AConnection->PID(), AConnection->Socket(), AConnection->PollingStatusString());
+            } else {
+                Log()->Postgres(APP_LOG_DEBUG, "[%d] [%d] [postgresql://%s@%s:%s/%s] PollingStatus: %s",
+                                AConnection->PID(), AConnection->Socket(),
+                                conInfo["user"].c_str(), conInfo["host"].c_str(), conInfo["port"].c_str(), conInfo["dbname"].c_str(), AConnection->PollingStatusString());
+            }
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoPQSendQuery(CPQQuery *AQuery) {
-            for (int I = 0; I < AQuery->SQL().Count(); ++I) {
-                Log()->Postgres(APP_LOG_DEBUG, "SendQuery: %s", AQuery->SQL()[I].c_str());
+            const auto pConnection = AQuery->Connection();
+            const auto& conInfo = pConnection->ConnInfo();
+            for (int i = 0; i < AQuery->SQL().Count(); ++i) {
+                if (conInfo.ConnInfo().IsEmpty()) {
+                    Log()->Postgres(APP_LOG_INFO, _T("[%d] [%d] Query: %s"), pConnection->PID(), pConnection->Socket(), AQuery->SQL()[i].c_str());
+                } else {
+                    Log()->Postgres(APP_LOG_INFO, "[%d] [%d] [postgresql://%s@%s:%s/%s] Query: %s",
+                                    pConnection->PID(), pConnection->Socket(),
+                                    conInfo["user"].c_str(), conInfo["host"].c_str(), conInfo["port"].c_str(), conInfo["dbname"].c_str(), AQuery->SQL()[i].c_str());
+                }
             }
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoPQResultStatus(CPQResult *AResult) {
-            Log()->Postgres(APP_LOG_DEBUG, "ResultStatus: %s", AResult->StatusString());
+            const auto pConnection = AResult->Query()->Connection();
+            const auto& conInfo = pConnection->ConnInfo();
+            if (conInfo.ConnInfo().IsEmpty()) {
+                Log()->Postgres(APP_LOG_DEBUG, _T("[%d] [%d] ResultStatus: %s"), pConnection->PID(), pConnection->Socket(), AResult->StatusString());
+            } else {
+                Log()->Postgres(APP_LOG_DEBUG, "[%d] [%d] [postgresql://%s@%s:%s/%s] ResultStatus: %s",
+                                pConnection->PID(), pConnection->Socket(),
+                                conInfo["user"].c_str(), conInfo["host"].c_str(), conInfo["port"].c_str(), conInfo["dbname"].c_str(), AResult->StatusString());
+            }
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoPQResult(CPQResult *AResult, ExecStatusType AExecStatus) {
+            const auto pConnection = AResult->Query()->Connection();
+            const auto& conInfo = pConnection->ConnInfo();
 #ifdef _DEBUG
             if (AExecStatus == PGRES_TUPLES_OK || AExecStatus == PGRES_COMMAND_OK) {
                 CString jsonString;
                 PQResultToJson(AResult, jsonString);
-                Log()->Postgres(APP_LOG_DEBUG, "%s", jsonString.c_str());
+                if (conInfo.ConnInfo().IsEmpty()) {
+                    Log()->Postgres(APP_LOG_INFO, _T("[%d] [%d] Result: %s"), pConnection->PID(), pConnection->Socket(), jsonString.c_str());
+                } else {
+                    Log()->Postgres(APP_LOG_INFO, "[%d] [%d] [postgresql://%s@%s:%s/%s] Result: %s",
+                                    pConnection->PID(), pConnection->Socket(),
+                                    conInfo["user"].c_str(), conInfo["host"].c_str(), conInfo["port"].c_str(), conInfo["dbname"].c_str(), jsonString.c_str());
+                }
 /*
                 if (AResult->nTuples() > 0) {
 
@@ -428,9 +485,9 @@ namespace Apostol {
 
                     Print = "(";
                     Print += AResult->fName(0);
-                    for (int I = 1; I < AResult->nFields(); ++I) {
+                    for (int i = 1; i < AResult->nFields(); ++i) {
                         Print += ",";
-                        Print += AResult->fName(I);
+                        Print += AResult->fName(i);
                     }
                     Print += ")";
 
@@ -471,11 +528,23 @@ namespace Apostol {
                 }
 */
             } else {
-                Log()->Postgres(APP_LOG_ERR, "PQResult: %s", AResult->GetErrorMessage());
+                if (conInfo.ConnInfo().IsEmpty()) {
+                    Log()->Postgres(APP_LOG_ERR, _T("[%d] [%d] %s"), pConnection->PID(), pConnection->Socket(), AResult->GetErrorMessage());
+                } else {
+                    Log()->Postgres(APP_LOG_ERR, "[%d] [%d] [postgresql://%s@%s:%s/%s] %s",
+                                    pConnection->PID(), pConnection->Socket(),
+                                    conInfo["user"].c_str(), conInfo["host"].c_str(), conInfo["port"].c_str(), conInfo["dbname"].c_str(), AResult->GetErrorMessage());
+                }
             }
 #else
             if (!(AExecStatus == PGRES_TUPLES_OK || AExecStatus == PGRES_COMMAND_OK)) {
-                Log()->Postgres(APP_LOG_ERR, "PQResult: %s", AResult->GetErrorMessage());
+                if (conInfo.ConnInfo().IsEmpty()) {
+                    Log()->Postgres(APP_LOG_ERR, _T("[%d] [%d] %s"), pConnection->PID(), pConnection->Socket(), AResult->GetErrorMessage());
+                } else {
+                    Log()->Postgres(APP_LOG_ERR, "[%d] [%d] [postgresql://%s@%s:%s/%s] %s",
+                                    pConnection->PID(), pConnection->Socket(),
+                                    conInfo["user"].c_str(), conInfo["host"].c_str(), conInfo["port"].c_str(), conInfo["dbname"].c_str(), AResult->GetErrorMessage());
+                }
             }
 #endif
         }
@@ -484,10 +553,11 @@ namespace Apostol {
         void CServerProcess::DoPQConnect(CObject *Sender) {
             auto pConnection = dynamic_cast<CPQConnection *>(Sender);
             if (pConnection != nullptr) {
-                const auto& Info = pConnection->ConnInfo();
-                if (!Info.ConnInfo().IsEmpty()) {
-                    Log()->Postgres(APP_LOG_NOTICE, "[%d] [postgresql://%s@%s:%s/%s] Connected.", pConnection->PID(),
-                                    Info["user"].c_str(), Info["host"].c_str(), Info["port"].c_str(), Info["dbname"].c_str());
+                const auto& conInfo = pConnection->ConnInfo();
+                if (!conInfo.ConnInfo().IsEmpty()) {
+                    Log()->Postgres(APP_LOG_NOTICE, "[%d] [%d] [postgresql://%s@%s:%s/%s] Connected.",
+                                    pConnection->PID(), pConnection->Socket(),
+                                    conInfo["user"].c_str(), conInfo["host"].c_str(), conInfo["port"].c_str(), conInfo["dbname"].c_str());
                 }
             }
         }
@@ -496,11 +566,23 @@ namespace Apostol {
         void CServerProcess::DoPQDisconnect(CObject *Sender) {
             auto pConnection = dynamic_cast<CPQConnection *>(Sender);
             if (pConnection != nullptr) {
-                const auto& Info = pConnection->ConnInfo();
-                if (!Info.ConnInfo().IsEmpty()) {
-                    Log()->Postgres(APP_LOG_NOTICE, "[%d] [postgresql://%s@%s:%s/%s] Disconnected.", pConnection->PID(),
-                                    Info["user"].c_str(), Info["host"].c_str(), Info["port"].c_str(), Info["dbname"].c_str());
+                const auto& conInfo = pConnection->ConnInfo();
+                if (!conInfo.ConnInfo().IsEmpty()) {
+                    Log()->Postgres(APP_LOG_NOTICE, "[%d] [postgresql://%s@%s:%s/%s] Disconnected.", pConnection->Socket(),
+                                    conInfo["user"].c_str(), conInfo["host"].c_str(), conInfo["port"].c_str(), conInfo["dbname"].c_str());
                 }
+            }
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CServerProcess::DoPQTimeOut(CPQConnection *AConnection) {
+            const auto& conInfo = AConnection->ConnInfo();
+            if (conInfo.ConnInfo().IsEmpty()) {
+                Log()->Postgres(APP_LOG_WARN, _T("Connection timeout."));
+            } else {
+                Log()->Postgres(APP_LOG_WARN, "[%d] [%d] [postgresql://%s@%s:%s/%s] Connection timeout.",
+                                AConnection->PID(), AConnection->Socket(),
+                                conInfo["user"].c_str(), conInfo["host"].c_str(), conInfo["port"].c_str(), conInfo["dbname"].c_str());
             }
         }
         //--------------------------------------------------------------------------------------------------------------

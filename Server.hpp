@@ -105,6 +105,7 @@ namespace Apostol {
             virtual void DoPQNotify(CPQConnection *AConnection, PGnotify *ANotify);
 
             virtual void DoPQError(CPQConnection *AConnection);
+            virtual void DoPQTimeOut(CPQConnection *AConnection);
             virtual void DoPQStatus(CPQConnection *AConnection);
             virtual void DoPQPollingStatus(CPQConnection *AConnection);
 
