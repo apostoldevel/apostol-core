@@ -143,7 +143,9 @@ namespace Apostol {
             m_ModuleStatus = msUnknown;
 
             m_pMethods = CStringList::Create(true);
+
             m_Headers.Add("Content-Type");
+            m_Headers.Add("X-Requested-With");
         }
         //--------------------------------------------------------------------------------------------------------------
 
