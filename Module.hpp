@@ -181,8 +181,8 @@ namespace Apostol {
             CHTTPServer &Server();
             const CHTTPServer &Server() const;
 #ifdef WITH_POSTGRESQL
-            CPQServer &PQServer();
-            const CPQServer &PQServer() const;
+            CPQClient &PQClient();
+            const CPQClient &PQClient() const;
 
             CPQPollQuery *GetQuery(CPollConnection *AConnection);
 

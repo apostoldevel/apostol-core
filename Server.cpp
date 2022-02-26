@@ -46,8 +46,8 @@ namespace Apostol {
             m_Server.PollStack(&m_PollStack);
             InitializeServerHandlers();
 #ifdef WITH_POSTGRESQL
-            m_PQServer.PollStack(&m_PollStack);
-            InitializePQServerHandlers();
+            m_PQClient.PollStack(&m_PollStack);
+            InitializePQClientHandlers();
 #endif
         }
         //--------------------------------------------------------------------------------------------------------------
@@ -172,47 +172,47 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 #ifdef WITH_POSTGRESQL
-        void CServerProcess::InitializePQServerHandlers() {
+        void CServerProcess::InitializePQClientHandlers() {
 #if defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE >= 9)
             if (Config()->PostgresNotice()) {
-                //m_PQServer.OnReceiver([this](auto && AConnection, auto && AResult) { DoPQReceiver(AConnection, AResult); });
-                m_PQServer.OnProcessor([this](auto && AConnection, auto && AMessage) { DoPQProcessor(AConnection, AMessage); });
+                //m_PQClient.OnReceiver([this](auto && AConnection, auto && AResult) { DoPQReceiver(AConnection, AResult); });
+                m_PQClient.OnProcessor([this](auto && AConnection, auto && AMessage) { DoPQProcessor(AConnection, AMessage); });
             }
 
-            m_PQServer.OnConnectException([this](auto && AConnection, auto && AException) { DoPQConnectException(AConnection, AException); });
-            m_PQServer.OnServerException([this](auto && AServer, auto && AException) { DoPQServerException(AServer, AException); });
+            m_PQClient.OnConnectException([this](auto && AConnection, auto && AException) { DoPQConnectException(AConnection, AException); });
+            m_PQClient.OnServerException([this](auto && AClient, auto && AException) { DoPQClientException(AClient, AException); });
 
-            m_PQServer.OnEventHandlerException([this](auto && AHandler, auto && AException) { DoServerEventHandlerException(AHandler, AException); });
+            m_PQClient.OnEventHandlerException([this](auto && AHandler, auto && AException) { DoServerEventHandlerException(AHandler, AException); });
 
-            m_PQServer.OnNotify([this](auto && AConnection, auto && ANotify) { DoPQNotify(AConnection, ANotify); });
+            m_PQClient.OnNotify([this](auto && AConnection, auto && ANotify) { DoPQNotify(AConnection, ANotify); });
 
-            m_PQServer.OnError([this](auto && AConnection) { DoPQError(AConnection); });
-            m_PQServer.OnTimeOut([this](auto && AConnection) { DoPQTimeOut(AConnection); });
-            m_PQServer.OnStatus([this](auto && AConnection) { DoPQStatus(AConnection); });
-            m_PQServer.OnPollingStatus([this](auto && AConnection) { DoPQPollingStatus(AConnection); });
+            m_PQClient.OnError([this](auto && AConnection) { DoPQError(AConnection); });
+            m_PQClient.OnTimeOut([this](auto && AConnection) { DoPQTimeOut(AConnection); });
+            m_PQClient.OnStatus([this](auto && AConnection) { DoPQStatus(AConnection); });
+            m_PQClient.OnPollingStatus([this](auto && AConnection) { DoPQPollingStatus(AConnection); });
 
-            m_PQServer.OnConnected([this](auto && Sender) { DoPQConnect(Sender); });
-            m_PQServer.OnDisconnected([this](auto && Sender) { DoPQDisconnect(Sender); });
+            m_PQClient.OnConnected([this](auto && Sender) { DoPQConnect(Sender); });
+            m_PQClient.OnDisconnected([this](auto && Sender) { DoPQDisconnect(Sender); });
 #else
             if (Config()->PostgresNotice()) {
-                //m_PQServer.OnReceiver(std::bind(&CServerProcess::DoPQReceiver, this, _1, _2));
-                m_PQServer.OnProcessor(std::bind(&CServerProcess::DoPQProcessor, this, _1, _2));
+                //m_PQClient.OnReceiver(std::bind(&CServerProcess::DoPQReceiver, this, _1, _2));
+                m_PQClient.OnProcessor(std::bind(&CServerProcess::DoPQProcessor, this, _1, _2));
             }
 
-            m_PQServer.OnConnectException(std::bind(&CServerProcess::DoPQConnectException, this, _1, _2));
-            m_PQServer.OnServerException(std::bind(&CServerProcess::DoPQServerException, this, _1, _2));
+            m_PQClient.OnConnectException(std::bind(&CServerProcess::DoPQConnectException, this, _1, _2));
+            m_PQClient.OnServerException(std::bind(&CServerProcess::DoPQClientException, this, _1, _2));
 
-            m_PQServer.OnEventHandlerException(std::bind(&CServerProcess::DoServerEventHandlerException, this, _1, _2));
+            m_PQClient.OnEventHandlerException(std::bind(&CServerProcess::DoServerEventHandlerException, this, _1, _2));
 
-            m_PQServer.OnNotify(std::bind(&CServerProcess::DoPQNotify, this, _1, _2));
+            m_PQClient.OnNotify(std::bind(&CServerProcess::DoPQNotify, this, _1, _2));
 
-            m_PQServer.OnError(std::bind(&CServerProcess::DoPQError, this, _1));
-            m_PQServer.OnTimeOut(std::bind(&CServerProcess::DoPQTimeOut, this, _1));
-            m_PQServer.OnStatus(std::bind(&CServerProcess::DoPQStatus, this, _1));
-            m_PQServer.OnPollingStatus(std::bind(&CServerProcess::DoPQPollingStatus, this, _1));
+            m_PQClient.OnError(std::bind(&CServerProcess::DoPQError, this, _1));
+            m_PQClient.OnTimeOut(std::bind(&CServerProcess::DoPQTimeOut, this, _1));
+            m_PQClient.OnStatus(std::bind(&CServerProcess::DoPQStatus, this, _1));
+            m_PQClient.OnPollingStatus(std::bind(&CServerProcess::DoPQPollingStatus, this, _1));
 
-            m_PQServer.OnConnected(std::bind(&CServerProcess::DoPQConnect, this, _1));
-            m_PQServer.OnDisconnected(std::bind(&CServerProcess::DoPQDisconnect, this, _1));
+            m_PQClient.OnConnected(std::bind(&CServerProcess::DoPQConnect, this, _1));
+            m_PQClient.OnDisconnected(std::bind(&CServerProcess::DoPQDisconnect, this, _1));
 #endif
         }
         //--------------------------------------------------------------------------------------------------------------
@@ -255,10 +255,10 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
 #ifdef WITH_POSTGRESQL
-        void CServerProcess::InitializePQServer(const CString &Title, u_int Min, u_int Max) {
-            m_PQServer.ConnInfo().ApplicationName() = "'" + Title + "'"; //application_name;
-            m_PQServer.SizeMin(Min);
-            m_PQServer.SizeMax(Max);
+        void CServerProcess::InitializePQClient(const CString &Title, u_int Min, u_int Max) {
+            m_PQClient.ConnInfo().ApplicationName() = "'" + Title + "'"; //application_name;
+            m_PQClient.SizeMin(Min);
+            m_PQClient.SizeMax(Max);
         }
         //--------------------------------------------------------------------------------------------------------------
 #endif
@@ -285,24 +285,24 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 #ifdef WITH_POSTGRESQL
-        void CServerProcess::PQServerStart(const CString &Name) {
+        void CServerProcess::PQClientStart(const CString &Name) {
             if (Config()->PostgresConnect()) {
-                m_PQServer.ConnInfo().SetParameters(Config()->PostgresConnInfo()[Name]);
-                m_PQServer.Active(true);
+                m_PQClient.ConnInfo().SetParameters(Config()->PostgresConnInfo()[Name]);
+                m_PQClient.Active(true);
             }
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CServerProcess::PQServerStop() {
-            m_PQServer.Active(false);
+        void CServerProcess::PQClientStop() {
+            m_PQClient.Active(false);
         }
         //--------------------------------------------------------------------------------------------------------------
 
         CPQPollQuery *CServerProcess::GetQuery(CPollConnection *AConnection) {
             CPQPollQuery *pQuery = nullptr;
 
-            if (m_PQServer.Active()) {
-                pQuery = m_PQServer.GetQuery();
+            if (m_PQClient.Active()) {
+                pQuery = m_PQClient.GetQuery();
 #if defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE >= 9)
                 pQuery->OnSendQuery([this](auto && AQuery) { DoPQSendQuery(AQuery); });
                 pQuery->OnResultStatus([this](auto && AResult) { DoPQResultStatus(AResult); });
@@ -395,7 +395,7 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CServerProcess::DoPQServerException(CPQServer *AServer, const Delphi::Exception::Exception &E) {
+        void CServerProcess::DoPQClientException(CPQClient *AClient, const Delphi::Exception::Exception &E) {
             Log()->Postgres(APP_LOG_ERR, "ServerException: %s", E.what());
         }
         //--------------------------------------------------------------------------------------------------------------

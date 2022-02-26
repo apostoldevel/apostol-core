@@ -47,7 +47,7 @@ namespace Apostol {
 
             CHTTPServer m_Server;
 #ifdef WITH_POSTGRESQL
-            CPQServer m_PQServer;
+            CPQClient m_PQClient;
 #endif
             virtual void UpdateTimer();
 
@@ -65,7 +65,7 @@ namespace Apostol {
 
             void InitializeServer(const CString &Title, const CString &Listen = Config()->Listen(), u_short Port = Config()->Port());
 #ifdef WITH_POSTGRESQL
-            void InitializePQServer(const CString &Title, u_int Min = Config()->PostgresPollMin(), u_int Max = Config()->PostgresPollMax());
+            void InitializePQClient(const CString &Title, u_int Min = Config()->PostgresPollMin(), u_int Max = Config()->PostgresPollMax());
 #endif
             virtual void DoOptions(CCommand *ACommand);
             virtual void DoGet(CCommand *ACommand);
@@ -97,9 +97,9 @@ namespace Apostol {
 
             void InitializeServerHandlers();
 #ifdef WITH_POSTGRESQL
-            void InitializePQServerHandlers();
+            void InitializePQClientHandlers();
 
-            virtual void DoPQServerException(CPQServer *AServer, const Delphi::Exception::Exception &E);
+            virtual void DoPQClientException(CPQClient *AClient, const Delphi::Exception::Exception &E);
             virtual void DoPQConnectException(CPQConnection *AConnection, const Delphi::Exception::Exception &E);
 
             virtual void DoPQNotify(CPQConnection *AConnection, PGnotify *ANotify);
@@ -134,11 +134,11 @@ namespace Apostol {
             CHTTPServer &Server() { return m_Server; };
             const CHTTPServer &Server() const { return m_Server; };
 #ifdef WITH_POSTGRESQL
-            void PQServerStart(const CString &Name);
-            void PQServerStop();
+            void PQClientStart(const CString &Name);
+            void PQClientStop();
 
-            CPQServer &PQServer() { return m_PQServer; };
-            const CPQServer &PQServer() const { return m_PQServer; };
+            CPQClient &PQClient() { return m_PQClient; };
+            const CPQClient &PQClient() const { return m_PQClient; };
 
             virtual CPQPollQuery *GetQuery(CPollConnection *AConnection);
 

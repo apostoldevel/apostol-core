@@ -163,13 +163,13 @@ namespace Apostol {
             return m_pModuleProcess->Server();
         }
 #ifdef WITH_POSTGRESQL
-        CPQServer &CApostolModule::PQServer() {
-            return m_pModuleProcess->PQServer();
+        CPQClient &CApostolModule::PQClient() {
+            return m_pModuleProcess->PQClient();
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        const CPQServer &CApostolModule::PQServer() const {
-            return m_pModuleProcess->PQServer();
+        const CPQClient &CApostolModule::PQClient() const {
+            return m_pModuleProcess->PQClient();
         }
 #endif
         const CString &CApostolModule::GetAllowedMethods() const {
