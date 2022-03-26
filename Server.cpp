@@ -441,9 +441,9 @@ namespace Apostol {
             const auto& conInfo = pConnection->ConnInfo();
             for (int i = 0; i < AQuery->SQL().Count(); ++i) {
                 if (conInfo.ConnInfo().IsEmpty()) {
-                    Log()->Postgres(APP_LOG_INFO, _T("[%d] [%d] Query: %s"), pConnection->PID(), pConnection->Socket(), AQuery->SQL()[i].c_str());
+                    Log()->Postgres(APP_LOG_DEBUG, _T("[%d] [%d] Query: %s"), pConnection->PID(), pConnection->Socket(), AQuery->SQL()[i].c_str());
                 } else {
-                    Log()->Postgres(APP_LOG_INFO, "[%d] [%d] [postgresql://%s@%s:%s/%s] Query: %s",
+                    Log()->Postgres(APP_LOG_DEBUG, "[%d] [%d] [postgresql://%s@%s:%s/%s] Query: %s",
                                     pConnection->PID(), pConnection->Socket(),
                                     conInfo["user"].c_str(), conInfo["host"].c_str(), conInfo["port"].c_str(), conInfo["dbname"].c_str(), AQuery->SQL()[i].c_str());
                 }
@@ -472,9 +472,9 @@ namespace Apostol {
                 CString jsonString;
                 PQResultToJson(AResult, jsonString);
                 if (conInfo.ConnInfo().IsEmpty()) {
-                    Log()->Postgres(APP_LOG_INFO, _T("[%d] [%d] Result: %s"), pConnection->PID(), pConnection->Socket(), jsonString.c_str());
+                    Log()->Postgres(APP_LOG_DEBUG, _T("[%d] [%d] Result: %s"), pConnection->PID(), pConnection->Socket(), jsonString.c_str());
                 } else {
-                    Log()->Postgres(APP_LOG_INFO, "[%d] [%d] [postgresql://%s@%s:%s/%s] Result: %s",
+                    Log()->Postgres(APP_LOG_DEBUG, "[%d] [%d] [postgresql://%s@%s:%s/%s] Result: %s",
                                     pConnection->PID(), pConnection->Socket(),
                                     conInfo["user"].c_str(), conInfo["host"].c_str(), conInfo["port"].c_str(), conInfo["dbname"].c_str(), jsonString.c_str());
                 }
