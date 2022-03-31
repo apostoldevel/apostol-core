@@ -51,7 +51,7 @@ namespace Apostol {
 
     namespace Process {
 
-        enum CProcessStatus { psRunning, psInProgress, psStopped };
+        enum CProcessStatus { psStopped = 0, psAuthorization, psAuthorized, psInProgress, psRunning };
         //--------------------------------------------------------------------------------------------------------------
 
         class CProcessManager;
