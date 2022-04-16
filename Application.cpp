@@ -264,6 +264,7 @@ namespace Apostol {
             Log()->Debug(APP_LOG_DEBUG_CORE, MSG_PROCESS_START, GetProcessName(), CmdLine().c_str());
 
             if (m_ProcessType != ptSignaller) {
+                InitCustomProcesses();
 
                 if (Config()->Master()) {
                     m_ProcessType = ptMaster;
@@ -394,13 +395,12 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        pid_t CApplicationProcess::SwapProcess(CProcessType Type, int Flag, Pointer Data) {
+        pid_t CApplicationProcess::SwapProcess(CProcessType Type, int Index, int Flag, Pointer Data) {
 
             CSignalProcess *pProcess;
 
-            if (Flag >= 0) {
-                pProcess = Application()->Processes(Flag);
-                pProcess->Respawn(true);
+            if (Index >= 0) {
+                pProcess = Application()->Processes(Index);
             } else {
                 pProcess = CApplicationProcess::Create(this, m_pApplication, Type);
                 pProcess->Data(Data);
@@ -428,11 +428,9 @@ namespace Apostol {
 
             Log()->Debug(APP_LOG_DEBUG_EVENT, _T("start %s %P"), pProcess->GetProcessName(), pProcess->Pid());
 
-            if (Flag >= 0) {
+            if (Index == Flag) {
                 return pid;
             }
-
-            pProcess->Exiting(false);
 
             pProcess->Respawn(Flag == PROCESS_RESPAWN || Flag == PROCESS_JUST_RESPAWN);
             pProcess->JustSpawn(Flag == PROCESS_JUST_SPAWN || Flag == PROCESS_JUST_RESPAWN);
@@ -443,7 +441,7 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         pid_t CApplicationProcess::ExecProcess(CExecuteContext *AContext) {
-            return SwapProcess(ptNewBinary, PROCESS_DETACHED, AContext);
+            return SwapProcess(ptNewBinary, -1, PROCESS_DETACHED, AContext);
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -655,38 +653,45 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CProcessMaster::StartProcess(CProcessType Type, int Flag) {
+        void CProcessMaster::StartProcess(CProcessType Type, int Index, int Flag) {
             switch (Type) {
                 case ptWorker:
                     for (int i = 0; i < Config()->Workers(); ++i) {
-                        SwapProcess(Type, Flag);
+                        SwapProcess(Type, Index, Flag);
                     }
                     break;
                 case ptHelper:
                     if (Config()->Helper()) {
-                        SwapProcess(Type, Flag);
+                        SwapProcess(Type, Index, Flag);
                     }
                     break;
                 default:
-                    SwapProcess(Type, Flag);
+                    SwapProcess(Type, Index, Flag);
                     break;
             }
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CProcessMaster::StartProcesses(int Flag) {
-            StartProcess(ptWorker, Flag);
-            StartProcess(ptHelper, Flag);
-            StartCustomProcesses();
+            StartProcess(ptWorker, -1, Flag);
+            StartProcess(ptHelper, -1, Flag);
+            StartCustomProcesses(Flag);
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CProcessMaster::StartCustomProcesses() {
+        void CProcessMaster::StartCustomProcesses(int Flag) {
             CCustomProcess *pProcess;
-            for (int i = 0; i < Application()->ProcessCount(); ++i) {
+
+            int i = 0;
+            if (Flag == PROCESS_JUST_RESPAWN) {
+                i = Application()->ProcessCount() - 1;
+                Application()->InitCustomProcesses();
+            }
+
+            for (; i < Application()->ProcessCount(); ++i) {
                 pProcess = Application()->Processes(i);
                 if (pProcess->Type() == ptCustom)
-                    StartProcess(ptCustom, i);
+                    StartProcess(ptCustom, i, Flag);
             }
         }
         //--------------------------------------------------------------------------------------------------------------
@@ -789,7 +794,7 @@ namespace Apostol {
 
                         if (pProcess->Type() >= ptWorker) {
                             try {
-                                SwapProcess(pProcess->Type(), i);
+                                SwapProcess(pProcess->Type(), i, i);
                             } catch (std::exception &e) {
                                 Log()->Error(APP_LOG_ALERT, 0, "could not respawn %s", pProcess->GetProcessName());
                                 continue;

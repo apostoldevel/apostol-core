@@ -62,7 +62,7 @@ namespace Apostol {
             void BeforeRun() override;
             void AfterRun() override;
 
-            pid_t SwapProcess(CProcessType Type, int Flag, Pointer Data = nullptr);
+            pid_t SwapProcess(CProcessType Type, int Index, int Flag, Pointer Data = nullptr);
             pid_t ExecProcess(CExecuteContext *AContext);
 
         public:
@@ -125,6 +125,8 @@ namespace Apostol {
             inline ClassProcess *AddProcess() {
                 return new ClassProcess(SignalProcess(), this);
             };
+
+            virtual void InitCustomProcesses() abstract;
 
             CString ProcessesNames();
 
@@ -190,10 +192,9 @@ namespace Apostol {
 
             bool ReapChildren();
 
-            void StartProcess(CProcessType Type, int Flag);
+            void StartProcess(CProcessType Type, int Index, int Flag);
             void StartProcesses(int Flag);
-
-            void StartCustomProcesses();
+            void StartCustomProcesses(int Flag);
 
             void SignalToProcess(CProcessType Type, int SigNo);
             void SignalToProcesses(int SigNo);
