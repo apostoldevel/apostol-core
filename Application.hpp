@@ -126,7 +126,7 @@ namespace Apostol {
                 return new ClassProcess(SignalProcess(), this);
             };
 
-            virtual void InitCustomProcesses() abstract;
+            virtual void CreateCustomProcesses();
 
             CString ProcessesNames();
 

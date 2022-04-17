@@ -259,12 +259,17 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
+        void CApplication::CreateCustomProcesses() {
+            CreateProcesses(nullptr, this);
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
         void CApplication::StartProcess() {
 
             Log()->Debug(APP_LOG_DEBUG_CORE, MSG_PROCESS_START, GetProcessName(), CmdLine().c_str());
 
             if (m_ProcessType != ptSignaller) {
-                InitCustomProcesses();
+                CreateCustomProcesses();
 
                 if (Config()->Master()) {
                     m_ProcessType = ptMaster;
@@ -685,7 +690,7 @@ namespace Apostol {
             int i = 0;
             if (Flag == PROCESS_JUST_RESPAWN) {
                 i = Application()->ProcessCount() - 1;
-                Application()->InitCustomProcesses();
+                Application()->CreateCustomProcesses();
             }
 
             for (; i < Application()->ProcessCount(); ++i) {
