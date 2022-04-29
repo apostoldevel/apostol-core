@@ -106,6 +106,7 @@ public:
     //------------------------------------------------------------------------------------------------------------------
 
     static void WSDebug(CWebSocket *AData) {
+#ifdef _DEBUG
         CString Hex;
         CMemoryStream Stream;
 
@@ -135,11 +136,12 @@ public:
             DebugMessage("HEX: %s", Hex.c_str());
             DebugMessage("\nSTR: %s\n", (LPCTSTR) Stream.Memory() + delta);
         }
+#endif
     }
     //------------------------------------------------------------------------------------------------------------------
 
     static void WSDebugConnection(CWebSocketConnection *AConnection) {
-
+#ifdef _DEBUG
         if (AConnection != nullptr) {
 
             auto pSocket = AConnection->Socket();
@@ -205,10 +207,12 @@ public:
             AConnection->OnRequest(OnRequest);
             AConnection->OnReply(OnReply);
         }
+#endif
     }
     //------------------------------------------------------------------------------------------------------------------
 
     static void DebugRequest(CHTTPRequest *ARequest) {
+#ifdef _DEBUG
         DebugMessage(_T("[%p] Request:\n%s %s HTTP/%d.%d\n"), ARequest, ARequest->Method.c_str(), ARequest->URI.c_str(), ARequest->VMajor, ARequest->VMinor);
 
         for (int i = 0; i < ARequest->Headers.Count(); i++)
@@ -216,10 +220,12 @@ public:
 
         if (!ARequest->Content.IsEmpty())
             DebugMessage(_T("\n%s\n"), ARequest->Content.c_str());
+#endif
     }
     //------------------------------------------------------------------------------------------------------------------
 
     static void DebugReply(CHTTPReply *AReply) {
+#ifdef _DEBUG
         if (!AReply->StatusText.IsEmpty()) {
             DebugMessage(_T("[%p] Reply:\nHTTP/%d.%d %d %s\n"), AReply, AReply->VMajor, AReply->VMinor, AReply->Status, AReply->StatusText.c_str());
 
@@ -229,13 +235,13 @@ public:
             if (!AReply->Content.IsEmpty())
                 DebugMessage(_T("\n%s\n"), AReply->Content.c_str());
         }
+#endif
     }
     //------------------------------------------------------------------------------------------------------------------
 
     static void DebugConnection(CHTTPServerConnection *AConnection) {
-
+#ifdef _DEBUG
         if (AConnection != nullptr) {
-
             auto pSocket = AConnection->Socket();
             if (pSocket != nullptr) {
                 auto pHandle = pSocket->Binding();
@@ -271,6 +277,22 @@ public:
 
             AConnection->OnReply(OnReply);
         }
+#endif
+    }
+    //------------------------------------------------------------------------------------------------------------------
+
+    static void DebugNotify(CPQConnection *AConnection, PGnotify *ANotify) {
+#ifdef _DEBUG
+        const auto& conInfo = AConnection->ConnInfo();
+
+        TCHAR szTimeStamp[25] = {0};
+        DateTimeToStr(Now(), szTimeStamp, sizeof(szTimeStamp));
+
+        DebugMessage("[%s] [%d#0] [NOTIFY] [%d] [%d] [postgresql://%s@%s:%s/%s] [PID: %d] [%s] %s\n",
+                     szTimeStamp, MainThreadID, AConnection->PID(), AConnection->Socket(),
+                     conInfo["user"].c_str(), conInfo["host"].c_str(), conInfo["port"].c_str(), conInfo["dbname"].c_str(),
+                     ANotify->be_pid, ANotify->relname, ANotify->extra);
+#endif
     }
     //------------------------------------------------------------------------------------------------------------------
 

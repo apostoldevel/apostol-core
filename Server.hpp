@@ -43,8 +43,6 @@ namespace Apostol {
         class CServerProcess: public CObject, public CGlobalComponent {
         private:
 
-            CPollStack m_PollStack;
-
             CHTTPServer m_Server;
 #ifdef WITH_POSTGRESQL
             CPQClient m_PQClient;
@@ -52,6 +50,8 @@ namespace Apostol {
             virtual void UpdateTimer();
 
         protected:
+
+            CPollEventHandlers m_EventHandlers;
 
             CHTTPClientManager m_ClientManager;
 
@@ -151,7 +151,7 @@ namespace Apostol {
             CHTTPClientManager &ClientManager() { return m_ClientManager; };
             const CHTTPClientManager &ClientManager() const { return m_ClientManager; };
 
-            CPollStack PollStack() const { return m_PollStack; }
+            const CPollEventHandlers &EventHandlers() const { return m_EventHandlers; }
 
             int TimerInterval() const { return m_TimerInterval; }
             void TimerInterval(int Value) { SetTimerInterval(Value); }

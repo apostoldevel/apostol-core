@@ -622,8 +622,8 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 #ifdef WITH_POSTGRESQL
         void CApostolModule::PQResultToList(CPQResult *Result, CStringList &List) {
-            for (int Row = 0; Row < Result->nTuples(); ++Row) {
-                List.Add(Result->GetValue(Row, 0));
+            for (int row = 0; row < Result->nTuples(); ++row) {
+                List.Add(Result->GetValue(row, 0));
             }
         }
         //--------------------------------------------------------------------------------------------------------------
@@ -650,11 +650,11 @@ namespace Apostol {
             if (bDataArray)
                 Json += _T("[");
 
-            for (int Row = 0; Row < Result->nTuples(); ++Row) {
-                if (!Result->GetIsNull(Row, 0)) {
-                    if (Row > 0)
+            for (int row = 0; row < Result->nTuples(); ++row) {
+                if (!Result->GetIsNull(row, 0)) {
+                    if (row > 0)
                         Json += _T(",");
-                    Json.Append(Result->GetValue(Row, 0), Result->GetLength(Row, 0));
+                    Json.Append(Result->GetValue(row, 0), Result->GetLength(row, 0));
                 } else {
                     Json += bDataArray ? _T("null") : _T("{}");
                 }
@@ -671,20 +671,20 @@ namespace Apostol {
         void CApostolModule::EnumQuery(CPQResult *APQResult, CPQueryResult& AResult) {
             CStringList cFields;
 
-            for (int I = 0; I < APQResult->nFields(); ++I) {
-                cFields.Add(APQResult->fName(I));
+            for (int i = 0; i < APQResult->nFields(); ++i) {
+                cFields.Add(APQResult->fName(i));
             }
 
-            for (int Row = 0; Row < APQResult->nTuples(); ++Row) {
+            for (int row = 0; row < APQResult->nTuples(); ++row) {
                 AResult.Add(CStringPairs());
-                for (int Col = 0; Col < APQResult->nFields(); ++Col) {
-                    if (APQResult->GetIsNull(Row, Col)) {
-                        AResult.Last().AddPair(cFields[Col].c_str(), _T(""));
+                for (int col = 0; col < APQResult->nFields(); ++col) {
+                    if (APQResult->GetIsNull(row, col)) {
+                        AResult.Last().AddPair(cFields[col].c_str(), _T(""));
                     } else {
-                        if (APQResult->fFormat(Col) == 0) {
-                            AResult.Last().AddPair(cFields[Col].c_str(), APQResult->GetValue(Row, Col));
+                        if (APQResult->fFormat(col) == 0) {
+                            AResult.Last().AddPair(cFields[col].c_str(), APQResult->GetValue(row, col));
                         } else {
-                            AResult.Last().AddPair(cFields[Col].c_str(), _T("<binary>"));
+                            AResult.Last().AddPair(cFields[col].c_str(), _T("<binary>"));
                         }
                     }
                 }
@@ -745,14 +745,12 @@ namespace Apostol {
                 throw Delphi::Exception::Exception(_T("ExecSQL: Start SQL query failed."));
             }
 
-            if (AConnection != nullptr)
-                AConnection->CloseConnection(false);
-
             return pQuery;
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CApostolModule::DoPostgresNotify(CPQConnection *AConnection, PGnotify *ANotify) {
+
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -838,7 +836,7 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CApostolModule::Heartbeat() {
+        void CApostolModule::Heartbeat(CDateTime Datetime) {
 
         }
 
@@ -880,7 +878,7 @@ namespace Apostol {
             pTimer->Read(&exp, sizeof(uint64_t));
 
             try {
-                HeartbeatModules();
+                HeartbeatModules(AHandler->TimeStamp());
             } catch (Delphi::Exception::Exception &E) {
                 DoServerEventHandlerException(AHandler, E);
             }
@@ -967,11 +965,11 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CModuleManager::HeartbeatModules() {
+        void CModuleManager::HeartbeatModules(CDateTime Datetime) {
             for (int i = 0; i < ModuleCount(); i++) {
                 auto Module = Modules(i);
                 if (Module->Enabled())
-                    Module->Heartbeat();
+                    Module->Heartbeat(Datetime);
             }
         }
         //--------------------------------------------------------------------------------------------------------------

@@ -161,7 +161,7 @@ namespace Apostol {
             virtual void BeforeExecute(CModuleProcess *AProcess) {};
             virtual void AfterExecute(CModuleProcess *AProcess) {};
 
-            virtual void Heartbeat();
+            virtual void Heartbeat(CDateTime Datetime);
             virtual bool Execute(CHTTPServerConnection *AConnection);
 
             static CString GetHostName();
@@ -243,7 +243,7 @@ namespace Apostol {
             void Initialization();
             void Finalization();
 
-            void HeartbeatModules();
+            void HeartbeatModules(CDateTime Datetime);
 
             void ExecuteModules(CTCPConnection *AConnection);
 

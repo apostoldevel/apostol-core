@@ -275,8 +275,8 @@ namespace Apostol {
 
             uint32_t m_nPort;
 
-            uint32_t m_nTimeOut;
-            uint32_t m_nConnectTimeOut;
+            int m_nTimeOut;
+            int m_nConnectTimeOut;
 
             uint32_t m_nLimitNoFile;
 
@@ -375,9 +375,8 @@ namespace Apostol {
 
             uint32_t Port() const { return m_nPort; };
 
-            uint32_t TimeOut() const { return m_nTimeOut; };
-
-            uint32_t ConnectTimeOut() const { return m_nConnectTimeOut; };
+            int TimeOut() const { return m_nTimeOut; };
+            int ConnectTimeOut() const { return m_nConnectTimeOut; };
 
             uint32_t LimitNoFile() const { return m_nLimitNoFile; };
 

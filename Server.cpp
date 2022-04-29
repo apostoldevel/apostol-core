@@ -37,25 +37,22 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         CServerProcess::CServerProcess(): CObject(), CGlobalComponent() {
-
             m_pTimer = nullptr;
             m_TimerInterval = 0;
 
-            m_PollStack.TimeOut(Config()->TimeOut());
+            m_EventHandlers.PollStack().TimeOut(Config()->TimeOut());
 
-            m_Server.PollStack(&m_PollStack);
+            m_Server.EventHandlers(&m_EventHandlers);
             InitializeServerHandlers();
 #ifdef WITH_POSTGRESQL
-            m_PQClient.PollStack(&m_PollStack);
+            m_PQClient.EventHandlers(&m_EventHandlers);
             InitializePQClientHandlers();
 #endif
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::InitializeCommandHandlers(CCommandHandlers *AHandlers, bool ADisconnect) {
-
             if (Assigned(AHandlers)) {
-
                 CCommandHandler *pCommand;
 
                 AHandlers->ParseParamsDefault(false);
@@ -313,6 +310,11 @@ namespace Apostol {
                 pQuery->OnResult(std::bind(&CServerProcess::DoPQResult, this, _1, _2));
 #endif
                 pQuery->Binding(AConnection);
+
+                if (Assigned(AConnection)) {
+                    AConnection->TimeOut(INFINITE);
+                    AConnection->CloseConnection(false);
+                }
             }
 
             return pQuery;
@@ -339,9 +341,6 @@ namespace Apostol {
                 delete pQuery;
                 throw Delphi::Exception::Exception(_T("ExecSQL: Start SQL query failed."));
             }
-
-            if (AConnection != nullptr)
-                AConnection->CloseConnection(false);
 
             return pQuery;
         }
@@ -478,55 +477,6 @@ namespace Apostol {
                                     pConnection->PID(), pConnection->Socket(),
                                     conInfo["user"].c_str(), conInfo["host"].c_str(), conInfo["port"].c_str(), conInfo["dbname"].c_str(), jsonString.c_str());
                 }
-/*
-                if (AResult->nTuples() > 0) {
-
-                    CString Print;
-
-                    Print = "(";
-                    Print += AResult->fName(0);
-                    for (int i = 1; i < AResult->nFields(); ++i) {
-                        Print += ",";
-                        Print += AResult->fName(i);
-                    }
-                    Print += ")";
-
-                    Log()->Postgres(APP_LOG_DEBUG, "%s", Print.c_str());
-
-                    Print = "(";
-                    for (int Row = 0; Row < AResult->nTuples(); ++Row) {
-
-                        if (AResult->GetIsNull(Row, 0)) {
-                            Print += "<null>";
-                        } else {
-                            if (AResult->fFormat(0) == 0) {
-                                Print += AResult->GetValue(Row, 0);
-                            } else {
-                                Print += "<binary>";
-                            }
-                        }
-
-                        for (int Col = 1; Col < AResult->nFields(); ++Col) {
-                            Print += ",";
-                            if (AResult->GetIsNull(Row, Col)) {
-                                Print += "<null>";
-                            } else {
-                                if (AResult->fFormat(Col) == 0) {
-                                    Print += AResult->GetValue(Row, Col);
-                                } else {
-                                    Print += "<binary>";
-                                }
-                            }
-                        }
-
-                        break;
-                    }
-
-                    Print += ")";
-
-                    Log()->Postgres(APP_LOG_DEBUG, "%s", Print.c_str());
-                }
-*/
             } else {
                 if (conInfo.ConnInfo().IsEmpty()) {
                     Log()->Postgres(APP_LOG_ERR, _T("[%d] [%d] %s"), pConnection->PID(), pConnection->Socket(), AResult->GetErrorMessage());
@@ -568,7 +518,8 @@ namespace Apostol {
             if (pConnection != nullptr) {
                 const auto& conInfo = pConnection->ConnInfo();
                 if (!conInfo.ConnInfo().IsEmpty()) {
-                    Log()->Postgres(APP_LOG_NOTICE, "[%d] [postgresql://%s@%s:%s/%s] Disconnected.", pConnection->Socket(),
+                    Log()->Postgres(APP_LOG_NOTICE, "[%d] [%d] [postgresql://%s@%s:%s/%s] Disconnected.",
+                                    pConnection->PID(), pConnection->Socket(),
                                     conInfo["user"].c_str(), conInfo["host"].c_str(), conInfo["port"].c_str(), conInfo["dbname"].c_str());
                 }
             }
@@ -592,7 +543,7 @@ namespace Apostol {
 
             pClient->ClientName() = m_Server.ServerName();
 
-            pClient->PollStack(&m_PollStack);
+            pClient->EventHandlers(&m_EventHandlers);
 #if defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE >= 9)
             pClient->OnVerbose([this](auto && Sender, auto && AConnection, auto && AFormat, auto && args) { DoVerbose(Sender, AConnection, AFormat, args); });
             pClient->OnException([this](auto && AConnection, auto && AException) { DoServerException(AConnection, AException); });

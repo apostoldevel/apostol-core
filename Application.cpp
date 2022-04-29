@@ -1119,13 +1119,14 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CProcessWorker::Run() {
+            sigset_t set;
 
             while (!sig_exiting) {
 
                 Log()->Debug(APP_LOG_DEBUG_EVENT, _T("worker cycle"));
 
                 try {
-                    Server().Wait();
+                    Server().Wait(SigAddSet(&set));
                 } catch (std::exception &e) {
                     Log()->Error(APP_LOG_ERR, 0, "%s", e.what());
                 }
