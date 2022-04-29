@@ -1196,6 +1196,8 @@ namespace Apostol {
 #endif
             Initialization();
 
+            SetUser(Config()->User(), Config()->Group());
+
             SigProcMask(SIG_UNBLOCK, SigAddSet(&set));
 
             SetTimerInterval(1000);
@@ -1207,7 +1209,6 @@ namespace Apostol {
 #ifdef WITH_POSTGRESQL
             PQClientStop();
 #endif
-            //ServerStop();
             CApplicationProcess::AfterRun();
         }
         //--------------------------------------------------------------------------------------------------------------
