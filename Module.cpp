@@ -95,7 +95,9 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         CString GetUID(unsigned int len) {
-            CString S(len, ' ');
+            CString S;
+
+            S.SetLength(len + 1);
 
             for (unsigned int i = 0; i < len / 2; i++) {
                 unsigned char rc = random_char();
