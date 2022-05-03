@@ -337,7 +337,7 @@ namespace Apostol {
 
             pQuery->SQL() = SQL;
 
-            if (pQuery->Start() == POLL_QUERY_START_ERROR) {
+            if (pQuery->Start() == POLL_QUERY_START_FAIL) {
                 delete pQuery;
                 throw Delphi::Exception::Exception(_T("ExecSQL: Start SQL query failed."));
             }

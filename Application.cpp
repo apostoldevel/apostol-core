@@ -1109,6 +1109,9 @@ namespace Apostol {
             ServerStop();
             Log()->Debug(APP_LOG_DEBUG_EVENT, _T("worker process: http server stopped"));
 
+            ServerShutDown();
+            Log()->Debug(APP_LOG_DEBUG_EVENT, _T("worker process: http server shutdown"));
+
             CApplicationProcess::AfterRun();
         }
         //--------------------------------------------------------------------------------------------------------------
