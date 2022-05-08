@@ -280,7 +280,7 @@ public:
 #endif
     }
     //------------------------------------------------------------------------------------------------------------------
-
+#ifdef WITH_POSTGRESQL
     static void DebugNotify(CPQConnection *AConnection, PGnotify *ANotify) {
 #ifdef _DEBUG
         const auto& conInfo = AConnection->ConnInfo();
@@ -295,7 +295,7 @@ public:
 #endif
     }
     //------------------------------------------------------------------------------------------------------------------
-
+#endif
     static CConfig *Config() { return GConfig; };
 
     static CLog *Log(){ return GLog; };
