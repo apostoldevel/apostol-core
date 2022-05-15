@@ -304,6 +304,7 @@ public:
 //----------------------------------------------------------------------------------------------------------------------
 
 #include "Process.hpp"
+#include "Client.hpp"
 #include "Server.hpp"
 #include "Token.hpp"
 #include "Module.hpp"
