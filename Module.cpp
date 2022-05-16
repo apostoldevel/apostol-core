@@ -351,9 +351,9 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CApostolModule::ExceptionToJson(int ErrorCode, const Delphi::Exception::Exception &E, CString& Json) {
+        void CApostolModule::ExceptionToJson(int ErrorCode, const std::exception &e, CString& Json) {
             Json.Clear();
-            Json.Format(R"({"error": {"code": %u, "message": "%s"}})", ErrorCode, Delphi::Json::EncodeJsonString(E.what()).c_str());
+            Json.Format(R"({"error": {"code": %u, "message": "%s"}})", ErrorCode, Delphi::Json::EncodeJsonString(e.what()).c_str());
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -840,6 +840,26 @@ namespace Apostol {
 
         void CApostolModule::Heartbeat(CDateTime Datetime) {
 
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CApostolModule::DoVerbose(CSocketEvent *Sender, CTCPConnection *AConnection, LPCTSTR AFormat, va_list args) {
+            Log()->Debug(APP_LOG_DEBUG_CORE, AFormat, args);
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CApostolModule::DoException(CTCPConnection *AConnection, const Delphi::Exception::Exception &E) {
+            Log()->Error(APP_LOG_ERR, 0, "Exception: %s", E.what());
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CApostolModule::DoEventHandlerException(CPollEventHandler *AHandler, const Delphi::Exception::Exception &E) {
+            Log()->Error(APP_LOG_ERR, 0, "EventHandlerException: %s", E.what());
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CApostolModule::DoNoCommandHandler(CSocketEvent *Sender, const CString &Data, CTCPConnection *AConnection) {
+            Log()->Error(APP_LOG_ERR, 0, "No command handler: %s", Data.IsEmpty() ? "(null)" : Data.c_str());
         }
 
         //--------------------------------------------------------------------------------------------------------------

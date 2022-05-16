@@ -133,6 +133,11 @@ namespace Apostol {
             const CString& GetAllowedMethods() const;
             const CString& GetAllowedHeaders() const;
 
+            void DoVerbose(CSocketEvent *Sender, CTCPConnection *AConnection, LPCTSTR AFormat, va_list args);
+            void DoException(CTCPConnection *AConnection, const Delphi::Exception::Exception &E);
+            void DoEventHandlerException(CPollEventHandler *AHandler, const Delphi::Exception::Exception &E);
+            void DoNoCommandHandler(CSocketEvent *Sender, const CString &Data, CTCPConnection *AConnection);
+
 #ifdef WITH_POSTGRESQL
             virtual void DoPostgresNotify(CPQConnection *AConnection, PGnotify *ANotify);
             virtual void DoPostgresQueryExecuted(CPQPollQuery *APollQuery);
@@ -198,7 +203,7 @@ namespace Apostol {
             static void ContentToJson(CHTTPRequest *ARequest, CJSON& Json);
             static void ListToJson(const CStringList &List, CString &Json, bool DataArray = false, const CString &ObjectName = CString());
 
-            static void ExceptionToJson(int ErrorCode, const Delphi::Exception::Exception &E, CString& Json);
+            static void ExceptionToJson(int ErrorCode, const std::exception &e, CString& Json);
 
             static void ReplyError(CHTTPServerConnection *AConnection, CHTTPReply::CStatusType ErrorCode, const CString &Message);
 

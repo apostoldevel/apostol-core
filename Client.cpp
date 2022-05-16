@@ -335,12 +335,12 @@ namespace Apostol {
                     pConnection->OnPing([this](auto &&Sender) { DoPing(Sender); });
                     pConnection->OnPong([this](auto &&Sender) { DoPong(Sender); });
 #else
-                    pConnection->OnDisconnected(std::bind(&CWebSocketClient::DoDisconnected, this, _1));
-                    pConnection->OnWaitRequest(std::bind(&CWebSocketClient::DoDebugWait, this, _1));
-                    pConnection->OnRequest(std::bind(&CWebSocketClient::DoDebugRequest, this, _1));
-                    pConnection->OnReply(std::bind(&CWebSocketClient::DoDebugReply, this, _1));
-                    pConnection->OnPing(std::bind(&CWebSocketClient::DoPing, this, _1));
-                    pConnection->OnPong(std::bind(&CWebSocketClient::DoPong, this, _1));
+                    pConnection->OnDisconnected(std::bind(&CCustomWebSocketClient::DoDisconnected, this, _1));
+                    pConnection->OnWaitRequest(std::bind(&CCustomWebSocketClient::DoDebugWait, this, _1));
+                    pConnection->OnRequest(std::bind(&CCustomWebSocketClient::DoDebugRequest, this, _1));
+                    pConnection->OnReply(std::bind(&CCustomWebSocketClient::DoDebugReply, this, _1));
+                    pConnection->OnPing(std::bind(&CCustomWebSocketClient::DoPing, this, _1));
+                    pConnection->OnPong(std::bind(&CCustomWebSocketClient::DoPong, this, _1));
 #endif
                     AHandler->Start(etIO);
 
@@ -546,37 +546,6 @@ namespace Apostol {
         void CCustomWebSocketClient::DoWebSocketError(CTCPConnection *AConnection) {
             if (m_OnWebSocketError != nullptr)
                 m_OnWebSocketError(AConnection);
-        }
-
-        //--------------------------------------------------------------------------------------------------------------
-
-        //-- CWebSocketClientItem --------------------------------------------------------------------------------------
-
-        //--------------------------------------------------------------------------------------------------------------
-
-        CWebSocketClientItem::CWebSocketClientItem(CWebSocketClientManager *AManager): CCollectionItem(AManager), CCustomWebSocketClient() {
-
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
-        CWebSocketClientItem::CWebSocketClientItem(CWebSocketClientManager *AManager, const CLocation &URI):
-                CCollectionItem(AManager), CCustomWebSocketClient(URI) {
-
-        }
-
-        //--------------------------------------------------------------------------------------------------------------
-
-        //-- CWebSocketClientManager -----------------------------------------------------------------------------------
-
-        //--------------------------------------------------------------------------------------------------------------
-
-        CWebSocketClientItem *CWebSocketClientManager::GetItem(int Index) const {
-            return (CWebSocketClientItem *) inherited::GetItem(Index);
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
-        CWebSocketClientItem *CWebSocketClientManager::Add(const CLocation &URI) {
-            return new CWebSocketClientItem(this, URI);
         }
 
     }

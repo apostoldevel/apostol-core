@@ -144,6 +144,7 @@ namespace Apostol {
         public:
 
             explicit CWebSocketClientConnection(CPollSocketClient *AClient) : CHTTPClientConnection(AClient) {
+                TimeOut(INFINITE);
                 CloseConnection(false);
             }
 
@@ -314,53 +315,6 @@ namespace Apostol {
 
             const COnSocketConnectionEvent &OnWebSocketError() { return m_OnWebSocketError; }
             void OnWebSocketError(COnSocketConnectionEvent && Value) { m_OnWebSocketError = Value; }
-
-        };
-
-        //--------------------------------------------------------------------------------------------------------------
-
-        //-- CWebSocketClientItem --------------------------------------------------------------------------------------
-
-        //--------------------------------------------------------------------------------------------------------------
-
-        class CWebSocketClientManager;
-        //--------------------------------------------------------------------------------------------------------------
-
-        class CWebSocketClientItem: public CCollectionItem, public CCustomWebSocketClient {
-        public:
-
-            explicit CWebSocketClientItem(CWebSocketClientManager *AManager);
-
-            explicit CWebSocketClientItem(CWebSocketClientManager *AManager, const CLocation &URI);
-
-        };
-
-        //--------------------------------------------------------------------------------------------------------------
-
-        //-- CWebSocketClientManager -----------------------------------------------------------------------------------
-
-        //--------------------------------------------------------------------------------------------------------------
-
-        class CWebSocketClientManager: public CCollection {
-            typedef CCollection inherited;
-
-        protected:
-
-            CWebSocketClientItem *GetItem(int Index) const override;
-
-        public:
-
-            CWebSocketClientManager(): CCollection(this) {
-
-            };
-
-            ~CWebSocketClientManager() override = default;
-
-            CWebSocketClientItem *Add(const CLocation &URI);
-
-            CWebSocketClientItem *Items(int Index) const override { return GetItem(Index); };
-
-            CWebSocketClientItem *operator[] (int Index) const override { return Items(Index); };
 
         };
 
