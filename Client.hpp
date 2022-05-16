@@ -166,16 +166,11 @@ namespace Apostol {
 
         //--------------------------------------------------------------------------------------------------------------
 
-        class CWebSocketClient;
-        //--------------------------------------------------------------------------------------------------------------
-
         typedef std::function<void (CObject *Sender, const CWSMessage &Message)> COnWebSocketClientMessage;
         typedef std::function<void (CObject *Sender, int Code, const CString &Message)> COnWebSocketClientError;
         //--------------------------------------------------------------------------------------------------------------
 
         class CCustomWebSocketClient: public CHTTPClient, public CGlobalComponent  {
-            friend CWebSocketClient;
-
         private:
 
             CWebSocketClientConnection *m_pConnection;
