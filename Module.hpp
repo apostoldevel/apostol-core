@@ -133,10 +133,10 @@ namespace Apostol {
             const CString& GetAllowedMethods() const;
             const CString& GetAllowedHeaders() const;
 
-            void DoVerbose(CSocketEvent *Sender, CTCPConnection *AConnection, LPCTSTR AFormat, va_list args);
-            void DoException(CTCPConnection *AConnection, const Delphi::Exception::Exception &E);
-            void DoEventHandlerException(CPollEventHandler *AHandler, const Delphi::Exception::Exception &E);
-            void DoNoCommandHandler(CSocketEvent *Sender, const CString &Data, CTCPConnection *AConnection);
+            virtual void DoVerbose(CSocketEvent *Sender, CTCPConnection *AConnection, LPCTSTR AFormat, va_list args);
+            virtual void DoException(CTCPConnection *AConnection, const Delphi::Exception::Exception &E);
+            virtual void DoEventHandlerException(CPollEventHandler *AHandler, const Delphi::Exception::Exception &E);
+            virtual void DoNoCommandHandler(CSocketEvent *Sender, const CString &Data, CTCPConnection *AConnection);
 
 #ifdef WITH_POSTGRESQL
             virtual void DoPostgresNotify(CPQConnection *AConnection, PGnotify *ANotify);
