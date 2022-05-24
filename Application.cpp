@@ -529,7 +529,7 @@ namespace Apostol {
 
             InitializeServer(AApplication->Title());
 #ifdef WITH_POSTGRESQL
-            InitializePQClient(AApplication->Title());
+            InitializePQClients(AApplication->Title());
 #endif
             if (Config()->Helper()) {
                 CreateHelpers(this);
@@ -541,7 +541,7 @@ namespace Apostol {
 
         void CProcessSingle::Reload() {
 #ifdef WITH_POSTGRESQL
-            PQClientStop();
+            PQClientsStop();
 #endif
             ServerStop();
 
@@ -587,7 +587,7 @@ namespace Apostol {
         void CProcessSingle::AfterRun() {
             Finalization();
 #ifdef WITH_POSTGRESQL
-            PQClientStop();
+            PQClientsStop();
 #endif
             ServerStop();
             ServerShutDown();
@@ -1070,7 +1070,7 @@ namespace Apostol {
                 InitializeServer(AApplication->Title());
             }
 #ifdef WITH_POSTGRESQL
-            InitializePQClient(AApplication->Title());
+            InitializePQClients(AApplication->Title());
 #endif
         }
         //--------------------------------------------------------------------------------------------------------------
@@ -1103,8 +1103,8 @@ namespace Apostol {
         void CProcessWorker::AfterRun() {
             Finalization();
 #ifdef WITH_POSTGRESQL
-            PQClientStop();
-            Log()->Debug(APP_LOG_DEBUG_EVENT, _T("worker process: postgres server stopped"));
+            PQClientsStop();
+            Log()->Debug(APP_LOG_DEBUG_EVENT, _T("worker process: postgres clients stopped"));
 #endif
             ServerStop();
             Log()->Debug(APP_LOG_DEBUG_EVENT, _T("worker process: http server stopped"));
@@ -1174,7 +1174,7 @@ namespace Apostol {
                 InitializeServer(AApplication->Title());
             }
 #ifdef WITH_POSTGRESQL
-            InitializePQClient(AApplication->Title());
+            InitializePQClients(AApplication->Title());
 #endif
         }
         //--------------------------------------------------------------------------------------------------------------
@@ -1210,7 +1210,7 @@ namespace Apostol {
         void CProcessHelper::AfterRun() {
             Finalization();
 #ifdef WITH_POSTGRESQL
-            PQClientStop();
+            PQClientsStop();
 #endif
             CApplicationProcess::AfterRun();
         }

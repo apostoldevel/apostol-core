@@ -38,6 +38,10 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         typedef std::function<CHTTPClient * (const CLocation &URL)> COnGetHTTPClientEvent;
+#ifdef WITH_POSTGRESQL
+        typedef TPair<CPQClient> CPQClientPair;
+        typedef TPairs<CPQClient> CPQClientList;
+#endif
         //--------------------------------------------------------------------------------------------------------------
 
         class CServerProcess: public CObject, public CGlobalComponent {
@@ -45,7 +49,8 @@ namespace Apostol {
 
             CHTTPServer m_Server;
 #ifdef WITH_POSTGRESQL
-            CPQClient m_PQClient;
+            CString m_ConfName;
+            CPQClientList m_PQClients;
 #endif
             virtual void UpdateTimer();
 
@@ -65,7 +70,7 @@ namespace Apostol {
 
             void InitializeServer(const CString &Title, const CString &Listen = Config()->Listen(), u_short Port = Config()->Port());
 #ifdef WITH_POSTGRESQL
-            void InitializePQClient(const CString &Title, u_int Min = Config()->PostgresPollMin(), u_int Max = Config()->PostgresPollMax());
+            void InitializePQClients(const CString &Title, u_int Min = Config()->PostgresPollMin(), u_int Max = Config()->PostgresPollMax());
 #endif
             virtual void DoOptions(CCommand *ACommand);
             virtual void DoGet(CCommand *ACommand);
@@ -97,7 +102,7 @@ namespace Apostol {
 
             void InitializeServerHandlers();
 #ifdef WITH_POSTGRESQL
-            void InitializePQClientHandlers();
+            void InitializePQClientHandlers(CPQClient &PQClient);
 
             virtual void DoPQClientException(CPQClient *AClient, const Delphi::Exception::Exception &E);
             virtual void DoPQConnectException(CPQConnection *AConnection, const Delphi::Exception::Exception &E);
@@ -134,12 +139,25 @@ namespace Apostol {
             CHTTPServer &Server() { return m_Server; };
             const CHTTPServer &Server() const { return m_Server; };
 #ifdef WITH_POSTGRESQL
-            void PQClientStart(const CString &Name);
-            void PQClientStop();
+            CPQClient &PQClientStart(const CString& ConfName);
+            CPQClient &PQClientStart(const CString& ConfName, const CEPoll &EPoll);
 
-            CPQClient &PQClient() { return m_PQClient; };
-            const CPQClient &PQClient() const { return m_PQClient; };
+            void PQClientsStart();
+            void PQClientsStop();
 
+            CString &ConfName() { return m_ConfName; };
+            const CString &ConfName() const { return m_ConfName; };
+
+            CPQClient &GetPQClient();
+            const CPQClient &GetPQClient() const;
+
+            CPQClient &GetPQClient(const CString& ConfName);
+            const CPQClient &GetPQClient(const CString& ConfName) const;
+
+            CPQClientList &PQClients() { return m_PQClients; };
+            const CPQClientList &PQClients() const { return m_PQClients; };
+
+            virtual CPQPollQuery *GetQuery(CPollConnection *AConnection, const CString &ConfName);
             virtual CPQPollQuery *GetQuery(CPollConnection *AConnection);
 
             CPQPollQuery *ExecSQL(const CStringList &SQL, CPollConnection *AConnection = nullptr,
