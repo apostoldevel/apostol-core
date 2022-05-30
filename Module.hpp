@@ -189,6 +189,9 @@ namespace Apostol {
             CPQClient &PQClient();
             const CPQClient &PQClient() const;
 
+            CPQClient &PQClient(const CString &ConfName);
+            const CPQClient &PQClient(const CString &ConfName) const;
+
             virtual CPQPollQuery *GetQuery(CPollConnection *AConnection);
 
             static void EnumQuery(CPQResult *APQResult, CPQueryResult& AResult);

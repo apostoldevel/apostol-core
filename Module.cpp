@@ -164,6 +164,7 @@ namespace Apostol {
         const CHTTPServer &CApostolModule::Server() const {
             return m_pModuleProcess->Server();
         }
+        //--------------------------------------------------------------------------------------------------------------
 #ifdef WITH_POSTGRESQL
         CPQClient &CApostolModule::PQClient() {
             return m_pModuleProcess->GetPQClient();
@@ -172,6 +173,16 @@ namespace Apostol {
 
         const CPQClient &CApostolModule::PQClient() const {
             return m_pModuleProcess->GetPQClient();
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        CPQClient &CApostolModule::PQClient(const CString &ConfName) {
+            return m_pModuleProcess->GetPQClient(ConfName);
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        const CPQClient &CApostolModule::PQClient(const CString &ConfName) const {
+            return m_pModuleProcess->GetPQClient(ConfName);
         }
 #endif
         const CString &CApostolModule::GetAllowedMethods() const {
