@@ -149,10 +149,26 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
+        void CApplication::ChMod(const CString &File, unsigned int Mode) {
+            if (chmod(File.c_str(), Mode) == -1) {
+                throw EOSError(errno, _T("chmod \"%s\" failed "), File.c_str());
+            }
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
         void CApplication::MkDir(const CString &Dir) {
             if (!DirectoryExists(Dir.c_str()))
                 if (!CreateDir(Dir.c_str(), 0700))
                     throw EOSError(errno, _T("mkdir \"%s\" failed "), Dir.c_str());
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        CString CApplication::MkTempDir() {
+            CString tmp;
+            tmp.Format("/tmp/%s.XXXXXX", GApplication->Name().c_str());
+            if (!mkdtemp(tmp.Data()))
+                throw EOSError(errno, _T("mkdtemp \"%s\" failed "), tmp.c_str());
+            return tmp;
         }
         //--------------------------------------------------------------------------------------------------------------
 

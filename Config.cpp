@@ -587,12 +587,15 @@ namespace Apostol {
 
             m_PostgresConnInfo.AddPair("worker", CStringList());
             m_PostgresConnInfo.AddPair("helper", CStringList());
+            m_PostgresConnInfo.AddPair("kernel", CStringList());
 
             auto &worker = m_PostgresConnInfo["worker"];
             auto &helper = m_PostgresConnInfo["helper"];
+            auto &kernel = m_PostgresConnInfo["kernel"];
 
             m_pIniFile->ReadSectionValues(_T("postgres/worker"), &worker);
             m_pIniFile->ReadSectionValues(_T("postgres/helper"), &helper);
+            m_pIniFile->ReadSectionValues(_T("postgres/kernel"), &kernel);
 
             if (worker.Count() == 0) {
                 m_pIniFile->ReadSectionValues(_T("postgres/conninfo"), &worker);

@@ -139,7 +139,9 @@ namespace Apostol {
 
             void Run() override;
 
+            static void ChMod(const CString &File, unsigned int Mode);
             static void MkDir(const CString &Dir);
+            static CString MkTempDir();
             static void CreateLogFiles();
 
         }; // class CApplication
