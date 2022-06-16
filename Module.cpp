@@ -453,6 +453,7 @@ namespace Apostol {
             pReply->Content.Clear();
             pReply->Content.Format(R"({"error": {"code": %u, "message": "%s"}})", ErrorCode, Delphi::Json::EncodeJsonString(Message).c_str());
 
+            AConnection->CloseConnection(true);
             AConnection->SendReply(ErrorCode, nullptr, true);
 
             Log()->Error(ErrorCode == CHTTPReply::internal_server_error ? APP_LOG_EMERG : APP_LOG_ERR, 0, _T("ReplyError: %s"), Message.c_str());
