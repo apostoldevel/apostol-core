@@ -291,8 +291,6 @@ namespace Apostol {
             int TimerInterval() const { return m_TimerInterval; }
             void TimerInterval(int Value) { SetTimerInterval(Value); }
 
-            static CCustomWebSocketClient *FindOfConnection(CWebSocketClientConnection *AConnection);
-
             const CNotifyEvent &OnHeartbeat() const { return m_OnHeartbeat; }
             void OnHeartbeat(CNotifyEvent && Value) { m_OnHeartbeat = Value; }
 

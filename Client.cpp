@@ -25,9 +25,6 @@ Author:
 #include "Client.hpp"
 //----------------------------------------------------------------------------------------------------------------------
 
-#define WEBSOCKET_CONNECTION_DATA_NAME "WebSocketClient"
-//----------------------------------------------------------------------------------------------------------------------
-
 extern "C++" {
 
 namespace Apostol {
@@ -71,7 +68,7 @@ namespace Apostol {
         CWebSocketMessageHandler *CWebSocketMessageHandlerManager::Add(CWebSocketConnection *AConnection,
                                                                        const CWSMessage &Message, COnMessageHandlerEvent &&Handler, uint32_t Key) {
 
-            if (AConnection->Connected() && !AConnection->ClosedGracefully()) {
+            if (AConnection != nullptr && AConnection->Connected() && !AConnection->ClosedGracefully()) {
                 auto pHandler = new CWebSocketMessageHandler(this, Message, static_cast<COnMessageHandlerEvent &&> (Handler));
 
                 CString sResult;
@@ -157,56 +154,29 @@ namespace Apostol {
 
         void CCustomWebSocketClient::AddToConnection(CWebSocketClientConnection *AConnection) {
             if (Assigned(AConnection)) {
-                int Index = AConnection->Data().IndexOfName(WEBSOCKET_CONNECTION_DATA_NAME);
-                if (Index == -1) {
-                    AConnection->Data().AddObject(WEBSOCKET_CONNECTION_DATA_NAME, this);
-                } else {
-                    delete AConnection->Data().Objects(Index);
-                    AConnection->Data().Objects(Index, this);
-                }
+                AConnection->Object(this);
             }
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CCustomWebSocketClient::DeleteFromConnection(CWebSocketClientConnection *AConnection) {
             if (Assigned(AConnection)) {
-                int Index = AConnection->Data().IndexOfObject(this);
-                if (Index != -1)
-                    AConnection->Data().Delete(Index);
+                AConnection->Object(nullptr);
             }
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
-        CCustomWebSocketClient *CCustomWebSocketClient::FindOfConnection(CWebSocketClientConnection *AConnection) {
-            int Index = AConnection->Data().IndexOfName(WEBSOCKET_CONNECTION_DATA_NAME);
-            if (Index == -1)
-                throw Delphi::Exception::ExceptionFrm("Not found ws client in connection");
-
-            auto Object = AConnection->Data().Objects(Index);
-            if (Object == nullptr)
-                throw Delphi::Exception::ExceptionFrm("Object in connection data is null");
-
-            return dynamic_cast<CCustomWebSocketClient *> (Object);
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CCustomWebSocketClient::SwitchConnection(CWebSocketClientConnection *AConnection) {
             if (m_pConnection != AConnection) {
                 BeginUpdate();
-
-                if (Assigned(m_pConnection)) {
-                    DeleteFromConnection(m_pConnection);
-                    m_pConnection->Disconnect();
-                    if (AConnection == nullptr)
-                        delete m_pConnection;
-                }
-
                 if (Assigned(AConnection)) {
+                    if (Assigned(m_pConnection)) {
+                        m_pConnection->Disconnect();
+                        DeleteFromConnection(m_pConnection);
+                    }
                     AddToConnection(AConnection);
                 }
-
                 m_pConnection = AConnection;
-
                 EndUpdate();
             }
         }
