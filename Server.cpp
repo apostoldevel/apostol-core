@@ -352,15 +352,13 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         CPQPollQuery *CServerProcess::GetQuery(CPollConnection *AConnection, const CString &ConfName) {
-            CPQPollQuery *pQuery = nullptr;
+            auto &pqClient = GetPQClient(ConfName);
 
-            auto &PQClient = GetPQClient(ConfName);
-
-            if (!PQClient.Active()) {
-                PQClient.Active(true);
+            if (!pqClient.Active()) {
+                pqClient.Active(true);
             }
 
-            pQuery = PQClient.GetQuery();
+            auto pQuery = pqClient.GetQuery();
 #if defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE >= 9)
             pQuery->OnSendQuery([this](auto && AQuery) { DoPQSendQuery(AQuery); });
             pQuery->OnResultStatus([this](auto && AResult) { DoPQResultStatus(AResult); });
@@ -371,11 +369,6 @@ namespace Apostol {
             pQuery->OnResult(std::bind(&CServerProcess::DoPQResult, this, _1, _2));
 #endif
             pQuery->Binding(AConnection);
-
-            if (Assigned(AConnection)) {
-                AConnection->TimeOut(INFINITE);
-                AConnection->CloseConnection(false);
-            }
 
             return pQuery;
         }
