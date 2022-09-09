@@ -168,7 +168,6 @@ namespace Apostol {
 
         void CCustomWebSocketClient::SwitchConnection(CWebSocketClientConnection *AConnection) {
             if (m_pConnection != AConnection) {
-                BeginUpdate();
                 if (Assigned(AConnection)) {
                     if (Assigned(m_pConnection)) {
                         m_pConnection->Disconnect();
@@ -177,7 +176,6 @@ namespace Apostol {
                     AddToConnection(AConnection);
                 }
                 m_pConnection = AConnection;
-                EndUpdate();
             }
         }
         //--------------------------------------------------------------------------------------------------------------

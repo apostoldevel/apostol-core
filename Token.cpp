@@ -109,6 +109,7 @@ namespace Apostol {
         pClient->OnExecute(static_cast<COnSocketExecuteEvent &&>(OnDone));
         pClient->OnException(OnFail == nullptr ? OnException : static_cast<COnSocketExceptionEvent &&>(OnFail));
 
+        pClient->AutoFree(true);
         pClient->Active(true);
     }
     //------------------------------------------------------------------------------------------------------------------
