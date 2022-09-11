@@ -200,6 +200,9 @@ namespace Apostol {
             CPQPollQuery *ExecSQL(const CStringList &SQL, CPollConnection *AConnection = nullptr,
                 COnPQPollQueryExecutedEvent && OnExecuted = nullptr, COnPQPollQueryExceptionEvent && OnException = nullptr);
 
+            CPQPollQuery *ExecuteSQL(const CStringList &SQL, CTCPConnection *AConnection,
+                COnSocketExecuteEvent && OnSuccess, COnSocketExceptionEvent && OnFail = nullptr);
+
             static void PQResultToList(CPQResult *Result, CStringList &List);
             static void PQResultToJson(CPQResult *Result, CString &Json, const CString &Format = CString(), const CString &ObjectName = CString());
 #endif

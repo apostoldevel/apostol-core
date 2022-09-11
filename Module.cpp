@@ -763,6 +763,49 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
+        CPQPollQuery *CApostolModule::ExecuteSQL(const CStringList &SQL, CTCPConnection *AConnection,
+                COnSocketExecuteEvent &&OnSuccess, COnSocketExceptionEvent &&OnFail) {
+
+            auto OnExecuted = [OnSuccess, OnFail](CPQPollQuery *APollQuery) {
+
+                CPQResult *pResult;
+                auto pConnection = dynamic_cast<CHTTPServerConnection *> (APollQuery->Binding());
+
+                if (pConnection != nullptr && pConnection->Connected()) {
+                    try {
+                        for (int i = 0; i < APollQuery->Count(); i++) {
+                            pResult = APollQuery->Results(i);
+
+                            if (pResult->ExecStatus() != PGRES_TUPLES_OK)
+                                throw Delphi::Exception::EDBError(pResult->GetErrorMessage());
+                        }
+
+                        OnSuccess(pConnection);
+                    } catch (Delphi::Exception::Exception &E) {
+                        OnFail(pConnection, E);
+                    }
+                }
+            };
+
+            auto OnException = [OnFail](CPQPollQuery *APollQuery, const Delphi::Exception::Exception &E) {
+                auto pConnection = dynamic_cast<CHTTPServerConnection *> (APollQuery->Binding());
+                if (pConnection != nullptr && pConnection->Connected()) {
+                    OnFail(pConnection, E);
+                }
+            };
+
+            CPQPollQuery *pQuery = nullptr;
+
+            try {
+                pQuery = ExecSQL(SQL, AConnection, OnExecuted, OnException);
+            } catch (Delphi::Exception::Exception &E) {
+                OnFail(AConnection, E);
+            }
+
+            return pQuery;
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
         void CApostolModule::DoPostgresNotify(CPQConnection *AConnection, PGnotify *ANotify) {
 
         }
