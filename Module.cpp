@@ -763,27 +763,13 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        CPQPollQuery *CApostolModule::ExecuteSQL(const CStringList &SQL, CTCPConnection *AConnection,
-                COnSocketExecuteEvent &&OnSuccess, COnSocketExceptionEvent &&OnFail) {
+        CPQPollQuery *CApostolModule::ExecuteSQL(const CStringList &SQL, CHTTPServerConnection *AConnection,
+                COnApostolModuleSuccessEvent &&OnSuccess, COnApostolModuleFailEvent &&OnFail) {
 
-            auto OnExecuted = [OnSuccess, OnFail](CPQPollQuery *APollQuery) {
-
-                CPQResult *pResult;
+            auto OnExecuted = [OnSuccess](CPQPollQuery *APollQuery) {
                 auto pConnection = dynamic_cast<CHTTPServerConnection *> (APollQuery->Binding());
-
                 if (pConnection != nullptr && pConnection->Connected()) {
-                    try {
-                        for (int i = 0; i < APollQuery->Count(); i++) {
-                            pResult = APollQuery->Results(i);
-
-                            if (pResult->ExecStatus() != PGRES_TUPLES_OK)
-                                throw Delphi::Exception::EDBError(pResult->GetErrorMessage());
-                        }
-
-                        OnSuccess(pConnection);
-                    } catch (Delphi::Exception::Exception &E) {
-                        OnFail(pConnection, E);
-                    }
+                    OnSuccess(pConnection, APollQuery);
                 }
             };
 

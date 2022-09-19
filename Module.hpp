@@ -95,6 +95,10 @@ namespace Apostol {
         enum CModuleStatus { msUnknown = -1, msDisabled, msEnabled };
         //--------------------------------------------------------------------------------------------------------------
 
+        typedef std::function<void (CHTTPServerConnection *AConnection, CPQPollQuery *APollQuery)> COnApostolModuleSuccessEvent;
+        typedef std::function<void (CHTTPServerConnection *AConnection, const Delphi::Exception::Exception &E)> COnApostolModuleFailEvent;
+        //--------------------------------------------------------------------------------------------------------------
+
         class CApostolModule: public CCollectionItem, public CGlobalComponent {
         private:
 
@@ -200,8 +204,8 @@ namespace Apostol {
             CPQPollQuery *ExecSQL(const CStringList &SQL, CPollConnection *AConnection = nullptr,
                 COnPQPollQueryExecutedEvent && OnExecuted = nullptr, COnPQPollQueryExceptionEvent && OnException = nullptr);
 
-            CPQPollQuery *ExecuteSQL(const CStringList &SQL, CTCPConnection *AConnection,
-                COnSocketExecuteEvent && OnSuccess, COnSocketExceptionEvent && OnFail = nullptr);
+            CPQPollQuery *ExecuteSQL(const CStringList &SQL, CHTTPServerConnection *AConnection,
+                COnApostolModuleSuccessEvent && OnSuccess, COnApostolModuleFailEvent && OnFail = nullptr);
 
             static void PQResultToList(CPQResult *Result, CStringList &List);
             static void PQResultToJson(CPQResult *Result, CString &Json, const CString &Format = CString(), const CString &ObjectName = CString());
