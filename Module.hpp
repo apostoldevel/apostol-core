@@ -94,11 +94,11 @@ namespace Apostol {
 
         enum CModuleStatus { msUnknown = -1, msDisabled, msEnabled };
         //--------------------------------------------------------------------------------------------------------------
-
+#ifdef WITH_POSTGRESQL
         typedef std::function<void (CHTTPServerConnection *AConnection, CPQPollQuery *APollQuery)> COnApostolModuleSuccessEvent;
         typedef std::function<void (CHTTPServerConnection *AConnection, const Delphi::Exception::Exception &E)> COnApostolModuleFailEvent;
         //--------------------------------------------------------------------------------------------------------------
-
+#endif
         class CApostolModule: public CCollectionItem, public CGlobalComponent {
         private:
 
