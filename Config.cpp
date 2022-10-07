@@ -458,7 +458,7 @@ namespace Apostol {
             Add(new CConfigCommand(_T("cache"), _T("prefix"), m_sCachePrefix.c_str(), [this](auto && AValue) { SetCachePrefix(AValue); }));
 
             Add(new CConfigCommand(_T("log"), _T("error"), m_sErrorLog.c_str(), [this](auto && AValue) { SetErrorLog(AValue); }));
-            Add(new CConfigCommand(_T("log"), _T("stream"), m_sStreamLog.c_str(), [this](auto && AValue) { SetStreamLog(AValue); }));
+            Add(new CConfigCommand(_T("stream"), _T("log"), m_sStreamLog.c_str(), [this](auto && AValue) { SetStreamLog(AValue); }));
             Add(new CConfigCommand(_T("server"), _T("log"), m_sAccessLog.c_str(), [this](auto && AValue) { SetAccessLog(AValue); }));
             Add(new CConfigCommand(_T("postgres"), _T("log"), m_sPostgresLog.c_str(), [this](auto && AValue) { SetPostgresLog(AValue); }));
 
