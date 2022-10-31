@@ -45,6 +45,9 @@ namespace Apostol {
         static void FetchAccessToken(const CString &URI, const CString &Assertion, COnGetHTTPClientEvent && OnClient,
             COnSocketExecuteEvent && OnDone, COnSocketExceptionEvent && OnFail = nullptr);
 
+        static void ExchangeAccessToken(const CString &URI, const CString &ClientId, const CString &Secret,
+            const CString &Token, COnGetHTTPClientEvent && OnClient, COnSocketExecuteEvent && OnDone, COnSocketExceptionEvent && OnFail = nullptr);
+
     };
 
 }

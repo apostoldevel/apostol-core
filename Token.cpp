@@ -68,16 +68,15 @@ namespace Apostol {
     //------------------------------------------------------------------------------------------------------------------
 
     void CToken::FetchAccessToken(const CString &URI, const CString &Assertion, COnGetHTTPClientEvent &&OnClient,
-            COnSocketExecuteEvent &&OnDone, COnSocketExceptionEvent &&OnFail) {
+                                  COnSocketExecuteEvent &&OnDone, COnSocketExceptionEvent &&OnFail) {
 
         auto OnRequest = [](CHTTPClient *Sender, CHTTPRequest *ARequest) {
 
             const auto &token_uri = Sender->Data()["token_uri"];
-            const auto &grant_type = Sender->Data()["grant_type"];
             const auto &assertion = Sender->Data()["assertion"];
 
             ARequest->Content = _T("grant_type=");
-            ARequest->Content << CHTTPServer::URLEncode(grant_type);
+            ARequest->Content << CHTTPServer::URLEncode("urn:ietf:params:oauth:grant-type:jwt-bearer");
 
             ARequest->Content << _T("&assertion=");
             ARequest->Content << CHTTPServer::URLEncode(assertion);
@@ -102,8 +101,65 @@ namespace Apostol {
         auto pClient = OnClient(token_uri);
 
         pClient->Data().Values("token_uri", token_uri.pathname);
-        pClient->Data().Values("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer");
         pClient->Data().Values("assertion", Assertion);
+
+        pClient->OnRequest(OnRequest);
+        pClient->OnExecute(static_cast<COnSocketExecuteEvent &&>(OnDone));
+        pClient->OnException(OnFail == nullptr ? OnException : static_cast<COnSocketExceptionEvent &&>(OnFail));
+
+        pClient->AutoFree(true);
+        pClient->Active(true);
+    }
+    //------------------------------------------------------------------------------------------------------------------
+
+    void CToken::ExchangeAccessToken(const CString &URI, const CString &ClientId, const CString &Secret,
+            const CString &Token, COnGetHTTPClientEvent &&OnClient, COnSocketExecuteEvent &&OnDone, COnSocketExceptionEvent &&OnFail) {
+
+        auto OnRequest = [](CHTTPClient *Sender, CHTTPRequest *ARequest) {
+
+            const auto &token_uri = Sender->Data()["token_uri"];
+            const auto &client_id = Sender->Data()["client_id"];
+            const auto &client_secret = Sender->Data()["client_secret"];
+            const auto &subject_token = Sender->Data()["subject_token"];
+
+            ARequest->Content = _T("client_id=");
+            ARequest->Content << CHTTPServer::URLEncode(client_id);
+
+            ARequest->Content << _T("&client_secret=");
+            ARequest->Content << CHTTPServer::URLEncode(client_secret);
+
+            ARequest->Content << _T("&grant_type=");
+            ARequest->Content << CHTTPServer::URLEncode("urn:ietf:params:oauth:grant-type:token-exchange");
+
+            ARequest->Content << _T("&subject_token=");
+            ARequest->Content << CHTTPServer::URLEncode(subject_token);
+
+            ARequest->Content << _T("&subject_token_type=");
+            ARequest->Content << CHTTPServer::URLEncode("urn:ietf:params:oauth:token-type:jwt");
+
+            CHTTPRequest::Prepare(ARequest, _T("POST"), token_uri.c_str(), _T("application/x-www-form-urlencoded"));
+
+            DebugRequest(ARequest);
+        };
+
+        auto OnException = [](CTCPConnection *Sender, const Delphi::Exception::Exception &E) {
+
+            auto pConnection = dynamic_cast<CHTTPClientConnection *> (Sender);
+            auto pClient = dynamic_cast<CHTTPClient *> (pConnection->Client());
+
+            DebugReply(pConnection->Reply());
+
+            Log()->Error(APP_LOG_ERR, 0, "[%s:%d] %s", pClient->Host().c_str(), pClient->Port(), E.what());
+        };
+
+        CLocation token_uri(URI);
+
+        auto pClient = OnClient(token_uri);
+
+        pClient->Data().Values("token_uri", token_uri.pathname);
+        pClient->Data().Values("client_id", ClientId);
+        pClient->Data().Values("client_secret", Secret);
+        pClient->Data().Values("subject_token", Token);
 
         pClient->OnRequest(OnRequest);
         pClient->OnExecute(static_cast<COnSocketExecuteEvent &&>(OnDone));
