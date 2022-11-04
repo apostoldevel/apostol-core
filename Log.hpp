@@ -195,12 +195,13 @@ namespace Apostol {
 
             int m_iFlags;
 
-            size_t m_uOffset;
+            off_t m_uOffset;
 
             LPTSTR m_lpFileName;
 
             COnFilerErrorEvent m_OnFilerError;
 
+            size_t GetSize() const;
 
         private:
 
@@ -216,17 +217,20 @@ namespace Apostol {
 
             int Handle() const { return m_hHandle; }
 
-            char *FileName() { return m_lpFileName; }
+            char *FileName() const { return m_lpFileName; }
 
             void Open();
             void Close(bool ASafe = false);
 
-            ssize_t Read(char *buf, size_t size, size_t offset);
-            ssize_t Write(char *buf, size_t size, size_t offset);
+            ssize_t Read(char *buf, ssize_t size, off_t offset);
+            ssize_t Write(char *buf, ssize_t size, off_t offset);
 
             const COnFilerErrorEvent &getOnFilerError() { return m_OnFilerError; };
 
             void setOnFilerError(COnFilerErrorEvent && Value) { m_OnFilerError = Value; };
+
+            size_t Size() const { return GetSize(); }
+            off_t Offset() const { return m_uOffset; }
 
         }; // class CFile
 

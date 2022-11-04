@@ -131,7 +131,7 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        ssize_t CFile::Read(char *buf, size_t size, size_t offset)
+        ssize_t CFile::Read(char *buf, ssize_t size, off_t offset)
         {
             ssize_t  n;
 
@@ -147,10 +147,10 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        ssize_t CFile::Write(char *buf, size_t size, size_t offset)
+        ssize_t CFile::Write(char *buf, ssize_t size, off_t offset)
         {
             ssize_t n;
-            size_t  written;
+            ssize_t written;
             int     err;
 
             written = 0;
@@ -178,6 +178,13 @@ namespace Apostol {
                 offset += n;
                 size -= n;
             }
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        size_t CFile::GetSize() const {
+            struct stat stat_buf {};
+            int rc = fstat(m_hHandle, &stat_buf);
+            return rc == 0 ? stat_buf.st_size : 0;
         }
         //--------------------------------------------------------------------------------------------------------------
 

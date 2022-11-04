@@ -25,6 +25,9 @@ Author:
 #include "Application.hpp"
 //----------------------------------------------------------------------------------------------------------------------
 
+#include "sys/sendfile.h"
+//----------------------------------------------------------------------------------------------------------------------
+
 extern "C++" {
 
 namespace Apostol {
@@ -146,6 +149,13 @@ namespace Apostol {
             if (close(fd) == -1) {
                 throw EOSError(errno, "close(\"/dev/null\") failed");
             }
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CApplication::CopyFile(const CFile &Out, const CFile &In) {
+            off_t offset = Out.Offset();
+            if (sendfile(Out.Handle(), In.Handle(), &offset, In.Size()) < 0)
+                throw EOSError(errno, _T("sendfile \"%s\" to \"%s\" failed "), In.FileName(), Out.FileName());
         }
         //--------------------------------------------------------------------------------------------------------------
 
