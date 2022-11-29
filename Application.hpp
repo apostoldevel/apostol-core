@@ -140,6 +140,7 @@ namespace Apostol {
             void Run() override;
 
             static void CopyFile(const CFile &Src, const CFile &Dst);
+            static bool DeleteFile(const CString &FileName);
             static void ChMod(const CString &File, unsigned int Mode);
             static void MkDir(const CString &Dir);
             static CString MkTempDir();

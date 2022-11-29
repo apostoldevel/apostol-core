@@ -159,6 +159,15 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
+        bool CApplication::DeleteFile(const CString &FileName) {
+            if (unlink(FileName.c_str()) == FILE_ERROR) {
+                Log()->Error(APP_LOG_ALERT, errno, _T("could not delete file: \"%s\" error: "), FileName.c_str());
+                return false;
+            }
+            return true;
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
         void CApplication::ChMod(const CString &File, unsigned int Mode) {
             if (chmod(File.c_str(), Mode) == -1) {
                 throw EOSError(errno, _T("chmod \"%s\" failed "), File.c_str());
