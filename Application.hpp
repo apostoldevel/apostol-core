@@ -63,7 +63,6 @@ namespace Apostol {
             void AfterRun() override;
 
             pid_t SwapProcess(CProcessType Type, int Index, int Flag, Pointer Data = nullptr);
-            pid_t ExecProcess(CExecuteContext *AContext);
 
         public:
 
@@ -76,6 +75,8 @@ namespace Apostol {
             void Assign(CCustomProcess *AProcess) override;
 
             CApplication *Application() { return m_pApplication; };
+
+            pid_t ExecProcess(CExecuteContext *AContext);
 
             bool RenamePidFile(bool Back, LPCTSTR lpszErrorMessage);
 
