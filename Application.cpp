@@ -76,25 +76,25 @@ namespace Apostol {
                 const auto &value = Config()->LogFiles().Values(key);
                 level = GetLogLevelByName(key.c_str());
                 if (level > APP_LOG_STDERR && level <= APP_LOG_DEBUG) {
-                    pLogFile = Log()->AddLogFile(value.c_str(), level);
+                    pLogFile = Log()->AddLogFile(value, level);
                     if (level == APP_LOG_DEBUG)
                         pLogFile->LogType(ltDebug);
                 }
             }
 
-            pLogFile = Log()->AddLogFile(Config()->AccessLog().c_str());
+            pLogFile = Log()->AddLogFile(Config()->AccessLog());
             pLogFile->LogType(ltAccess);
 
-            pLogFile = Log()->AddLogFile(Config()->StreamLog().c_str(), level);
+            pLogFile = Log()->AddLogFile(Config()->StreamLog(), level);
             pLogFile->LogType(ltStream);
 #ifdef WITH_POSTGRESQL
-            pLogFile = Log()->AddLogFile(Config()->PostgresLog().c_str(), level);
+            pLogFile = Log()->AddLogFile(Config()->PostgresLog(), level);
             pLogFile->LogType(ltPostgres);
 #endif
 #ifdef _DEBUG
             const auto &debug = Config()->LogFiles().Values(_T("debug"));
             if (debug.IsEmpty()) {
-                pLogFile = Log()->AddLogFile(Config()->ErrorLog().c_str(), APP_LOG_DEBUG);
+                pLogFile = Log()->AddLogFile(Config()->ErrorLog(), APP_LOG_DEBUG);
                 pLogFile->LogType(ltDebug);
             }
 #endif
@@ -519,7 +519,7 @@ namespace Apostol {
 
             if (Daemonized()) {
 
-                CFile File(Config()->PidFile().c_str(), FILE_RDWR | create);
+                CFile File(Config()->PidFile(), FILE_RDWR | create);
 
 #if defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE >= 9)
                 File.OnFilerError([this](auto && Sender, auto && Error, auto && lpFormat, auto && args) { OnFilerError(Sender, Error, lpFormat, args); });
@@ -1051,9 +1051,7 @@ namespace Apostol {
             pid_t         pid;
             char          buf[_INT64_LEN + 2] = {0};
 
-            LPCTSTR lpszPid = Config()->PidFile().c_str();
-
-            CFile File(lpszPid, FILE_RDONLY | FILE_OPEN);
+            CFile File(Config()->PidFile(), FILE_RDONLY | FILE_OPEN);
 
 #if defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE >= 9)
             File.OnFilerError([this](auto && Sender, auto && Error, auto && lpFormat, auto && args) { OnFilerError(Sender, Error, lpFormat, args); });
@@ -1071,7 +1069,7 @@ namespace Apostol {
             pid = (pid_t) strtol(buf, nullptr, 0);
 
             if (pid == (pid_t) 0) {
-                throw ExceptionFrm(_T("invalid PID number \"%*s\" in \"%s\""), n, buf, lpszPid);
+                throw ExceptionFrm(_T("invalid PID number \"%*s\" in \"%s\""), n, buf, Config()->PidFile().c_str());
             }
 
             SignalToProcess(pid);

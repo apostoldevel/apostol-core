@@ -60,8 +60,8 @@ namespace Apostol {
 
         //--------------------------------------------------------------------------------------------------------------
 
-        CLogFile::CLogFile(CLog *ALog, LPCSTR AFileName) :
-                CFile(AFileName, FILE_APPEND | FILE_CREATE_OR_OPEN),
+        CLogFile::CLogFile(CLog *ALog, const CString &FileName):
+                CFile(FileName, FILE_APPEND | FILE_CREATE_OR_OPEN),
                 CCollectionItem(ALog), m_uLevel(APP_LOG_STDERR), m_LogType(ltError) {
         }
 
@@ -94,8 +94,8 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        CLog::CLog(LPCSTR  AFileName, u_int ALevel): CLog() {
-            AddLogFile(AFileName, ALevel);
+        CLog::CLog(const CString &FileName, u_int ALevel): CLog() {
+            AddLogFile(FileName, ALevel);
         };
         //--------------------------------------------------------------------------------------------------------------
 
@@ -327,14 +327,14 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        CLogFile *CLog::AddLogFile(LPCSTR AFileName, u_int ALevel) {
+        CLogFile *CLog::AddLogFile(const CString &FileName, u_int ALevel) {
             CLogFile *LogFile = First();
-            while (LogFile && (LogFile->FileName() != AFileName)) {
+            while (LogFile && (LogFile->FileName() != FileName)) {
                 LogFile = Next();
             }
 
             if (LogFile == nullptr) {
-                LogFile = new CLogFile(this, AFileName);
+                LogFile = new CLogFile(this, FileName);
                 LogFile->Level(ALevel);
                 LogFile->Open();
             }

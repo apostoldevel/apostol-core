@@ -167,7 +167,7 @@ namespace Apostol {
 
         public:
 
-            explicit CLogFile(CLog *ALog, LPCSTR AFileName);
+            explicit CLogFile(CLog *ALog, const CString &FileName);
 
             ~CLogFile() override = default;
 
@@ -221,7 +221,7 @@ namespace Apostol {
 
             CLog();
 
-            explicit CLog(LPCSTR  AFileName, u_int ALevel);
+            explicit CLog(const CString &FileName, u_int ALevel);
 
             inline static class CLog *CreateLog() { return GLog = new CLog(); };
 
@@ -229,7 +229,7 @@ namespace Apostol {
 
             ~CLog() override = default;
 
-            CLogFile *AddLogFile(LPCSTR AFileName, u_int ALevel = APP_LOG_STDERR);
+            CLogFile *AddLogFile(const CString &FileName, u_int ALevel = APP_LOG_STDERR);
 
             void Error(u_int ALevel, int AErrNo, LPCSTR AFormat, ...);
             void Error(u_int ALevel, int AErrNo, LPCSTR AFormat, va_list args);
