@@ -505,10 +505,15 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        const CIniFile &CConfig::IniFile() const {
+        CIniFile *CConfig::ptrIniFile() const {
             if (m_pIniFile == nullptr)
                 throw Delphi::Exception::Exception(_T("Not initialized"));
-            return *m_pIniFile;
+            return m_pIniFile;
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        const CIniFile &CConfig::IniFile() const {
+            return *ptrIniFile();
         }
         //--------------------------------------------------------------------------------------------------------------
 
