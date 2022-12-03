@@ -522,9 +522,9 @@ namespace Apostol {
                 CFile File(Config()->PidFile().c_str(), FILE_RDWR | create);
 
 #if defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE >= 9)
-                File.setOnFilerError([this](auto && Sender, auto && Error, auto && lpFormat, auto && args) { OnFilerError(Sender, Error, lpFormat, args); });
+                File.OnFilerError([this](auto && Sender, auto && Error, auto && lpFormat, auto && args) { OnFilerError(Sender, Error, lpFormat, args); });
 #else
-                File.setOnFilerError(std::bind(&CApplicationProcess::OnFilerError, this, _1, _2, _3, _4));
+                File.OnFilerError(std::bind(&CApplicationProcess::OnFilerError, this, _1, _2, _3, _4));
 #endif
                 File.Open();
 
@@ -1056,9 +1056,9 @@ namespace Apostol {
             CFile File(lpszPid, FILE_RDONLY | FILE_OPEN);
 
 #if defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE >= 9)
-            File.setOnFilerError([this](auto && Sender, auto && Error, auto && lpFormat, auto && args) { OnFilerError(Sender, Error, lpFormat, args); });
+            File.OnFilerError([this](auto && Sender, auto && Error, auto && lpFormat, auto && args) { OnFilerError(Sender, Error, lpFormat, args); });
 #else
-            File.setOnFilerError(std::bind(&CApplicationProcess::OnFilerError, this, _1, _2, _3, _4));
+            File.OnFilerError(std::bind(&CApplicationProcess::OnFilerError, this, _1, _2, _3, _4));
 #endif
             File.Open();
 
