@@ -1067,6 +1067,93 @@ namespace Apostol {
                 pConnection->SendStockReply(CHTTPReply::forbidden);
             }
         }
+
+        //--------------------------------------------------------------------------------------------------------------
+
+        //-- CQueueHandler ---------------------------------------------------------------------------------------------
+
+        //--------------------------------------------------------------------------------------------------------------
+
+        CQueueHandler::CQueueHandler(CQueueModule *AModule, COnQueueHandlerEvent &&Handler):
+                CPollConnection(AModule->ptrQueueManager()), m_Allow(true) {
+
+            m_pModule = AModule;
+            m_Handler = Handler;
+
+            AddToQueue();
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        CQueueHandler::~CQueueHandler() {
+            RemoveFromQueue();
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CQueueHandler::Close() {
+            m_Allow = false;
+            RemoveFromQueue();
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CQueueHandler::SetAllow(bool Value) {
+            if (m_Allow != Value) {
+                m_Allow = Value;
+            }
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        int CQueueHandler::AddToQueue() {
+            return m_pModule->AddToQueue(this);
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CQueueHandler::RemoveFromQueue() {
+            m_pModule->RemoveFromQueue(this);
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        bool CQueueHandler::Handler() {
+            if (m_Allow && m_Handler) {
+                m_Handler(this);
+                return true;
+            }
+            return false;
+        }
+
+        //--------------------------------------------------------------------------------------------------------------
+
+        //-- CQueueModule ---------------------------------------------------------------------------------------------
+
+        //--------------------------------------------------------------------------------------------------------------
+
+        CQueueModule::CQueueModule(size_t AMaxQueue, CModuleProcess *AProcess, const CString &ModuleName, 
+                const CString &SectionName): CApostolModule(AProcess, ModuleName, SectionName) {
+            m_MaxQueue = AMaxQueue;
+            m_Progress = 0;
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CQueueModule::DeleteHandler(CQueueHandler *AHandler) {
+            delete AHandler;
+            if (m_Progress > 0)
+                DecProgress();
+            UnloadQueue();
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        int CQueueModule::AddToQueue(CQueueHandler *AHandler) {
+            return m_Queue.AddToQueue(this, AHandler);
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CQueueModule::InsertToQueue(int Index, CQueueHandler *AHandler) {
+            m_Queue.InsertToQueue(this, Index, AHandler);
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CQueueModule::RemoveFromQueue(CQueueHandler *AHandler) {
+            m_Queue.RemoveFromQueue(this, AHandler);
+        }
         //--------------------------------------------------------------------------------------------------------------
 
     }
