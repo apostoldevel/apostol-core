@@ -159,11 +159,11 @@ namespace Apostol {
 
             f = ld_slprintf(file_str, last_f, "[%s] ", time_str);
             c = ld_slprintf(cons_str, last_c, COLOR_WHITE "[%s] ", time_str);
-#ifdef _DEBUG
+
             /* pid#tid */
             f = ld_slprintf(f, last_f, "[%P#" LOG_TID_T_FMT "] ", log_pid, log_tid);
             c = ld_slprintf(c, last_c, "[%P#" LOG_TID_T_FMT "] ", log_pid, log_tid);
-#endif
+
             f = ld_slprintf(f, last_f, "%V: ", &err_levels[ALevel]);
             c = ld_slprintf(c, last_c, "%V", &level_colors[ALevel]);
 
