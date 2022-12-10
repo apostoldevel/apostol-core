@@ -1082,8 +1082,9 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CProcessNewBinary::Run() {
-            auto LContext = (CExecuteContext *) Data();
-            ExecuteProcess(LContext);
+            auto pContext = (CExecuteContext *) Data();
+            Application()->Header(pContext->name);
+            ExecuteProcess(pContext);
         }
 
         //--------------------------------------------------------------------------------------------------------------
