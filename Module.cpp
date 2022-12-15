@@ -144,15 +144,8 @@ namespace Apostol {
 
             m_ModuleStatus = msUnknown;
 
-            m_pMethods = CStringList::Create(true);
-
             m_Headers.Add("Content-Type");
             m_Headers.Add("X-Requested-With");
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
-        CApostolModule::~CApostolModule() {
-            delete m_pMethods;
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -187,15 +180,15 @@ namespace Apostol {
 #endif
         const CString &CApostolModule::GetAllowedMethods() const {
             if (m_AllowedMethods.IsEmpty()) {
-                if (m_pMethods->Count() > 0) {
+                if (m_Methods.Count() > 0) {
                     CMethodHandler *pHandler;
-                    for (int i = 0; i < m_pMethods->Count(); ++i) {
-                        pHandler = (CMethodHandler *) m_pMethods->Objects(i);
+                    for (int i = 0; i < m_Methods.Count(); ++i) {
+                        pHandler = (CMethodHandler *) m_Methods.Objects(i);
                         if (pHandler->Allow()) {
                             if (m_AllowedMethods.IsEmpty())
-                                m_AllowedMethods = m_pMethods->Strings(i);
+                                m_AllowedMethods = m_Methods.Strings(i);
                             else
-                                m_AllowedMethods += _T(", ") + m_pMethods->Strings(i);
+                                m_AllowedMethods += _T(", ") + m_Methods.Strings(i);
                         }
                     }
                 }
@@ -854,10 +847,10 @@ namespace Apostol {
 
             int i;
             CMethodHandler *pHandler;
-            for (i = 0; i < m_pMethods->Count(); ++i) {
-                pHandler = (CMethodHandler *) m_pMethods->Objects(i);
+            for (i = 0; i < m_Methods.Count(); ++i) {
+                pHandler = (CMethodHandler *) m_Methods.Objects(i);
                 if (pHandler->Allow()) {
-                    const CString& Method = m_pMethods->Strings(i);
+                    const CString& Method = m_Methods.Strings(i);
                     if (Method == pRequest->Method) {
                         CORS(AConnection);
                         pHandler->Handler(AConnection);
@@ -866,7 +859,7 @@ namespace Apostol {
                 }
             }
 
-            if (i == m_pMethods->Count()) {
+            if (i == m_Methods.Count()) {
                 AConnection->SendStockReply(CHTTPReply::not_implemented);
             }
 

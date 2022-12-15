@@ -116,7 +116,7 @@ namespace Apostol {
 
             CStringList m_Headers;
 
-            CStringList *m_pMethods;
+            CStringList m_Methods { true };
 
             CModuleStatus m_ModuleStatus;
 
@@ -151,7 +151,7 @@ namespace Apostol {
 
             explicit CApostolModule(CModuleProcess *AProcess, const CString& ModuleName, const CString& SectionName = CString());
 
-            ~CApostolModule() override;
+            ~CApostolModule() override = default;
 
             const CString& ModuleName() const { return m_ModuleName; }
             const CString& SectionName() const { return m_SectionName; }
@@ -210,6 +210,9 @@ namespace Apostol {
             static void PQResultToList(CPQResult *Result, CStringList &List);
             static void PQResultToJson(CPQResult *Result, CString &Json, const CString &Format = CString(), const CString &ObjectName = CString());
 #endif
+            CStringList &Methods() { return m_Methods; };
+            const CStringList &Methods() const { return m_Methods; };
+
             static void ContentToJson(CHTTPRequest *ARequest, CJSON& Json);
             static void ListToJson(const CStringList &List, CString &Json, bool DataArray = false, const CString &ObjectName = CString());
 
