@@ -222,10 +222,10 @@ namespace Apostol {
 
             PQClient.OnNotify([this](auto && AConnection, auto && ANotify) { DoPQNotify(AConnection, ANotify); });
 
-            PQClient.OnError([this](auto && AConnection) { DoPQError(AConnection); });
-            PQClient.OnTimeOut([this](auto && AConnection) { DoPQTimeOut(AConnection); });
-            PQClient.OnStatus([this](auto && AConnection) { DoPQStatus(AConnection); });
-            PQClient.OnPollingStatus([this](auto && AConnection) { DoPQPollingStatus(AConnection); });
+            PQClient.OnPQError([this](auto && AConnection) { DoPQError(AConnection); });
+            PQClient.OnPQTimeOut([this](auto && AConnection) { DoPQTimeOut(AConnection); });
+            PQClient.OnPQStatus([this](auto && AConnection) { DoPQStatus(AConnection); });
+            PQClient.OnPQPollingStatus([this](auto && AConnection) { DoPQPollingStatus(AConnection); });
 
             PQClient.OnConnected([this](auto && Sender) { DoPQConnect(Sender); });
             PQClient.OnDisconnected([this](auto && Sender) { DoPQDisconnect(Sender); });
@@ -242,10 +242,10 @@ namespace Apostol {
 
             PQClient.OnNotify(std::bind(&CServerProcess::DoPQNotify, this, _1, _2));
 
-            PQClient.OnError(std::bind(&CServerProcess::DoPQError, this, _1));
-            PQClient.OnTimeOut(std::bind(&CServerProcess::DoPQTimeOut, this, _1));
-            PQClient.OnStatus(std::bind(&CServerProcess::DoPQStatus, this, _1));
-            PQClient.OnPollingStatus(std::bind(&CServerProcess::DoPQPollingStatus, this, _1));
+            PQClient.OnPQError(std::bind(&CServerProcess::DoPQError, this, _1));
+            PQClient.OnPQTimeOut(std::bind(&CServerProcess::DoPQTimeOut, this, _1));
+            PQClient.OnPQStatus(std::bind(&CServerProcess::DoPQStatus, this, _1));
+            PQClient.OnPQPollingStatus(std::bind(&CServerProcess::DoPQPollingStatus, this, _1));
 
             PQClient.OnConnected(std::bind(&CServerProcess::DoPQConnect, this, _1));
             PQClient.OnDisconnected(std::bind(&CServerProcess::DoPQDisconnect, this, _1));
