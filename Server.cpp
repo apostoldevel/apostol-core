@@ -715,7 +715,7 @@ namespace Apostol {
             auto pRequest = pConnection->Request();
             auto pReply = pConnection->Reply();
 
-            if (pRequest->Method.IsEmpty())
+            if (pRequest->Method.IsEmpty() || pRequest->URI.IsEmpty())
                 return;
 
             TCHAR szTime[PATH_MAX / 4] = {0};

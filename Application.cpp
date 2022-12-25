@@ -155,7 +155,7 @@ namespace Apostol {
         void CApplication::CopyFile(const CFile &Out, const CFile &In) {
             off_t offset = Out.Offset();
             if (sendfile(Out.Handle(), In.Handle(), &offset, In.Size()) < 0)
-                throw EOSError(errno, _T("sendfile \"%s\" to \"%s\" failed "), In.FileName(), Out.FileName());
+                throw EOSError(errno, _T("sendfile \"%s\" to \"%s\" failed "), In.FileName().c_str(), Out.FileName().c_str());
         }
         //--------------------------------------------------------------------------------------------------------------
 
