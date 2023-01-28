@@ -1057,7 +1057,7 @@ namespace Apostol {
             }
 
             if (Index == ModuleCount()) {
-                pConnection->SendStockReply(CHTTPReply::forbidden);
+                pConnection->SendStockReply(CHTTPReply::not_implemented);
             }
         }
 
