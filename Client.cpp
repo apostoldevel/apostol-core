@@ -378,9 +378,9 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CCustomWebSocketClient::DoHTTP(CHTTPClientConnection *AConnection) {
-            auto pReply = AConnection->Reply();
+            const auto &caReply = AConnection->Reply();
 
-            if (pReply->Status == CHTTPReply::switching_protocols) {
+            if (caReply.Status == CHTTPReply::switching_protocols) {
 #ifdef _DEBUG
                 WSDebugConnection(AConnection);
 #endif
@@ -418,13 +418,13 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CCustomWebSocketClient::Handshake(CWebSocketClientConnection *AConnection) {
-            auto pRequest = AConnection->Request();
+            auto &Request = AConnection->Request();
 
-            pRequest->AddHeader("Sec-WebSocket-Version", "13");
-            pRequest->AddHeader("Sec-WebSocket-Key", base64_encode(m_Key));
-            pRequest->AddHeader("Upgrade", "websocket");
+            Request.AddHeader("Sec-WebSocket-Version", "13");
+            Request.AddHeader("Sec-WebSocket-Key", base64_encode(m_Key));
+            Request.AddHeader("Upgrade", "websocket");
 
-            CHTTPRequest::Prepare(pRequest, _T("GET"), m_URI.href().c_str(), nullptr, "Upgrade");
+            CHTTPRequest::Prepare(Request, _T("GET"), m_URI.href().c_str(), nullptr, "Upgrade");
 
             AConnection->SendRequest(true);
         }

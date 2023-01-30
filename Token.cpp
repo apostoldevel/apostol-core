@@ -70,20 +70,20 @@ namespace Apostol {
     void CToken::FetchAccessToken(const CString &URI, const CString &Assertion, COnGetHTTPClientEvent &&OnClient,
                                   COnSocketExecuteEvent &&OnDone, COnSocketExceptionEvent &&OnFail) {
 
-        auto OnRequest = [](CHTTPClient *Sender, CHTTPRequest *ARequest) {
+        auto OnRequest = [](CHTTPClient *Sender, CHTTPRequest &Request) {
 
             const auto &token_uri = Sender->Data()["token_uri"];
             const auto &assertion = Sender->Data()["assertion"];
 
-            ARequest->Content = _T("grant_type=");
-            ARequest->Content << CHTTPServer::URLEncode("urn:ietf:params:oauth:grant-type:jwt-bearer");
+            Request.Content = _T("grant_type=");
+            Request.Content << CHTTPServer::URLEncode("urn:ietf:params:oauth:grant-type:jwt-bearer");
 
-            ARequest->Content << _T("&assertion=");
-            ARequest->Content << CHTTPServer::URLEncode(assertion);
+            Request.Content << _T("&assertion=");
+            Request.Content << CHTTPServer::URLEncode(assertion);
 
-            CHTTPRequest::Prepare(ARequest, _T("POST"), token_uri.c_str(), _T("application/x-www-form-urlencoded"));
+            CHTTPRequest::Prepare(Request, _T("POST"), token_uri.c_str(), _T("application/x-www-form-urlencoded"));
 
-            DebugRequest(ARequest);
+            DebugRequest(Request);
         };
 
         auto OnException = [](CTCPConnection *Sender, const Delphi::Exception::Exception &E) {
@@ -115,31 +115,31 @@ namespace Apostol {
     void CToken::ExchangeAccessToken(const CString &URI, const CString &ClientId, const CString &Secret,
             const CString &Token, COnGetHTTPClientEvent &&OnClient, COnSocketExecuteEvent &&OnDone, COnSocketExceptionEvent &&OnFail) {
 
-        auto OnRequest = [](CHTTPClient *Sender, CHTTPRequest *ARequest) {
+        auto OnRequest = [](CHTTPClient *Sender, CHTTPRequest &Request) {
 
             const auto &token_uri = Sender->Data()["token_uri"];
             const auto &client_id = Sender->Data()["client_id"];
             const auto &client_secret = Sender->Data()["client_secret"];
             const auto &subject_token = Sender->Data()["subject_token"];
 
-            ARequest->Content = _T("client_id=");
-            ARequest->Content << CHTTPServer::URLEncode(client_id);
+            Request.Content = _T("client_id=");
+            Request.Content << CHTTPServer::URLEncode(client_id);
 
-            ARequest->Content << _T("&client_secret=");
-            ARequest->Content << CHTTPServer::URLEncode(client_secret);
+            Request.Content << _T("&client_secret=");
+            Request.Content << CHTTPServer::URLEncode(client_secret);
 
-            ARequest->Content << _T("&grant_type=");
-            ARequest->Content << CHTTPServer::URLEncode("urn:ietf:params:oauth:grant-type:token-exchange");
+            Request.Content << _T("&grant_type=");
+            Request.Content << CHTTPServer::URLEncode("urn:ietf:params:oauth:grant-type:token-exchange");
 
-            ARequest->Content << _T("&subject_token=");
-            ARequest->Content << CHTTPServer::URLEncode(subject_token);
+            Request.Content << _T("&subject_token=");
+            Request.Content << CHTTPServer::URLEncode(subject_token);
 
-            ARequest->Content << _T("&subject_token_type=");
-            ARequest->Content << CHTTPServer::URLEncode("urn:ietf:params:oauth:token-type:jwt");
+            Request.Content << _T("&subject_token_type=");
+            Request.Content << CHTTPServer::URLEncode("urn:ietf:params:oauth:token-type:jwt");
 
-            CHTTPRequest::Prepare(ARequest, _T("POST"), token_uri.c_str(), _T("application/x-www-form-urlencoded"));
+            CHTTPRequest::Prepare(Request, _T("POST"), token_uri.c_str(), _T("application/x-www-form-urlencoded"));
 
-            DebugRequest(ARequest);
+            DebugRequest(Request);
         };
 
         auto OnException = [](CTCPConnection *Sender, const Delphi::Exception::Exception &E) {

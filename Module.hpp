@@ -213,7 +213,7 @@ namespace Apostol {
             CStringList &Methods() { return m_Methods; };
             const CStringList &Methods() const { return m_Methods; };
 
-            static void ContentToJson(CHTTPRequest *ARequest, CJSON& Json);
+            static void ContentToJson(const CHTTPRequest &Request, CJSON &Json);
             static void ListToJson(const CStringList &List, CString &Json, bool DataArray = false, const CString &ObjectName = CString());
 
             static void ExceptionToJson(int ErrorCode, const std::exception &e, CString& Json);

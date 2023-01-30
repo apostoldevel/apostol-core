@@ -712,10 +712,10 @@ namespace Apostol {
             if (pConnection == nullptr)
                 return;
 
-            auto pRequest = pConnection->Request();
-            auto pReply = pConnection->Reply();
+            const auto &caRequest = pConnection->Request();
+            const auto &caReply = pConnection->Reply();
 
-            if (pRequest->Method.IsEmpty() || pRequest->URI.IsEmpty())
+            if (caRequest.Method.IsEmpty() || caRequest.URI.IsEmpty())
                 return;
 
             TCHAR szTime[PATH_MAX / 4] = {0};
@@ -725,8 +725,8 @@ namespace Apostol {
 
             if ((wtm != nullptr) && (strftime(szTime, sizeof(szTime), "%d/%b/%Y:%T %z", wtm) != 0)) {
 
-                const auto& referer = pRequest->Headers[_T("Referer")];
-                const auto& user_agent = pRequest->Headers[_T("User-Agent")];
+                const auto& referer = caRequest.Headers[_T("Referer")];
+                const auto& user_agent = caRequest.Headers[_T("User-Agent")];
 
                 auto pSocket = pConnection->Socket();
                 if (pSocket != nullptr) {
@@ -735,9 +735,9 @@ namespace Apostol {
                         Log()->Access(_T("%s %d %.3f [%s] \"%s %s HTTP/%d.%d\" %d %d \"%s\" \"%s\"\r\n"),
                                       pHandle->PeerIP(), pHandle->PeerPort(),
                                       (Now() - AConnection->Clock()) * MSecsPerDay / MSecsPerSec, szTime,
-                                      pRequest->Method.c_str(), pRequest->URI.c_str(), pRequest->VMajor,
-                                      pRequest->VMinor,
-                                      pReply->Status, pReply->Content.Size(),
+                                      caRequest.Method.c_str(), caRequest.URI.c_str(), caRequest.VMajor,
+                                      caRequest.VMinor,
+                                      caReply.Status, caReply.Content.Size(),
                                       referer.IsEmpty() ? "-" : referer.c_str(),
                                       user_agent.IsEmpty() ? "-" : user_agent.c_str());
                     }

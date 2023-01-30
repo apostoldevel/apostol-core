@@ -211,29 +211,29 @@ public:
     }
     //------------------------------------------------------------------------------------------------------------------
 
-    static void DebugRequest(CHTTPRequest *ARequest) {
+    static void DebugRequest(const CHTTPRequest &Request) {
 #ifdef _DEBUG
-        DebugMessage(_T("[%p] Request:\n%s %s HTTP/%d.%d\n"), ARequest, ARequest->Method.c_str(), ARequest->URI.c_str(), ARequest->VMajor, ARequest->VMinor);
+        DebugMessage(_T("[%p] Request:\n%s %s HTTP/%d.%d\n"), &Request, Request.Method.c_str(), Request.URI.c_str(), Request.VMajor, Request.VMinor);
 
-        for (int i = 0; i < ARequest->Headers.Count(); i++)
-            DebugMessage(_T("%s: %s\n"), ARequest->Headers[i].Name().c_str(), ARequest->Headers[i].Value().c_str());
+        for (int i = 0; i < Request.Headers.Count(); i++)
+            DebugMessage(_T("%s: %s\n"), Request.Headers[i].Name().c_str(), Request.Headers[i].Value().c_str());
 
-        if (!ARequest->Content.IsEmpty())
-            DebugMessage(_T("\n%s\n"), ARequest->Content.c_str());
+        if (!Request.Content.IsEmpty())
+            DebugMessage(_T("\n%s\n"), Request.Content.c_str());
 #endif
     }
     //------------------------------------------------------------------------------------------------------------------
 
-    static void DebugReply(CHTTPReply *AReply) {
+    static void DebugReply(const CHTTPReply &Reply) {
 #ifdef _DEBUG
-        if (!AReply->StatusText.IsEmpty()) {
-            DebugMessage(_T("[%p] Reply:\nHTTP/%d.%d %d %s\n"), AReply, AReply->VMajor, AReply->VMinor, AReply->Status, AReply->StatusText.c_str());
+        if (!Reply.StatusText.IsEmpty()) {
+            DebugMessage(_T("[%p] Reply:\nHTTP/%d.%d %d %s\n"), &Reply, Reply.VMajor, Reply.VMinor, Reply.Status, Reply.StatusText.c_str());
 
-            for (int i = 0; i < AReply->Headers.Count(); i++)
-                DebugMessage(_T("%s: %s\n"), AReply->Headers[i].Name().c_str(), AReply->Headers[i].Value().c_str());
+            for (int i = 0; i < Reply.Headers.Count(); i++)
+                DebugMessage(_T("%s: %s\n"), Reply.Headers[i].Name().c_str(), Reply.Headers[i].Value().c_str());
 
-            if (!AReply->Content.IsEmpty())
-                DebugMessage(_T("\n%s\n"), AReply->Content.c_str());
+            if (!Reply.Content.IsEmpty())
+                DebugMessage(_T("\n%s\n"), Reply.Content.c_str());
         }
 #endif
     }

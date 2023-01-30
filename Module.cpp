@@ -213,12 +213,12 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CApostolModule::MethodNotAllowed(CHTTPServerConnection *AConnection) {
-            auto pReply = AConnection->Reply();
+            auto &Reply = AConnection->Reply();
 
-            CHTTPReply::GetStockReply(pReply, CHTTPReply::not_allowed);
+            CHTTPReply::GetStockReply(Reply, CHTTPReply::not_allowed);
 
             if (!AllowedMethods().IsEmpty())
-                pReply->AddHeader(_T("Allow"), AllowedMethods());
+                Reply.AddHeader(_T("Allow"), AllowedMethods());
 
             AConnection->SendReply();
         }
@@ -307,31 +307,31 @@ namespace Apostol {
 
         CString CApostolModule::GetUserAgent(CHTTPServerConnection *AConnection) {
             auto pServer = dynamic_cast<CHTTPServer *> (AConnection->Server());
-            auto pRequest = AConnection->Request();
-            const auto& agent = pRequest->Headers[_T("User-Agent")];
+            const auto &caRequest = AConnection->Request();
+            const auto &agent = caRequest.Headers[_T("User-Agent")];
             return agent.IsEmpty() ? pServer->ServerName() : agent;
         }
         //--------------------------------------------------------------------------------------------------------------
 
         CString CApostolModule::GetOrigin(CHTTPServerConnection *AConnection) {
-            auto pRequest = AConnection->Request();
-            const auto& caOrigin = pRequest->Headers[_T("Origin")];
-            return caOrigin.IsEmpty() ? pRequest->Location.Origin() : caOrigin;
+            const auto &caRequest = AConnection->Request();
+            const auto &caOrigin = caRequest.Headers[_T("Origin")];
+            return caOrigin.IsEmpty() ? caRequest.Location.Origin() : caOrigin;
         }
         //--------------------------------------------------------------------------------------------------------------
 
         CString CApostolModule::GetProtocol(CHTTPServerConnection *AConnection) {
-            auto pRequest = AConnection->Request();
-            const auto& caProtocol = pRequest->Headers[_T("X-Forwarded-Proto")];
-            return caProtocol.IsEmpty() ? pRequest->Location.protocol : caProtocol;
+            const auto &caRequest = AConnection->Request();
+            const auto &caProtocol = caRequest.Headers[_T("X-Forwarded-Proto")];
+            return caProtocol.IsEmpty() ? caRequest.Location.protocol : caProtocol;
         }
         //--------------------------------------------------------------------------------------------------------------
 
         CString CApostolModule::GetRealIP(CHTTPServerConnection *AConnection) {
-            auto pRequest = AConnection->Request();
+            const auto &caRequest = AConnection->Request();
             CString sHost;
 
-            const auto& caRealIP = pRequest->Headers[_T("X-Real-IP")];
+            const auto &caRealIP = caRequest.Headers[_T("X-Real-IP")];
             if (!caRealIP.IsEmpty()) {
                 sHost = caRealIP;
             } else {
@@ -349,8 +349,8 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         CString CApostolModule::GetHost(CHTTPServerConnection *AConnection) {
-            auto pRequest = AConnection->Request();
-            const CString sHost(pRequest->Headers[_T("Host")]);
+            const auto &caRequest = AConnection->Request();
+            const CString sHost(caRequest.Headers[_T("Host")]);
             return sHost.IsEmpty() ? "localhost" : sHost;
         }
         //--------------------------------------------------------------------------------------------------------------
@@ -361,13 +361,13 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CApostolModule::ContentToJson(CHTTPRequest *ARequest, CJSON &Json) {
+        void CApostolModule::ContentToJson(const CHTTPRequest &Request, CJSON &Json) {
 
-            const auto& caContentType = ARequest->Headers[_T("Content-Type")].Lower();
+            const auto &caContentType = Request.Headers[_T("Content-Type")].Lower();
 
             if (caContentType.Find("application/x-www-form-urlencoded") != CString::npos) {
 
-                const CStringList &formData = ARequest->FormData;
+                const auto &formData = Request.FormData;
 
                 auto& jsonObject = Json.Object();
                 for (int i = 0; i < formData.Count(); ++i) {
@@ -377,7 +377,7 @@ namespace Apostol {
             } else if (caContentType.Find("multipart/form-data") != CString::npos) {
 
                 CFormData formData;
-                CHTTPRequestParser::ParseFormData(ARequest, formData);
+                CHTTPRequestParser::ParseFormData(Request, formData);
 
                 auto& jsonObject = Json.Object();
                 for (int i = 0; i < formData.Count(); ++i) {
@@ -386,13 +386,13 @@ namespace Apostol {
 
             } else if (caContentType.Find("application/json") != CString::npos) {
 
-                Json << ARequest->Content;
+                Json << Request.Content;
 
             } else {
 
                 auto& jsonObject = Json.Object();
-                for (int i = 0; i < ARequest->Params.Count(); ++i) {
-                    jsonObject.AddPair(ARequest->Params.Names(i), CHTTPServer::URLDecode(ARequest->Params.ValueFromIndex(i)));
+                for (int i = 0; i < Request.Params.Count(); ++i) {
+                    jsonObject.AddPair(Request.Params.Names(i), CHTTPServer::URLDecode(Request.Params.ValueFromIndex(i)));
                 }
             }
         }
@@ -435,16 +435,16 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CApostolModule::ReplyError(CHTTPServerConnection *AConnection, CHTTPReply::CStatusType ErrorCode, const CString &Message) {
-            auto pReply = AConnection->Reply();
+            auto &Reply = AConnection->Reply();
 
-            pReply->ContentType = CHTTPReply::json;
+            Reply.ContentType = CHTTPReply::json;
 
             if (ErrorCode == CHTTPReply::unauthorized) {
-                CHTTPReply::AddUnauthorized(pReply, AConnection->Data()["Authorization"] != "Basic", "invalid_client", Message.c_str());
+                CHTTPReply::AddUnauthorized(Reply, AConnection->Data()["Authorization"] != "Basic", "invalid_client", Message.c_str());
             }
 
-            pReply->Content.Clear();
-            pReply->Content.Format(R"({"error": {"code": %u, "message": "%s"}})", ErrorCode, Delphi::Json::EncodeJsonString(Message).c_str());
+            Reply.Content.Clear();
+            Reply.Content.Format(R"({"error": {"code": %u, "message": "%s"}})", ErrorCode, Delphi::Json::EncodeJsonString(Message).c_str());
 
             AConnection->CloseConnection(true);
             AConnection->SendReply(ErrorCode, nullptr, true);
@@ -454,10 +454,10 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CApostolModule::Redirect(CHTTPServerConnection *AConnection, const CString& Location, bool SendNow) {
-            auto pReply = AConnection->Reply();
+            auto &Reply = AConnection->Reply();
 
-            pReply->Content.Clear();
-            pReply->AddHeader(_T("Location"), Location);
+            Reply.Content.Clear();
+            Reply.AddHeader(_T("Location"), Location);
 
             AConnection->Data().Values("redirect", CString());
             AConnection->Data().Values("redirect_error", CString());
@@ -480,10 +480,10 @@ namespace Apostol {
         void CApostolModule::SendResource(CHTTPServerConnection *AConnection, const CString &Path,
                 LPCTSTR AContentType, bool SendNow, const CStringList& TryFiles) const {
 
-            auto pRequest = AConnection->Request();
-            auto pReply = AConnection->Reply();
+            const auto &caRequest = AConnection->Request();
+            auto &Reply = AConnection->Reply();
 
-            CString sRoot(GetRoot(pRequest->Location.Host()));
+            CString sRoot(GetRoot(caRequest.Location.Host()));
 
             if (!path_separator(sRoot.front())) {
                 sRoot = Config()->Prefix() + sRoot;
@@ -521,19 +521,19 @@ namespace Apostol {
 
             auto sModified = StrWebTime(FileAge(sResource.c_str()), szBuffer, sizeof(szBuffer));
             if (sModified != nullptr) {
-                pReply->AddHeader(_T("Last-Modified"), sModified);
+                Reply.AddHeader(_T("Last-Modified"), sModified);
             }
 
-            pReply->Content.LoadFromFile(sResource.c_str());
+            Reply.Content.LoadFromFile(sResource.c_str());
             AConnection->SendReply(CHTTPReply::ok, AContentType, SendNow);
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CApostolModule::DoHead(CHTTPServerConnection *AConnection) {
-            auto pRequest = AConnection->Request();
-            auto pReply = AConnection->Reply();
+            const auto &caRequest = AConnection->Request();
+            auto &Reply = AConnection->Reply();
 
-            CString sPath(pRequest->Location.pathname);
+            CString sPath(caRequest.Location.pathname);
 
             // Request sPath must be absolute and not contain "..".
             if (sPath.empty() || sPath.front() != '/' || sPath.find("..") != CString::npos) {
@@ -546,7 +546,7 @@ namespace Apostol {
                 sPath += "index.html";
             }
 
-            CString sResource(GetRoot(pRequest->Location.Host()));
+            CString sResource(GetRoot(caRequest.Location.Host()));
             sResource += sPath;
 
             if (!FileExists(sResource.c_str())) {
@@ -558,44 +558,44 @@ namespace Apostol {
 
             auto contentType = Mapping::ExtToType(ExtractFileExt(szBuffer, sResource.c_str()));
             if (contentType != nullptr) {
-                pReply->AddHeader(_T("Content-Type"), contentType);
+                Reply.AddHeader(_T("Content-Type"), contentType);
             }
 
             auto fileSize = FileSize(sResource.c_str());
-            pReply->AddHeader(_T("Content-Length"), IntToStr((int) fileSize, szBuffer, sizeof(szBuffer)));
+            Reply.AddHeader(_T("Content-Length"), IntToStr((int) fileSize, szBuffer, sizeof(szBuffer)));
 
             auto LModified = StrWebTime(FileAge(sResource.c_str()), szBuffer, sizeof(szBuffer));
             if (LModified != nullptr)
-                pReply->AddHeader(_T("Last-Modified"), LModified);
+                Reply.AddHeader(_T("Last-Modified"), LModified);
 
             AConnection->SendReply(CHTTPReply::no_content);
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CApostolModule::DoOptions(CHTTPServerConnection *AConnection) {
-            auto pRequest = AConnection->Request();
-            auto pReply = AConnection->Reply();
+            const auto &caRequest = AConnection->Request();
+            auto &Reply = AConnection->Reply();
 
-            CHTTPReply::GetStockReply(pReply, CHTTPReply::no_content);
+            CHTTPReply::GetStockReply(Reply, CHTTPReply::no_content);
 
             if (!AllowedMethods().IsEmpty())
-                pReply->AddHeader(_T("Allow"), AllowedMethods());
+                Reply.AddHeader(_T("Allow"), AllowedMethods());
 
             AConnection->SendReply();
 #ifdef _DEBUG
-            if (pRequest->URI == _T("/reload"))
+            if (caRequest.URI == _T("/reload"))
                 GApplication->SignalProcess()->SignalReload();
 
-            if (pRequest->URI == _T("/quit"))
+            if (caRequest.URI == _T("/quit"))
                 GApplication->SignalProcess()->SignalQuit();
 #endif
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CApostolModule::DoGet(CHTTPServerConnection *AConnection) {
-            auto pRequest = AConnection->Request();
+            const auto &caRequest = AConnection->Request();
 
-            CString sPath(pRequest->Location.pathname);
+            CString sPath(caRequest.Location.pathname);
 
             // Request sPath must be absolute and not contain "..".
             if (sPath.empty() || sPath.front() != '/' || sPath.find(_T("..")) != CString::npos) {
@@ -608,17 +608,17 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CApostolModule::CORS(CHTTPServerConnection *AConnection) {
-            auto pRequest = AConnection->Request();
-            auto pReply = AConnection->Reply();
+            const auto &caRequest = AConnection->Request();
+            auto &Reply = AConnection->Reply();
 
-            const auto& caRequestHeaders = pRequest->Headers;
-            auto& aReplyHeaders = pReply->Headers;
+            const auto& caRequestHeaders = caRequest.Headers;
+            auto &ReplyHeaders = Reply.Headers;
 
             const auto& caOrigin = caRequestHeaders[_T("origin")];
             if (!caOrigin.IsEmpty()) {
-                aReplyHeaders.AddPair(_T("Access-Control-Allow-Origin"), caOrigin);
-                aReplyHeaders.AddPair(_T("Access-Control-Allow-Methods"), AllowedMethods());
-                aReplyHeaders.AddPair(_T("Access-Control-Allow-Headers"), AllowedHeaders());
+                ReplyHeaders.AddPair(_T("Access-Control-Allow-Origin"), caOrigin);
+                ReplyHeaders.AddPair(_T("Access-Control-Allow-Methods"), AllowedMethods());
+                ReplyHeaders.AddPair(_T("Access-Control-Allow-Headers"), AllowedHeaders());
             }
         }
         //--------------------------------------------------------------------------------------------------------------
@@ -804,9 +804,9 @@ namespace Apostol {
                     throw Delphi::Exception::EDBError(pResult->GetErrorMessage());
 
                 status = CHTTPReply::ok;
-                Postgres::PQResultToJson(pResult, pReply->Content);
+                Postgres::PQResultToJson(pResult, Reply.Content);
             } catch (Delphi::Exception::Exception &E) {
-                ExceptionToJson(status, E, pReply->Content);
+                ExceptionToJson(status, E, Reply.Content);
                 Log()->Error(APP_LOG_ERR, 0, "%s", E.what());
             }
 
@@ -821,7 +821,7 @@ namespace Apostol {
 
             CHTTPReply::CStatusType status = CHTTPReply::internal_server_error;
 
-            ExceptionToJson(status, E, pReply->Content);
+            ExceptionToJson(status, E, Reply.Content);
             pConnection->SendStockReply(status, true);
 
             Log()->Error(APP_LOG_ERR, 0, "%s", E.what());
@@ -831,10 +831,10 @@ namespace Apostol {
         bool CApostolModule::Execute(CHTTPServerConnection *AConnection) {
 
             auto pServer = dynamic_cast<CHTTPServer *> (AConnection->Server());
-            auto pRequest = AConnection->Request();
-            auto pReply = AConnection->Reply();
+            const auto &caRequest = AConnection->Request();
+            auto &Reply = AConnection->Reply();
 
-            if (!CheckLocation(pRequest->Location))
+            if (!CheckLocation(caRequest.Location))
                 return false;
 
             if (m_Sites.Count() == 0)
@@ -842,8 +842,8 @@ namespace Apostol {
 #ifdef _DEBUG
             DebugConnection(AConnection);
 #endif
-            pReply->Clear();
-            pReply->ContentType = CHTTPReply::html;
+            Reply.Clear();
+            Reply.ContentType = CHTTPReply::html;
 
             int i;
             CMethodHandler *pHandler;
@@ -851,7 +851,7 @@ namespace Apostol {
                 pHandler = (CMethodHandler *) m_Methods.Objects(i);
                 if (pHandler->Allow()) {
                     const CString& Method = m_Methods.Strings(i);
-                    if (Method == pRequest->Method) {
+                    if (Method == caRequest.Method) {
                         CORS(AConnection);
                         pHandler->Handler(AConnection);
                         break;
