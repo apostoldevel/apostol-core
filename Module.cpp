@@ -794,7 +794,7 @@ namespace Apostol {
 
             auto pConnection = dynamic_cast<CHTTPServerConnection *> (APollQuery->Binding());
 
-            auto pReply = pConnection->Reply();
+            auto &Reply = pConnection->Reply();
             auto pResult = APollQuery->Results(0);
 
             CHTTPReply::CStatusType status = CHTTPReply::internal_server_error;
@@ -817,7 +817,7 @@ namespace Apostol {
         void CApostolModule::DoPostgresQueryException(CPQPollQuery *APollQuery, const Delphi::Exception::Exception &E) {
 
             auto pConnection = dynamic_cast<CHTTPServerConnection *> (APollQuery->Binding());
-            auto pReply = pConnection->Reply();
+            auto &Reply = pConnection->Reply();
 
             CHTTPReply::CStatusType status = CHTTPReply::internal_server_error;
 
