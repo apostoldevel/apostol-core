@@ -74,10 +74,10 @@ namespace Apostol {
                 CString sResult;
                 CWSProtocol::Response(Message, sResult);
 
-                auto pWSReply = AConnection->WSReply();
+                auto &WSReply = AConnection->WSReply();
 
-                pWSReply->Clear();
-                pWSReply->SetPayload(sResult, Key);
+                WSReply.Clear();
+                WSReply.SetPayload(sResult, Key);
 
                 AConnection->SendWebSocket(true);
 
@@ -329,15 +329,15 @@ namespace Apostol {
 
         void CCustomWebSocketClient::DoWebSocket(CHTTPClientConnection *AConnection) {
 
-            auto pWSRequest = AConnection->WSRequest();
-            auto pWSReply = AConnection->WSReply();
+            const auto &caWSRequest = AConnection->WSRequest();
+            auto &WSReply = AConnection->WSReply();
 
-            pWSReply->Clear();
+            WSReply.Clear();
 
             CWSMessage jmRequest;
             CWSMessage jmResponse;
 
-            const CString csRequest(pWSRequest->Payload());
+            const CString csRequest(caWSRequest.Payload());
 
             CWSProtocol::Request(csRequest, jmRequest);
 
@@ -439,25 +439,24 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CCustomWebSocketClient::SendMessage(const CWSMessage &Message, bool ASendNow) {
+        void CCustomWebSocketClient::SendMessage(const CWSMessage &Message, bool bSendNow) {
             CString sResponse;
             DoMessage(Message);
             CWSProtocol::Response(Message, sResponse);
             chASSERT(m_pConnection);
             if (m_pConnection != nullptr && m_pConnection->Connected()) {
-                m_pConnection->WSReply()->SetPayload(sResponse, (uint32_t) MsEpoch());
-                m_pConnection->SendWebSocket(ASendNow);
+                m_pConnection->WSReply().SetPayload(sResponse, (uint32_t) MsEpoch());
+                m_pConnection->SendWebSocket(bSendNow);
             }
         }
         //--------------------------------------------------------------------------------------------------------------
 
         CWSMessage CCustomWebSocketClient::RequestToMessage(CWebSocketConnection *AWSConnection) {
-            auto pWSRequest = AWSConnection->WSRequest();
+            const auto &caWSRequest = AWSConnection->WSRequest();
             CWSMessage Message;
-            const CString Payload(pWSRequest->Payload());
+            const CString Payload(caWSRequest.Payload());
             CWSProtocol::Request(Payload, Message);
             AWSConnection->ConnectionStatus(csReplySent);
-            pWSRequest->Clear();
             return Message;
         }
         //--------------------------------------------------------------------------------------------------------------

@@ -105,7 +105,7 @@ public:
     }
     //------------------------------------------------------------------------------------------------------------------
 
-    static void WSDebug(CWebSocket *AData) {
+    static void WSDebug(const CWebSocket &Data) {
 #ifdef _DEBUG
         CString Hex;
         CMemoryStream Stream;
@@ -113,10 +113,10 @@ public:
         TCHAR szZero[1] = { 0x00 };
 
         size_t delta = 0;
-        size_t size = AData->Payload().Size();
+        size_t size = Data.Payload().Size();
 
         Stream.SetSize((ssize_t) size);
-        Stream.Write(AData->Payload().Memory(), size);
+        Stream.Write(Data.Payload().Memory(), size);
 
         Hex.SetLength(size * 3 + 1);
         ByteToHexStr((LPSTR) Hex.Data(), Hex.Size(), (LPCBYTE) Stream.Memory(), size, 32);
@@ -127,8 +127,8 @@ public:
         }
 
         DebugMessage("[FIN: %#x; OP: %#x; MASK: %#x LEN: %d] [%d-%d=%d] [%d] [%d]\n",
-                     AData->Frame().FIN, AData->Frame().Opcode, AData->Frame().Mask, AData->Frame().Length,
-                     AData->Payload().Size(), AData->Payload().Position(), AData->Payload().Size() - AData->Payload().Position(), delta, size
+                     Data.Frame().FIN, Data.Frame().Opcode, Data.Frame().Mask, Data.Frame().Length,
+                     Data.Payload().Size(), Data.Payload().Position(), Data.Payload().Size() - Data.Payload().Position(), delta, size
         );
 
         if (Stream.Size() != 0) {
