@@ -462,17 +462,30 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CSignalProcess::SignalRestart() {
+#ifdef _DEBUG
+            sig_restart = 1;
+            sig_exiting = 1;
+#else
             kill(Pid(), signal_value(SIG_TERMINATE_SIGNAL));
+#endif
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CSignalProcess::SignalReload() {
+#ifdef _DEBUG
+            sig_quit = 1;
+#else
             kill(Pid(), signal_value(SIG_RECONFIGURE_SIGNAL));
+#endif
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CSignalProcess::SignalQuit() {
+#ifdef _DEBUG
+            sig_quit = 1;
+#else
             kill(Pid(), signal_value(SIG_SHUTDOWN_SIGNAL));
+#endif
         }
 
         //--------------------------------------------------------------------------------------------------------------
