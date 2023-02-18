@@ -215,7 +215,7 @@ namespace Apostol {
         void CApostolModule::MethodNotAllowed(CHTTPServerConnection *AConnection) {
             auto &Reply = AConnection->Reply();
 
-            CHTTPReply::GetStockReply(Reply, CHTTPReply::not_allowed);
+            CHTTPReply::InitStockReply(Reply, CHTTPReply::not_allowed);
 
             if (!AllowedMethods().IsEmpty())
                 Reply.AddHeader(_T("Allow"), AllowedMethods());
@@ -510,19 +510,17 @@ namespace Apostol {
                 return;
             }
 
-            CString sFileExt;
-            TCHAR szBuffer[MAX_BUFFER_SIZE + 1] = {0};
-
-            sFileExt = ExtractFileExt(szBuffer, sResource.c_str());
-
             if (AContentType == nullptr) {
+                CString sFileExt;
+                TCHAR szBuffer[MAX_BUFFER_SIZE + 1] = {0};
+                sFileExt = ExtractFileExt(szBuffer, sResource.c_str());
                 AContentType = Mapping::ExtToType(sFileExt.c_str());
             }
 
-            auto sModified = StrWebTime(FileAge(sResource.c_str()), szBuffer, sizeof(szBuffer));
-            if (sModified != nullptr) {
-                Reply.AddHeader(_T("Last-Modified"), sModified);
-            }
+//            auto sModified = StrWebTime(FileAge(sResource.c_str()), szBuffer, sizeof(szBuffer));
+//            if (sModified != nullptr) {
+//                Reply.AddHeader(_T("Last-Modified"), sModified);
+//            }
 
             Reply.Content.LoadFromFile(sResource.c_str());
             AConnection->SendReply(CHTTPReply::ok, AContentType, SendNow);
@@ -576,7 +574,7 @@ namespace Apostol {
             const auto &caRequest = AConnection->Request();
             auto &Reply = AConnection->Reply();
 
-            CHTTPReply::GetStockReply(Reply, CHTTPReply::no_content);
+            CHTTPReply::InitStockReply(Reply, CHTTPReply::no_content);
 
             if (!AllowedMethods().IsEmpty())
                 Reply.AddHeader(_T("Allow"), AllowedMethods());
