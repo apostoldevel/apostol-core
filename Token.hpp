@@ -36,6 +36,31 @@ extern "C++" {
 
 namespace Apostol {
 
+    struct CCleanToken {
+
+        const CString Header {};
+        const CString Payload {};
+
+        const bool Valid;
+
+        explicit CCleanToken(const CString& Header, const CString& Payload, bool Valid):
+                Header(Header), Payload(Payload), Valid(Valid) {
+
+        }
+
+        template<typename T, typename E>
+        CString Sign(const T& algorithm, E& ec) const {
+            if (!Valid)
+                throw CAuthorizationError("Clean Token has not valid.");
+            const auto& header = base64urlEncoding(Header);
+            const auto& payload = base64urlEncoding(Payload);
+            CString token = header + "." + payload;
+            return token + "." + base64urlEncoding(algorithm.sign(token, ec));
+        }
+
+    };
+    //--------------------------------------------------------------------------------------------------------------
+
     class CToken: public CGlobalComponent {
     public:
 
