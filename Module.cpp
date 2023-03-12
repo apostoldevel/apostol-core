@@ -943,11 +943,7 @@ namespace Apostol {
             auto pConnection = dynamic_cast<CHTTPServerConnection *> (AConnection);
 
             try {
-                clock_t start = clock();
-
                 ExecuteModules(pConnection);
-
-                Log()->Debug(APP_LOG_DEBUG_CORE, _T("[Module] Runtime: %.2f ms."), (double) (clock() - start) / (double) CLOCKS_PER_SEC * 1000);
             } catch (Delphi::Exception::Exception &E) {
                 DoServerException(pConnection, E);
             }
