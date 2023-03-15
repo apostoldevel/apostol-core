@@ -282,8 +282,8 @@ namespace Apostol {
             AProcess->Pid(getpid());
             AProcess->Assign(this);
 
-            if ((AProcess->Type() <= ptMaster) || (AProcess->Pid() != MainThreadID)) {
-                MainThreadID = AProcess->Pid();
+            if ((AProcess->Type() <= ptMaster) || (AProcess->Pid() != MainProcessID)) {
+                MainProcessID = AProcess->Pid();
                 SetSignalProcess(AProcess);
             }
         }

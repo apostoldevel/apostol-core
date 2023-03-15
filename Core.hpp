@@ -288,8 +288,8 @@ public:
         TCHAR szTimeStamp[25] = {0};
         DateTimeToStr(Now(), szTimeStamp, sizeof(szTimeStamp));
 
-        DebugMessage("[%s] [%d#0] [NOTIFY] [%d] [%d] [postgresql://%s@%s:%s/%s] [PID: %d] [%s] %s\n",
-                     szTimeStamp, MainThreadID, AConnection->PID(), AConnection->Socket(),
+        DebugMessage("[%s] [%d] [%d] [NOTIFY] [%d] [%d] [postgresql://%s@%s:%s/%s] [PID: %d] [%s] %s\n",
+                     szTimeStamp, MainProcessID, MainThreadID, AConnection->PID(), AConnection->Socket(),
                      conInfo["user"].c_str(), conInfo["host"].c_str(), conInfo["port"].c_str(), conInfo["dbname"].c_str(),
                      ANotify->be_pid, ANotify->relname, ANotify->extra);
 #endif
