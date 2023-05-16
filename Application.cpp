@@ -278,11 +278,10 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CApplication::DoBeforeStartProcess(CSignalProcess *AProcess) {
-
             AProcess->Pid(getpid());
             AProcess->Assign(this);
 
-            if ((AProcess->Type() <= ptMaster) || (AProcess->Pid() != MainProcessID)) {
+            if (AProcess->Type() <= ptMaster || m_ProcessType == ptCustom || AProcess->Pid() != MainProcessID) {
                 MainProcessID = AProcess->Pid();
                 SetSignalProcess(AProcess);
             }
@@ -870,16 +869,15 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CProcessMaster::Run() {
-
             int sigio;
-            sigset_t set, wset;
+            sigset_t set {};
             struct itimerval itv = {};
             bool live;
             uint_t delay;
 
             CreatePidFile();
 
-            SigProcMask(SIG_BLOCK, SigAddSet(&set), &wset);
+            SigProcMask(SIG_BLOCK, &set);
 
             StartProcesses(PROCESS_RESPAWN);
 
@@ -929,7 +927,7 @@ namespace Apostol {
 
                 Log()->Debug(APP_LOG_DEBUG_EVENT, _T("sigsuspend"));
 
-                sigsuspend(&wset);
+                sigsuspend(&set);
 
                 Log()->Debug(APP_LOG_DEBUG_EVENT, _T("wake up, sigio %i"), sigio);
 
@@ -1110,8 +1108,6 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CProcessWorker::BeforeRun() {
-            sigset_t set;
-
             Application()->Header(Application()->Name() + ": worker process (" + CModuleProcess::ModulesNames() + ")");
 
             Log()->Debug(APP_LOG_DEBUG_CORE, MSG_PROCESS_START, GetProcessName(), Application()->Header().c_str());
@@ -1128,7 +1124,7 @@ namespace Apostol {
 
             SetUser(Config()->User(), Config()->Group());
 
-            SigProcMask(SIG_UNBLOCK, SigAddSet(&set));
+            SigProcMask(SIG_UNBLOCK);
 
             SetTimerInterval(1000);
         }
@@ -1153,14 +1149,12 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CProcessWorker::Run() {
-            sigset_t set;
-
             while (!sig_exiting) {
 
                 Log()->Debug(APP_LOG_DEBUG_EVENT, _T("worker cycle"));
 
                 try {
-                    Server().Wait(SigAddSet(&set));
+                    Server().Wait(&SignalSet());
                 } catch (std::exception &e) {
                     Log()->Error(APP_LOG_ERR, 0, "%s", e.what());
                 }
@@ -1216,8 +1210,6 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CProcessHelper::BeforeRun() {
-            sigset_t set;
-
             Application()->Header(Application()->Name() + ": helper process (" + CModuleProcess::ModulesNames() + ")");
 
             Log()->Debug(APP_LOG_DEBUG_CORE, MSG_PROCESS_START, GetProcessName(), Application()->Header().c_str());
@@ -1232,7 +1224,7 @@ namespace Apostol {
 
             SetUser(Config()->User(), Config()->Group());
 
-            SigProcMask(SIG_UNBLOCK, SigAddSet(&set));
+            SigProcMask(SIG_UNBLOCK);
 
             SetTimerInterval(1000);
         }
