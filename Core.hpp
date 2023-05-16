@@ -307,6 +307,7 @@ public:
 #include "Client.hpp"
 #include "Server.hpp"
 #include "Token.hpp"
+#include "Crypto.hpp"
 #include "Module.hpp"
 #include "Modules.hpp"
 #include "Application.hpp"

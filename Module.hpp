@@ -24,8 +24,6 @@ Author:
 #ifndef APOSTOL_MODULE_HPP
 #define APOSTOL_MODULE_HPP
 
-#define APOSTOL_MODULE_UID_LENGTH    42
-
 #define APOSTOL_INDEX_FILE "index.html"
 
 extern "C++" {
@@ -40,21 +38,7 @@ namespace Apostol {
         typedef std::function<void (CHTTPServerConnection *AConnection)> COnMethodHandlerEvent;
         //--------------------------------------------------------------------------------------------------------------
 
-        CString b2a_hex(const unsigned char *byte_arr, int size);
-        CString hmac_sha256(const CString &key, const CString &data);
-        //--------------------------------------------------------------------------------------------------------------
-
-        CString SHA1(const CString &data);
-        //--------------------------------------------------------------------------------------------------------------
-
-        CString LongToString(unsigned long Value);
-        //--------------------------------------------------------------------------------------------------------------
-
         LPCTSTR StrWebTime(time_t Time, LPTSTR lpszBuffer, size_t Size);
-        //--------------------------------------------------------------------------------------------------------------
-
-        CString GetUID(unsigned int len);
-        CString ApostolUID();
 
         //--------------------------------------------------------------------------------------------------------------
 

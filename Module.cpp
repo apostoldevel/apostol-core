@@ -25,53 +25,11 @@ Author:
 #include "Module.hpp"
 //----------------------------------------------------------------------------------------------------------------------
 
-#include <sstream>
-#include <random>
-//----------------------------------------------------------------------------------------------------------------------
-
-#include <openssl/sha.h>
-#include <openssl/hmac.h>
-//----------------------------------------------------------------------------------------------------------------------
-
 extern "C++" {
 
 namespace Apostol {
 
     namespace Module {
-
-        CString b2a_hex(const unsigned char *byte_arr, int size) {
-            const static CString HexCodes = "0123456789abcdef";
-            CString hexString;
-            for ( int i = 0; i < size; ++i ) {
-                unsigned char BinValue = byte_arr[i];
-                hexString += HexCodes[(BinValue >> 4) & 0x0F];
-                hexString += HexCodes[BinValue & 0x0F];
-            }
-            return hexString;
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
-        CString hmac_sha256(const CString &key, const CString &data) {
-            unsigned char* digest;
-            digest = HMAC(EVP_sha256(), key.data(), key.length(), (unsigned char *) data.data(), data.length(), nullptr, nullptr);
-            return b2a_hex( digest, SHA256_DIGEST_LENGTH );
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
-        CString SHA1(const CString &data) {
-            CString digest;
-            digest.SetLength(SHA_DIGEST_LENGTH);
-            ::SHA1((unsigned char *) data.data(), data.length(), (unsigned char *) digest.Data());
-            return digest;
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
-        CString LongToString(unsigned long Value) {
-            TCHAR szString[_INT_T_LEN + 1] = {0};
-            sprintf(szString, "%lu", Value);
-            return CString(szString);
-        }
-        //--------------------------------------------------------------------------------------------------------------
 
         LPCTSTR StrWebTime(time_t Time, LPTSTR lpszBuffer, size_t Size) {
             struct tm *gmt;
@@ -83,53 +41,6 @@ namespace Apostol {
             }
 
             return nullptr;
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
-        unsigned char random_char() {
-            std::random_device rd;
-            std::mt19937 gen(rd());
-            std::uniform_int_distribution<> dis(0, 255);
-            return static_cast<unsigned char>(dis(gen));
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
-        CString GetUID(unsigned int len) {
-            CString S;
-
-            S.SetLength(len + 1);
-
-            for (unsigned int i = 0; i < len / 2; i++) {
-                unsigned char rc = random_char();
-                ByteToHexStr(S.Data() + i * 2 * sizeof(unsigned char), S.Size(), &rc, 1);
-            }
-
-            return S;
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
-//      A0000-P0000-O0000-S0000-T0000-O0000-L00000
-//      012345678901234567890123456789012345678901
-//      0         1         2         3         4
-        CString ApostolUID() {
-
-            CString S(GetUID(APOSTOL_MODULE_UID_LENGTH));
-
-            S[ 0] = 'A';
-            S[ 5] = '-';
-            S[ 6] = 'P';
-            S[11] = '-';
-            S[12] = 'O';
-            S[17] = '-';
-            S[18] = 'S';
-            S[23] = '-';
-            S[24] = 'T';
-            S[29] = '-';
-            S[30] = 'O';
-            S[35] = '-';
-            S[36] = 'L';
-
-            return S;
         }
 
         //--------------------------------------------------------------------------------------------------------------
