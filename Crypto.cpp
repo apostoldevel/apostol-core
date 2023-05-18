@@ -63,43 +63,43 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        CString SHA1(const CString &Data) {
+        CString SHA1(const CString &Data, bool bHex) {
             CString Digest;
             Digest.SetLength(SHA_DIGEST_LENGTH);
             ::SHA1((unsigned char *) Data.Data(), Data.Size(), (unsigned char *) Digest.Data());
-            return B2A_HEX(Digest);
+            return bHex ? B2A_HEX(Digest) : Digest;
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        CString SHA224(const CString &Data) {
+        CString SHA224(const CString &Data, bool bHex) {
             CString Digest;
             Digest.SetLength(SHA224_DIGEST_LENGTH);
             ::SHA224((unsigned char *) Data.Data(), Data.Size(), (unsigned char *) Digest.Data());
-            return B2A_HEX(Digest);
+            return bHex ? B2A_HEX(Digest) : Digest;
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        CString SHA256(const CString &Data) {
+        CString SHA256(const CString &Data, bool bHex) {
             CString Digest;
             Digest.SetLength(SHA256_DIGEST_LENGTH);
             ::SHA256((unsigned char *) Data.Data(), Data.Size(), (unsigned char *) Digest.Data());
-            return B2A_HEX(Digest);
+            return bHex ? B2A_HEX(Digest) : Digest;
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        CString SHA384(const CString &Data) {
+        CString SHA384(const CString &Data, bool bHex) {
             CString Digest;
             Digest.SetLength(SHA384_DIGEST_LENGTH);
             ::SHA224((unsigned char *) Data.Data(), Data.Size(), (unsigned char *) Digest.Data());
-            return B2A_HEX(Digest);
+            return bHex ? B2A_HEX(Digest) : Digest;
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        CString SHA512(const CString &Data) {
+        CString SHA512(const CString &Data, bool bHex) {
             CString Digest;
             Digest.SetLength(SHA512_DIGEST_LENGTH);
             ::SHA512((unsigned char *) Data.Data(), Data.Size(), (unsigned char *) Digest.Data());
-            return B2A_HEX(Digest);
+            return bHex ? B2A_HEX(Digest) : Digest;
         }
         //--------------------------------------------------------------------------------------------------------------
 

@@ -36,11 +36,11 @@ namespace Apostol {
         CString HMAC_SHA256(const CString &Key, const CString &Data);
         //--------------------------------------------------------------------------------------------------------------
 
-        CString SHA1(const CString &Data);
-        CString SHA224(const CString &Data);
-        CString SHA256(const CString &Data);
-        CString SHA384(const CString &Data);
-        CString SHA512(const CString &Data);
+        CString SHA1(const CString &Data, bool bHex = false);
+        CString SHA224(const CString &Data, bool bHex = false);
+        CString SHA256(const CString &Data, bool bHex = false);
+        CString SHA384(const CString &Data, bool bHex = false);
+        CString SHA512(const CString &Data, bool bHex = false);
         //--------------------------------------------------------------------------------------------------------------
 
         CString GetUID(unsigned int len);
