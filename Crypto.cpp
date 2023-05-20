@@ -56,10 +56,11 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        CString HMAC_SHA256(const CString &Key, const CString &Data) {
+        CString HMAC_SHA256(const CString &Key, const CString &Data, bool bHex) {
             unsigned char* digest;
             digest = HMAC(EVP_sha256(), Key.Data(), (int) Key.Size(), (unsigned char *) Data.Data(), Data.Size(), nullptr, nullptr);
-            return B2A_HEX( { (LPCTSTR) digest, SHA256_DIGEST_LENGTH} );
+            const CString Digest((LPCTSTR) digest, SHA256_DIGEST_LENGTH);
+            return bHex ? B2A_HEX(Digest) : Digest;
         }
         //--------------------------------------------------------------------------------------------------------------
 

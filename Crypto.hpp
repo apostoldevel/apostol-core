@@ -33,7 +33,7 @@ namespace Apostol {
     namespace Crypto {
 
         CString B2A_HEX(const CString &Data, bool UpperCache = false);
-        CString HMAC_SHA256(const CString &Key, const CString &Data);
+        CString HMAC_SHA256(const CString &Key, const CString &Data, bool bHex = false);
         //--------------------------------------------------------------------------------------------------------------
 
         CString SHA1(const CString &Data, bool bHex = false);
