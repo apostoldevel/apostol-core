@@ -25,7 +25,7 @@ Author:
 #include "Application.hpp"
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "sys/sendfile.h"
+#include <dirent.h>
 //----------------------------------------------------------------------------------------------------------------------
 
 extern "C++" {
@@ -188,6 +188,43 @@ namespace Apostol {
             if (!mkdtemp(tmp.Data()))
                 throw EOSError(errno, _T("mkdtemp \"%s\" failed "), tmp.c_str());
             return tmp;
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CApplication::RmDir(const CString &Dir) {
+            const auto path = Dir.c_str();
+
+            DIR *dir = opendir(path);
+            if (dir == nullptr) {
+                return;
+            }
+
+            struct dirent *entry;
+            while ((entry = readdir(dir)) != nullptr) {
+                if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+                    continue;
+                }
+
+                char entry_path[PATH_MAX];
+                snprintf(entry_path, sizeof(entry_path), "%s/%s", path, entry->d_name);
+
+                struct stat entry_stat = {};
+                if (lstat(entry_path, &entry_stat) == -1) {
+                    throw EOSError(errno, _T("lstat failed "));
+                }
+
+                if (S_ISDIR(entry_stat.st_mode)) {
+                    CApplication::RmDir(entry_path);
+                } else {
+                    DeleteFile(entry_path);
+                }
+            }
+
+            if (rmdir(path) == -1) {
+                Log()->Error(APP_LOG_ALERT, errno, _T("could not delete directory: \"%s\" error: "), path);
+            }
+
+            closedir(dir);
         }
         //--------------------------------------------------------------------------------------------------------------
 

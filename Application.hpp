@@ -144,6 +144,7 @@ namespace Apostol {
             static bool DeleteFile(const CString &FileName);
             static void ChMod(const CString &File, unsigned int Mode);
             static void MkDir(const CString &Dir);
+            static void RmDir(const CString &Dir);
             static CString MkTempDir();
             static void CreateLogFiles();
 

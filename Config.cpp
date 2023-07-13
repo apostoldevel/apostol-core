@@ -374,9 +374,21 @@ namespace Apostol {
 
         void CConfig::SetDocRoot(LPCTSTR AValue) {
             if (m_sDocRoot != AValue) {
-                m_sDocRoot = AValue;
+                if (AValue != nullptr)
+                    m_sDocRoot = AValue;
+                else
+                    m_sDocRoot = m_sPrefix;
+
+                if (m_sDocRoot.empty()) {
+                    m_sDocRoot = GetCwd();
+                }
+
                 if (!path_separator(m_sDocRoot.front())) {
                     m_sDocRoot = m_sPrefix + m_sDocRoot;
+                }
+
+                if (!path_separator(m_sDocRoot.back())) {
+                    m_sDocRoot += '/';
                 }
             }
         }

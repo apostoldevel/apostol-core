@@ -166,7 +166,8 @@ namespace Apostol {
             static CString GetRealIP(CHTTPServerConnection *AConnection);
             static CString GetHost(CHTTPServerConnection *AConnection);
 
-            const CString& GetRoot(const CString &Host) const;
+            CString GetRoot(const CString &Host) const;
+            const CString& GetSiteRoot(const CString &Host) const;
             const CStringList& GetSiteConfig(const CString &Host) const;
 
             CHTTPClient *GetClient(const CString &Host, uint16_t Port);
@@ -204,12 +205,14 @@ namespace Apostol {
 
             static void ReplyError(CHTTPServerConnection *AConnection, CHTTPReply::CStatusType ErrorCode, const CString &Message);
 
-            static void Redirect(CHTTPServerConnection *AConnection, const CString& Location, bool SendNow = false);
+            void Redirect(CHTTPServerConnection *AConnection, const CString& Location, bool SendNow = false) const;
 
             static CString TryFiles(const CString &Root, const CStringList &uris, const CString &Location);
 
-            void SendResource(CHTTPServerConnection *AConnection, const CString &Path, LPCTSTR AContentType = nullptr,
-                bool SendNow = false, const CStringList& TryFiles = CStringList()) const;
+            bool ResourceExists(CString &Resource, const CString &Path, const CString &Host, const CStringList &TryFiles) const;
+
+            bool SendResource(CHTTPServerConnection *AConnection, const CString &Path, LPCTSTR AContentType = nullptr,
+                bool SendNow = false, const CStringList& TryFiles = CStringList(), bool SendNotFound = true) const;
 
         };
 

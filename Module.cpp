@@ -180,7 +180,16 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        const CString &CApostolModule::GetRoot(const CString &Host) const {
+        CString CApostolModule::GetRoot(const CString &Host) const {
+            CString Result(GetSiteRoot(Host));
+            if (!path_separator(Result.front())) {
+                Result = Config()->Prefix() + Result;
+            }
+            return Result;
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        const CString &CApostolModule::GetSiteRoot(const CString &Host) const {
             auto Index = m_Sites.IndexOfName(Host);
             if (Index == -1)
                 return m_Sites["*"];
@@ -367,7 +376,7 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CApostolModule::Redirect(CHTTPServerConnection *AConnection, const CString& Location, bool SendNow) {
+        void CApostolModule::Redirect(CHTTPServerConnection *AConnection, const CString& Location, bool SendNow) const {
             auto &Reply = AConnection->Reply();
 
             Reply.Content.Clear();
@@ -376,7 +385,7 @@ namespace Apostol {
             AConnection->Data().Values("redirect", CString());
             AConnection->Data().Values("redirect_error", CString());
 
-            AConnection->SendStockReply(CHTTPReply::moved_temporarily, SendNow);
+            AConnection->SendStockReply(CHTTPReply::moved_temporarily, SendNow, GetRoot(GetHost(AConnection)));
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -391,53 +400,66 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CApostolModule::SendResource(CHTTPServerConnection *AConnection, const CString &Path,
-                LPCTSTR AContentType, bool SendNow, const CStringList& TryFiles) const {
+        bool CApostolModule::ResourceExists(CString &Resource, const CString &Path, const CString &Host, const CStringList &TryFiles) const {
+            Resource = GetRoot(Host);
+            Resource += Path;
+
+            if (DirectoryExists(Resource.c_str())) {
+                if (!path_separator(Resource.back())) {
+                    Resource += '/';
+                }
+                Resource += APOSTOL_INDEX_FILE;
+            } else if (path_separator(Resource.back())) {
+                Resource.SetLength(Resource.Length() - 1);
+            }
+
+            if (TryFiles.Count() != 0 && !FileExists(Resource.c_str())) {
+                Resource = CApostolModule::TryFiles(Resource, TryFiles, Path);
+            }
+
+            return FileExists(Resource.c_str());
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        bool CApostolModule::SendResource(CHTTPServerConnection *AConnection, const CString &Path,
+                LPCTSTR AContentType, bool SendNow, const CStringList& TryFiles, bool SendNotFound) const {
 
             const auto &caRequest = AConnection->Request();
             auto &Reply = AConnection->Reply();
 
-            CString sRoot(GetRoot(caRequest.Location.Host()));
+            CString sResource;
 
-            if (!path_separator(sRoot.front())) {
-                sRoot = Config()->Prefix() + sRoot;
+            if (!ResourceExists(sResource, Path, caRequest.Location.Host(), TryFiles)) {
+                if (SendNotFound) {
+                    AConnection->SendStockReply(CHTTPReply::not_found, SendNow, GetRoot(GetHost(AConnection)));
+                }
+                return false;
             }
 
-            CString sResource(sRoot);
-
-            sResource += Path;
-
-            if (!path_separator(sResource.back()) && DirectoryExists(sResource.c_str())) {
-                sResource += '/';
-            }
-
-            if (path_separator(sResource.back())) {
-                sResource += APOSTOL_INDEX_FILE;
-            }
-
-            if (TryFiles.Count() != 0 && !FileExists(sResource.c_str())) {
-                sResource = CApostolModule::TryFiles(sRoot, TryFiles, Path);
-            }
-
-            if (!FileExists(sResource.c_str())) {
-                AConnection->SendStockReply(CHTTPReply::not_found, SendNow);
-                return;
-            }
+            TCHAR szBuffer[MAX_BUFFER_SIZE + 1] = {0};
 
             if (AContentType == nullptr) {
                 CString sFileExt;
-                TCHAR szBuffer[MAX_BUFFER_SIZE + 1] = {0};
                 sFileExt = ExtractFileExt(szBuffer, sResource.c_str());
                 AContentType = Mapping::ExtToType(sFileExt.c_str());
             }
 
-//            auto sModified = StrWebTime(FileAge(sResource.c_str()), szBuffer, sizeof(szBuffer));
-//            if (sModified != nullptr) {
-//                Reply.AddHeader(_T("Last-Modified"), sModified);
-//            }
+            auto sModified = StrWebTime(FileAge(sResource.c_str()), szBuffer, sizeof(szBuffer));
+            if (sModified != nullptr) {
+                Reply.AddHeader(_T("Last-Modified"), sModified);
+            }
 
-            Reply.Content.LoadFromFile(sResource.c_str());
-            AConnection->SendReply(CHTTPReply::ok, AContentType, SendNow);
+#if (OPENSSL_VERSION_NUMBER >= 0x30000000L) && defined(BIO_get_ktls_send)
+            AConnection->SendFileReply(sResource.c_str(), AContentType);
+#else
+            if (AConnection->IOHandler()->UsedSSL()) {
+                Reply.Content.LoadFromFile(sResource.c_str());
+                AConnection->SendReply(CHTTPReply::ok, AContentType, SendNow);
+            } else {
+                AConnection->SendFileReply(sResource.c_str(), AContentType);
+            }
+#endif
+            return true;
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -449,7 +471,7 @@ namespace Apostol {
 
             // Request sPath must be absolute and not contain "..".
             if (sPath.empty() || sPath.front() != '/' || sPath.find("..") != CString::npos) {
-                AConnection->SendStockReply(CHTTPReply::bad_request);
+                AConnection->SendStockReply(CHTTPReply::bad_request, false, GetRoot(GetHost(AConnection)));
                 return;
             }
 
@@ -462,7 +484,7 @@ namespace Apostol {
             sResource += sPath;
 
             if (!FileExists(sResource.c_str())) {
-                AConnection->SendStockReply(CHTTPReply::not_found);
+                AConnection->SendStockReply(CHTTPReply::not_found, false, GetRoot(GetHost(AConnection)));
                 return;
             }
 
@@ -511,7 +533,7 @@ namespace Apostol {
 
             // Request sPath must be absolute and not contain "..".
             if (sPath.empty() || sPath.front() != '/' || sPath.find(_T("..")) != CString::npos) {
-                AConnection->SendStockReply(CHTTPReply::bad_request);
+                AConnection->SendStockReply(CHTTPReply::bad_request, false, GetRoot(GetHost(AConnection)));
                 return;
             }
 
@@ -734,7 +756,7 @@ namespace Apostol {
             CHTTPReply::CStatusType status = CHTTPReply::internal_server_error;
 
             ExceptionToJson(status, E, Reply.Content);
-            pConnection->SendStockReply(status, true);
+            pConnection->SendStockReply(status, true, GetRoot(GetHost(AConnection)));
 
             Log()->Error(APP_LOG_ERR, 0, "%s", E.what());
         }
@@ -772,7 +794,7 @@ namespace Apostol {
             }
 
             if (i == m_Methods.Count()) {
-                AConnection->SendStockReply(CHTTPReply::not_implemented);
+                AConnection->SendStockReply(CHTTPReply::not_implemented, false, GetRoot(GetHost(AConnection)));
             }
 
             return true;
