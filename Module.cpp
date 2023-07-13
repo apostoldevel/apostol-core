@@ -756,7 +756,7 @@ namespace Apostol {
             CHTTPReply::CStatusType status = CHTTPReply::internal_server_error;
 
             ExceptionToJson(status, E, Reply.Content);
-            pConnection->SendStockReply(status, true, GetRoot(GetHost(AConnection)));
+            pConnection->SendStockReply(status, true, GetRoot(GetHost(pConnection)));
 
             Log()->Error(APP_LOG_ERR, 0, "%s", E.what());
         }
