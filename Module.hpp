@@ -209,7 +209,7 @@ namespace Apostol {
 
             static CString TryFiles(const CString &Root, const CStringList &uris, const CString &Location);
 
-            bool ResourceExists(CString &Resource, const CString &Path, const CString &Host, const CStringList &TryFiles) const;
+            static bool ResourceExists(CString &Resource, const CString &Root, const CString &Path, const CStringList &TryFiles) ;
 
             bool SendResource(CHTTPServerConnection *AConnection, const CString &Path, LPCTSTR AContentType = nullptr,
                 bool SendNow = false, const CStringList& TryFiles = CStringList(), bool SendNotFound = true) const;

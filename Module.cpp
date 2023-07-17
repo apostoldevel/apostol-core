@@ -400,8 +400,8 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        bool CApostolModule::ResourceExists(CString &Resource, const CString &Path, const CString &Host, const CStringList &TryFiles) const {
-            Resource = GetRoot(Host);
+        bool CApostolModule::ResourceExists(CString &Resource, const CString &Root, const CString &Path, const CStringList &TryFiles) {
+            Resource = Root;
             Resource += Path;
 
             if (DirectoryExists(Resource.c_str())) {
@@ -414,7 +414,7 @@ namespace Apostol {
             }
 
             if (TryFiles.Count() != 0 && !FileExists(Resource.c_str())) {
-                Resource = CApostolModule::TryFiles(Resource, TryFiles, Path);
+                Resource = CApostolModule::TryFiles(Root, TryFiles, Path);
             }
 
             return FileExists(Resource.c_str());
@@ -427,11 +427,12 @@ namespace Apostol {
             const auto &caRequest = AConnection->Request();
             auto &Reply = AConnection->Reply();
 
+            const CString sRoot(GetRoot(GetHost(AConnection)));
             CString sResource;
 
-            if (!ResourceExists(sResource, Path, caRequest.Location.Host(), TryFiles)) {
+            if (!ResourceExists(sResource, sRoot, Path, TryFiles)) {
                 if (SendNotFound) {
-                    AConnection->SendStockReply(CHTTPReply::not_found, SendNow, GetRoot(GetHost(AConnection)));
+                    AConnection->SendStockReply(CHTTPReply::not_found, SendNow, sRoot);
                 }
                 return false;
             }
