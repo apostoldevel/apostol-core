@@ -245,7 +245,7 @@ namespace Apostol {
         class CConfigComponent {
         public:
             CConfigComponent();
-            ~CConfigComponent();
+            virtual ~CConfigComponent();
         };
 
         //--------------------------------------------------------------------------------------------------------------

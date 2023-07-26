@@ -188,7 +188,7 @@ namespace Apostol {
         class CLogComponent {
         public:
             CLogComponent();
-            ~CLogComponent();
+            virtual ~CLogComponent();
         };
 
         //--------------------------------------------------------------------------------------------------------------

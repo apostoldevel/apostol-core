@@ -50,6 +50,9 @@ public:
     };
     //------------------------------------------------------------------------------------------------------------------
 
+    ~CGlobalComponent() override = default;
+    //------------------------------------------------------------------------------------------------------------------
+
     static void OnIniFileParseError (CCustomIniFile *Sender, LPCTSTR lpszSectionName, LPCTSTR lpszKeyName,
                                      LPCTSTR lpszValue, LPCTSTR lpszDefault, int Line) {
 

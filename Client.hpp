@@ -227,7 +227,7 @@ namespace Apostol {
             void DoConnect(CPollEventHandler *AHandler) override;
             bool DoExecute(CTCPConnection *AConnection) override;
 
-            void DoTimer(CPollEventHandler *AHandler);
+            void DoTimer(CPollEventHandler *AHandler) override;
 
             virtual void Heartbeat(CDateTime Now);
 

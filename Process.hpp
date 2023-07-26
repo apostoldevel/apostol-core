@@ -95,6 +95,7 @@ namespace Apostol {
         public:
 
             CSignalProcess(CCustomProcess *AParent, CProcessManager *AManager, CProcessType AType, LPCTSTR AName);
+            ~CSignalProcess() override = default;
 
             virtual CSignalProcess *SignalProcess() { return m_pSignalProcess; };
             void SignalProcess(CSignalProcess *Value) { SetSignalProcess(Value); };

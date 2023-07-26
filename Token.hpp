@@ -64,6 +64,9 @@ namespace Apostol {
     class CToken: public CGlobalComponent {
     public:
 
+        CToken() = default;
+        ~CToken() override = default;
+
         static CString CreateToken(const CProvider& Provider, const CString &Application);
         static CString CreateGoogleToken(const CProvider& Provider, const CString &Application);
 
