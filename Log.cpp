@@ -132,6 +132,8 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CLog::ErrorCore(u_int ALevel, int AError, LPCSTR AFormat, CLogType ALogType, va_list args) {
+            const auto char_size = sizeof(TCHAR);
+
             TCHAR       *f, *last_f;
             TCHAR       *c, *last_c;
             TCHAR       *last_a;
@@ -140,17 +142,17 @@ namespace Apostol {
 
             bool        wrote_stderr;
 
-            TCHAR       time_str [LOG_MAX_ERROR_STR] = {0};
-            TCHAR       args_str [LOG_MAX_ERROR_STR] = {0};
-            TCHAR       file_str [LOG_MAX_ERROR_STR] = {0};
-            TCHAR       cons_str [LOG_MAX_ERROR_STR] = {0};
+            TCHAR       time_str [LOG_MAX_ERROR_STR + 1] = {0};
+            TCHAR       args_str [LOG_MAX_ERROR_STR + 1] = {0};
+            TCHAR       file_str [LOG_MAX_ERROR_STR + 1] = {0};
+            TCHAR       cons_str [LOG_MAX_ERROR_STR + 1] = {0};
 
             time_t      itime;
             struct tm   *timeInfo;
 
-            last_f = file_str + LOG_MAX_ERROR_STR * sizeof(TCHAR);
-            last_c = cons_str + LOG_MAX_ERROR_STR * sizeof(TCHAR);
-            last_a = args_str + LOG_MAX_ERROR_STR * sizeof(TCHAR);
+            last_f = file_str + LOG_MAX_ERROR_STR * char_size;
+            last_c = cons_str + LOG_MAX_ERROR_STR * char_size;
+            last_a = args_str + LOG_MAX_ERROR_STR * char_size;
 
             itime = time(&itime);
             timeInfo = localtime(&itime);
@@ -288,13 +290,14 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CLog::Access(LPCSTR AFormat, va_list args) {
-            TCHAR szBuffer[MAX_ERROR_STR + sizeof(TCHAR) + 1] = {0};
+            TCHAR szBuffer[MAX_ERROR_STR + 1] = {0};
             size_t LSize = MAX_ERROR_STR;
             CLogFile *logfile = First();
             while (logfile) {
                 if (logfile->LogType() == ltAccess) {
                     chVERIFY(SUCCEEDED(StringPCchVPrintf(szBuffer, &LSize, AFormat, args)));
                     write_fd(logfile->Handle(), szBuffer, LSize);
+                    break;
                 }
                 logfile = Next();
             }

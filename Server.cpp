@@ -495,6 +495,10 @@ namespace Apostol {
 
         void CServerProcess::DoPQSendQuery(CPQQuery *AQuery) {
             const auto pConnection = AQuery->Connection();
+
+            if (pConnection == nullptr)
+                return;
+
             const auto& conInfo = pConnection->ConnInfo();
             for (int i = 0; i < AQuery->SQL().Count(); ++i) {
                 if (conInfo.ConnInfo().IsEmpty()) {
@@ -510,6 +514,10 @@ namespace Apostol {
 
         void CServerProcess::DoPQResultStatus(CPQResult *AResult) {
             const auto pConnection = AResult->Query()->Connection();
+
+            if (pConnection == nullptr)
+                return;
+
             const auto& conInfo = pConnection->ConnInfo();
             if (conInfo.ConnInfo().IsEmpty()) {
                 Log()->Postgres(APP_LOG_DEBUG, _T("[%d] [%d] ResultStatus: %s"), pConnection->PID(), pConnection->Socket(), AResult->StatusString());
@@ -523,6 +531,10 @@ namespace Apostol {
 
         void CServerProcess::DoPQResult(CPQResult *AResult, ExecStatusType AExecStatus) {
             const auto pConnection = AResult->Query()->Connection();
+
+            if (pConnection == nullptr)
+                return;
+
             const auto& conInfo = pConnection->ConnInfo();
 #ifdef _DEBUG
             if (AExecStatus == PGRES_TUPLES_OK || AExecStatus == PGRES_COMMAND_OK) {
@@ -735,8 +747,9 @@ namespace Apostol {
                         Log()->Access(_T("%s %d %.3f [%s] \"%s %s HTTP/%d.%d\" %d %d \"%s\" \"%s\"\r\n"),
                                       pHandle->PeerIP(), pHandle->PeerPort(),
                                       (Now() - AConnection->Clock()) * MSecsPerDay / MSecsPerSec, szTime,
-                                      caRequest.Method.c_str(), caRequest.URI.c_str(), caRequest.VMajor,
-                                      caRequest.VMinor,
+                                      caRequest.Method.IsEmpty() ? "GET" : caRequest.Method.c_str(),
+                                      caRequest.URI.IsEmpty() ? "/" : caRequest.URI.c_str(),
+                                      caRequest.VMajor, caRequest.VMinor,
                                       caReply.Status, caReply.Content.Size(),
                                       referer.IsEmpty() ? "-" : referer.c_str(),
                                       user_agent.IsEmpty() ? "-" : user_agent.c_str());
