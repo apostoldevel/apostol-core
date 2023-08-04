@@ -182,9 +182,15 @@ namespace Apostol {
 
         CString CApostolModule::GetRoot(const CString &Host) const {
             CString Result(GetSiteRoot(Host));
+
             if (!path_separator(Result.front())) {
                 Result = Config()->Prefix() + Result;
             }
+
+            if (path_separator(Result.back())) {
+                Result.SetLength(Result.Length() - 1);
+            }
+
             return Result;
         }
         //--------------------------------------------------------------------------------------------------------------

@@ -134,6 +134,8 @@ namespace Apostol {
         void CLog::ErrorCore(u_int ALevel, int AError, LPCSTR AFormat, CLogType ALogType, va_list args) {
             const auto char_size = sizeof(TCHAR);
 
+            const auto tid = (pid_t) syscall(SYS_gettid);
+
             TCHAR       *f, *last_f;
             TCHAR       *c, *last_c;
             TCHAR       *last_a;
@@ -163,8 +165,8 @@ namespace Apostol {
             c = ld_slprintf(cons_str, last_c, COLOR_WHITE "[%s] ", time_str);
 
             /* pid#tid */
-            f = ld_slprintf(f, last_f, "[%P] [" LOG_TID_T_FMT "] ", log_pid, log_tid);
-            c = ld_slprintf(c, last_c, "[%P] [" LOG_TID_T_FMT "] ", log_pid, log_tid);
+            f = ld_slprintf(f, last_f, "[%P] [" LOG_TID_T_FMT "] ", log_pid, tid);
+            c = ld_slprintf(c, last_c, "[%P] [" LOG_TID_T_FMT "] ", log_pid, tid);
 
             f = ld_slprintf(f, last_f, "%V: ", &err_levels[ALevel]);
             c = ld_slprintf(c, last_c, "%V", &level_colors[ALevel]);
