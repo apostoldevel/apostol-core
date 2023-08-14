@@ -503,7 +503,7 @@ namespace Apostol {
             Add(new CConfigCommand(_T("cache"), _T("prefix"), m_sCachePrefix.c_str(), std::bind(&CConfig::SetCachePrefix, this, _1)));
 
             Add(new CConfigCommand(_T("log"), _T("error"), m_sErrorLog.c_str(), std::bind(&CConfig::SetErrorLog, this, _1)));
-            Add(new CConfigCommand(_T("log"), _T("stream"), m_sStreamLog.c_str(), std::bind(&CConfig::SetStreamLog, this, _1)));
+            Add(new CConfigCommand(_T("stream"), _T("log"), m_sStreamLog.c_str(), std::bind(&CConfig::SetStreamLog, this, _1)));
             Add(new CConfigCommand(_T("server"), _T("log"), m_sAccessLog.c_str(), std::bind(&CConfig::SetAccessLog, this, _1)));
             Add(new CConfigCommand(_T("postgres"), _T("log"), m_sPostgresLog.c_str(), std::bind(&CConfig::SetPostgresLog, this, _1)));
 
