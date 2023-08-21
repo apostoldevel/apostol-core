@@ -282,7 +282,6 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CApostolModule::ExceptionToJson(int ErrorCode, const std::exception &e, CString& Json) {
-            Json.Clear();
             Json.Format(R"({"error": {"code": %u, "message": "%s"}})", ErrorCode, Delphi::Json::EncodeJsonString(e.what()).c_str());
         }
         //--------------------------------------------------------------------------------------------------------------
@@ -374,7 +373,6 @@ namespace Apostol {
                 CHTTPReply::AddUnauthorized(Reply, AConnection->Data()["Authorization"] != "Basic", "invalid_client", Message.c_str());
             }
 
-            Reply.Content.Clear();
             Reply.Content.Format(R"({"error": {"code": %u, "message": "%s"}})", ErrorCode, Delphi::Json::EncodeJsonString(Message).c_str());
 
             AConnection->CloseConnection(true);
