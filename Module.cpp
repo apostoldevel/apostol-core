@@ -454,15 +454,20 @@ namespace Apostol {
                 Reply.AddHeader(_T("Last-Modified"), sModified);
             }
 
-#if (OPENSSL_VERSION_NUMBER >= 0x30000000L) && defined(BIO_get_ktls_send)
+#if (APOSTOL_USE_SEND_FILE)
+  #if (OPENSSL_VERSION_NUMBER >= 0x30000000L) && defined(BIO_get_ktls_send)
             AConnection->SendFileReply(sResource.c_str(), AContentType);
-#else
+  #else
             if (AConnection->IOHandler()->UsedSSL()) {
                 Reply.Content.LoadFromFile(sResource.c_str());
                 AConnection->SendReply(CHTTPReply::ok, AContentType, SendNow);
             } else {
                 AConnection->SendFileReply(sResource.c_str(), AContentType);
             }
+  #endif
+#else
+            Reply.Content.LoadFromFile(sResource.c_str());
+            AConnection->SendReply(CHTTPReply::ok, AContentType, SendNow);
 #endif
             return true;
         }
