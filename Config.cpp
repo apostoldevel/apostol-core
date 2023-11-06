@@ -167,7 +167,7 @@ namespace Apostol {
             m_pLog = ALog;
             m_uErrorCount = 0;
 
-            m_nWorkers = 1;
+            m_nWorkers = 0;
 
             m_nPort = 0;
 
@@ -401,10 +401,15 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
+        void CConfig::SetWorkers(uint32_t AValue) {
+            if (m_nWorkers != AValue) {
+                m_nWorkers = AValue;
+            }
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
         void CConfig::SetDefault() {
             m_uErrorCount = 0;
-
-            m_nWorkers = 1;
 
             m_nPort = 4977;
 
@@ -453,7 +458,9 @@ namespace Apostol {
 
             Add(new CConfigCommand(_T("main"), _T("limitnofile"), &m_nLimitNoFile));
 
-            Add(new CConfigCommand(_T("main"), _T("workers"), &m_nWorkers));
+            if (m_nWorkers == 0) {
+                Add(new CConfigCommand(_T("main"), _T("workers"), &m_nWorkers));
+            }
 
             Add(new CConfigCommand(_T("main"), _T("master"), &m_fMaster));
             Add(new CConfigCommand(_T("main"), _T("helper"), &m_fHelper));
@@ -486,7 +493,9 @@ namespace Apostol {
 
             Add(new CConfigCommand(_T("main"), _T("limitnofile"), &m_nLimitNoFile));
 
-            Add(new CConfigCommand(_T("main"), _T("workers"), &m_nWorkers));
+            if (m_nWorkers == 0) {
+              Add(new CConfigCommand(_T("main"), _T("workers"), &m_nWorkers));
+            }
 
             Add(new CConfigCommand(_T("main"), _T("master"), &m_fMaster));
             Add(new CConfigCommand(_T("main"), _T("helper"), &m_fHelper));
@@ -541,12 +550,15 @@ namespace Apostol {
             if (GetCount() == 0)
                 throw Delphi::Exception::Exception(_T("Command list is empty"));
 
-            CConfigCommand *C;
-            CVariant V;
+            CVariant var;
 
             if (!FileExists(m_sConfFile.c_str())) {
                 Log()->Error(APP_LOG_ERR, 0, APP_FILE_NOT_FOUND, m_sConfFile.c_str());
                 return;
+            }
+
+            if (m_nWorkers == 0) {
+                m_nWorkers = sysconf(_SC_NPROCESSORS_ONLN);
             }
 
             if (m_pIniFile == nullptr) {
@@ -563,36 +575,36 @@ namespace Apostol {
             m_pIniFile->OnIniFileParseError(std::bind(&CConfig::OnIniFileParseError, this, _1, _2, _3, _4, _5, _6));
 #endif
             for (int i = 0; i < Count(); ++i) {
-                C = Commands(i);
+                const auto command = Commands(i);
 
-                switch (C->Type()) {
+                switch (command->Type()) {
                     case ctInteger:
-                        V = m_pIniFile->ReadInteger(C->Section(), C->Ident(), C->Default().vasInteger);
+                        var = m_pIniFile->ReadInteger(command->Section(), command->Ident(), command->Default().vasInteger);
                         break;
 
                     case ctUInteger:
-                        V = ((uint32_t) m_pIniFile->ReadInteger(C->Section(), C->Ident(), C->Default().vasUnsigned));
+                        var = ((uint32_t) m_pIniFile->ReadInteger(command->Section(), command->Ident(), (INT) command->Default().vasUnsigned));
                         break;
 
                     case ctDouble:
-                        V = m_pIniFile->ReadFloat(C->Section(), C->Ident(), C->Default().vasDouble);
+                        var = m_pIniFile->ReadFloat(command->Section(), command->Ident(), command->Default().vasDouble);
                         break;
 
                     case ctBoolean:
-                        V = m_pIniFile->ReadBool(C->Section(), C->Ident(), C->Default().vasBoolean);
+                        var = m_pIniFile->ReadBool(command->Section(), command->Ident(), command->Default().vasBoolean);
                         break;
 
                     case ctDateTime:
-                        V = m_pIniFile->ReadDateTime(C->Section(), C->Ident(), C->Default().vasDouble);
+                        var = m_pIniFile->ReadDateTime(command->Section(), command->Ident(), command->Default().vasDouble);
                         break;
 
                     default:
-                        V = new CString();
-                        m_pIniFile->ReadString(C->Section(), C->Ident(), C->Default().vasStr, *V.vasCString);
+                        var = new CString();
+                        m_pIniFile->ReadString(command->Section(), command->Ident(), command->Default().vasStr, *var.vasCString);
                         break;
                 }
 
-                C->Value(V);
+                command->Value(var);
             }
 
             m_LogFiles.Clear();
@@ -635,9 +647,9 @@ namespace Apostol {
         bool CConfig::CheckLogFiles() {
             u_int Level;
 
-            for (int I = 0; I < m_LogFiles.Count(); ++I) {
+            for (int i = 0; i < m_LogFiles.Count(); ++i) {
 
-                const CString &Key = m_LogFiles.Names(I);
+                const CString &Key = m_LogFiles.Names(i);
 
                 Level = GetLogLevelByName(Key.c_str());
                 if (Level == 0) {
@@ -648,7 +660,7 @@ namespace Apostol {
 
                 const CString &Value = m_LogFiles.Values(Key);
                 if (!path_separator(m_LogFiles.Values(Key).front())) {
-                    m_LogFiles[I] = Key + _T("=") + m_sPrefix + Value;
+                    m_LogFiles[i] = Key + _T("=") + m_sPrefix + Value;
                 }
             }
 

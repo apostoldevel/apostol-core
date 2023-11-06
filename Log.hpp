@@ -202,6 +202,7 @@ namespace Apostol {
         private:
 
             u_int       m_uLevel;
+            u_int       m_uDebugLevel;
             int         m_CurrentIndex;
             bool        m_fUseStdErr;
             time_t      m_DiskFullTime;
@@ -213,6 +214,7 @@ namespace Apostol {
             void ErrorCore(u_int ALevel, int AError, LPCSTR AFormat, CLogType ALogType, va_list args);
 
             void SetLevel(u_int Value);
+            void SetDebugLevel(u_int Value);
 
             void CheckCurrentIndex();
             void SetCurrentIndex(int Index);
@@ -234,8 +236,8 @@ namespace Apostol {
             void Error(u_int ALevel, int AErrNo, LPCSTR AFormat, ...);
             void Error(u_int ALevel, int AErrNo, LPCSTR AFormat, va_list args);
 
-            void Debug(u_int ALevel, LPCSTR AFormat, ...);
-            void Debug(u_int ALevel, LPCSTR AFormat, va_list args);
+            void Debug(u_int ADebugLevel, LPCSTR AFormat, ...);
+            void Debug(u_int ADebugLevel, LPCSTR AFormat, va_list args);
 
             void Warning(LPCSTR AFormat, ...);
             void Warning(LPCSTR AFormat, va_list args);
@@ -257,6 +259,9 @@ namespace Apostol {
 
             u_int Level() const { return m_uLevel; }
             void Level(u_int Value) { SetLevel(Value); };
+
+            u_int DebugLevel() const { return m_uDebugLevel; }
+            void DebugLevel(u_int Value) { SetDebugLevel(Value); };
 
             time_t DiskFullTime() const { return m_DiskFullTime; };
             void DiskFullTime(time_t Value) { m_DiskFullTime = Value; };

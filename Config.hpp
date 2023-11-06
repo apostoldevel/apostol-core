@@ -341,6 +341,8 @@ namespace Apostol {
             void SetPostgresLog(LPCTSTR AValue);
             void SetStreamLog(LPCTSTR AValue);
 
+            void SetWorkers(uint32_t AValue);
+
             bool CheckLogFiles();
 
             void OnIniFileParseError(CCustomIniFile *Sender, LPCTSTR lpszSectionName, LPCTSTR lpszKeyName, LPCTSTR lpszValue,
@@ -368,6 +370,7 @@ namespace Apostol {
             uint32_t ErrorCount() const { return m_uErrorCount; };
 
             uint32_t Workers() const { return m_nWorkers; };
+            void Workers(uint32_t Value) { SetWorkers(Value); };
 
             bool Master() const { return m_fMaster; };
             bool Helper() const { return m_fHelper; };

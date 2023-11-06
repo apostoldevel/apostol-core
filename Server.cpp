@@ -204,6 +204,8 @@ namespace Apostol {
 
             m_Server.InitializeBindings();
             m_Server.ActiveLevel(alBinding);
+
+            Log()->Error(APP_LOG_STDERR, 0, "Listening at: %s:%d", Listen.c_str(), Port);
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -255,13 +257,13 @@ namespace Apostol {
 
         void CServerProcess::InitializePQClients(const CString &Title, u_int Min, u_int Max) {
             for (int i = 0; i < Config()->PostgresConnInfo().Count(); i++) {
-                const auto &connInfo = Config()->PostgresConnInfo()[i];
-                const auto index = m_PQClients.AddPair(connInfo.Name(), CPQClient(Min, Max));
+                const auto &caPostgresConnInfo = Config()->PostgresConnInfo()[i];
+                const auto index = m_PQClients.AddPair(caPostgresConnInfo.Name(), CPQClient(Min, Max));
 
                 auto &PQClient = m_PQClients[index].Value();
 
-                PQClient.ConnInfo().ApplicationName() = "'" + Title + "'"; //application_name;
-                PQClient.ConnInfo().SetParameters(connInfo.Value());
+                PQClient.ConnInfo().ApplicationName() = "'" + Title + "'";
+                PQClient.ConnInfo().SetParameters(caPostgresConnInfo.Value());
 
                 PQClient.AllocateEventHandlers(&m_EventHandlers);
                 InitializePQClientHandlers(PQClient);

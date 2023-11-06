@@ -66,9 +66,9 @@ namespace Apostol {
 
             Log()->Clear();
 #ifdef _DEBUG
-            Log()->Level(APP_LOG_DEBUG_ALL & ~APP_LOG_DEBUG_EVENT);
+            Log()->DebugLevel(APP_LOG_DEBUG_ALL & ~APP_LOG_DEBUG_EVENT);
 #else
-            Log()->Level(APP_LOG_DEBUG_CORE);
+            Log()->DebugLevel(APP_LOG_DEBUG_CORE);
 #endif
             u_int level;
             for (int i = 0; i < Config()->LogFiles().Count(); ++i) {
@@ -77,6 +77,8 @@ namespace Apostol {
                 level = GetLogLevelByName(key.c_str());
                 if (level > APP_LOG_STDERR && level <= APP_LOG_DEBUG) {
                     pLogFile = Log()->AddLogFile(value, level);
+                    if (level > Log()->Level())
+                        Log()->Level(level);
                     if (level == APP_LOG_DEBUG)
                         pLogFile->LogType(ltDebug);
                 }
@@ -462,12 +464,12 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CApplicationProcess::BeforeRun() {
-            Log()->Debug(APP_LOG_DEBUG_CORE, MSG_PROCESS_START, GetProcessName(), Application()->CmdLine().c_str());
+            Log()->Error(APP_LOG_STDERR, 0, MSG_PROCESS_START, GetProcessName(), Application()->CmdLine().c_str());
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CApplicationProcess::AfterRun() {
-            Log()->Debug(APP_LOG_DEBUG_CORE, MSG_PROCESS_STOP, GetProcessName());
+            Log()->Error(APP_LOG_STDERR, 0, MSG_PROCESS_STOP, GetProcessName());
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -635,7 +637,7 @@ namespace Apostol {
         void CProcessSingle::BeforeRun() {
             Application()->Header(Application()->Name() + ": single process " + Application()->CmdLine());
 
-            Log()->Debug(APP_LOG_DEBUG_CORE, MSG_PROCESS_START, GetProcessName(), Application()->Header().c_str());
+            Log()->Error(APP_LOG_STDERR, 0, MSG_PROCESS_START, GetProcessName(), Application()->Header().c_str());
 
             InitSignals();
 
@@ -717,7 +719,7 @@ namespace Apostol {
         void CProcessMaster::BeforeRun() {
             Application()->Header(Application()->Name() + ": master process " + Application()->CmdLine());
 
-            Log()->Debug(APP_LOG_DEBUG_CORE, MSG_PROCESS_START, GetProcessName(), Application()->Header().c_str());
+            Log()->Error(APP_LOG_STDERR, 0, MSG_PROCESS_START, GetProcessName(), Application()->Header().c_str());
 
             InitSignals();
         }
@@ -1147,7 +1149,7 @@ namespace Apostol {
         void CProcessWorker::BeforeRun() {
             Application()->Header(Application()->Name() + ": worker process (" + CModuleProcess::ModulesNames() + ")");
 
-            Log()->Debug(APP_LOG_DEBUG_CORE, MSG_PROCESS_START, GetProcessName(), Application()->Header().c_str());
+            Log()->Error(APP_LOG_STDERR, 0, MSG_PROCESS_START, GetProcessName(), Application()->Header().c_str());
 
             InitSignals();
 
@@ -1249,7 +1251,7 @@ namespace Apostol {
         void CProcessHelper::BeforeRun() {
             Application()->Header(Application()->Name() + ": helper process (" + CModuleProcess::ModulesNames() + ")");
 
-            Log()->Debug(APP_LOG_DEBUG_CORE, MSG_PROCESS_START, GetProcessName(), Application()->Header().c_str());
+            Log()->Error(APP_LOG_STDERR, 0, MSG_PROCESS_START, GetProcessName(), Application()->Header().c_str());
 
             InitSignals();
 

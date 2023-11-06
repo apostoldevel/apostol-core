@@ -62,7 +62,7 @@ namespace Apostol {
 
         CLogFile::CLogFile(CLog *ALog, const CString &FileName):
                 CFile(FileName, FILE_APPEND | FILE_CREATE_OR_OPEN),
-                CCollectionItem(ALog), m_uLevel(APP_LOG_STDERR), m_LogType(ltError) {
+                CCollectionItem(ALog), m_uLevel(ALog->Level()), m_LogType(ltError) {
         }
 
         //--------------------------------------------------------------------------------------------------------------
@@ -87,7 +87,8 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         CLog::CLog(): CSysErrorComponent(), CCollection(this) {
-            m_uLevel = APP_LOG_DEBUG_CORE;
+            m_uLevel = APP_LOG_STDERR;
+            m_uDebugLevel = APP_LOG_DEBUG_CORE;
             m_CurrentIndex = -1;
             m_fUseStdErr = true;
             m_DiskFullTime = 0;
@@ -207,7 +208,7 @@ namespace Apostol {
 #ifdef _DEBUG
             DebugMessage(_T("%s"), UseStdErr() ? cons_str : file_str);
 #else
-            if (UseStdErr() && ALevel < APP_LOG_DEBUG && !wrote_stderr) {
+            if (UseStdErr() && m_uLevel >= ALevel && !wrote_stderr) {
                 (void) write_console(STDERR_FILENO, cons_str, c - cons_str);
             }
 #endif
@@ -227,8 +228,8 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CLog::Debug(u_int ALevel, LPCSTR AFormat, ...) {
-            if (Level() & ALevel) {
+        void CLog::Debug(u_int ADebugLevel, LPCSTR AFormat, ...) {
+            if (m_uDebugLevel & ADebugLevel) {
                 va_list args;
                 va_start(args, AFormat);
                 ErrorCore(APP_LOG_DEBUG, 0, AFormat, ltDebug, args);
@@ -237,8 +238,8 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CLog::Debug(u_int ALevel, LPCSTR AFormat, va_list args) {
-            if (Level() & ALevel) {
+        void CLog::Debug(u_int ADebugLevel, LPCSTR AFormat, va_list args) {
+            if (m_uDebugLevel & ADebugLevel) {
                 ErrorCore(APP_LOG_DEBUG, 0, AFormat, ltDebug, args);
             }
         }
@@ -402,7 +403,16 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CLog::SetLevel(u_int AValue) {
-            m_uLevel = AValue;
+            if (m_uLevel != AValue) {
+                m_uLevel = AValue;
+            }
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CLog::SetDebugLevel(u_int AValue) {
+            if (m_uDebugLevel != AValue) {
+                m_uDebugLevel = AValue;
+            }
         }
         //--------------------------------------------------------------------------------------------------------------
 
