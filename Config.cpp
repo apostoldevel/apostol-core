@@ -168,6 +168,7 @@ namespace Apostol {
             m_uErrorCount = 0;
 
             m_nWorkers = 0;
+            m_nProcessors = sysconf(_SC_NPROCESSORS_ONLN);
 
             m_nPort = 0;
 
@@ -401,6 +402,15 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
+        uint32_t CConfig::GetWorkers() const {
+            if (m_nWorkers == 0) {
+                return m_nProcessors <= 0 ? 1 : m_nProcessors;
+            }
+
+            return m_nWorkers;
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
         void CConfig::SetWorkers(uint32_t AValue) {
             if (m_nWorkers != AValue) {
                 m_nWorkers = AValue;
@@ -555,10 +565,6 @@ namespace Apostol {
             if (!FileExists(m_sConfFile.c_str())) {
                 Log()->Error(APP_LOG_ERR, 0, APP_FILE_NOT_FOUND, m_sConfFile.c_str());
                 return;
-            }
-
-            if (m_nWorkers == 0) {
-                m_nWorkers = sysconf(_SC_NPROCESSORS_ONLN);
             }
 
             if (m_pIniFile == nullptr) {

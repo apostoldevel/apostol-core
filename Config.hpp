@@ -275,6 +275,8 @@ namespace Apostol {
 
             uint32_t m_nPort;
 
+            long int m_nProcessors;
+
             int m_nTimeOut;
             int m_nConnectTimeOut;
 
@@ -341,6 +343,7 @@ namespace Apostol {
             void SetPostgresLog(LPCTSTR AValue);
             void SetStreamLog(LPCTSTR AValue);
 
+            uint32_t GetWorkers() const;
             void SetWorkers(uint32_t AValue);
 
             bool CheckLogFiles();
@@ -369,7 +372,7 @@ namespace Apostol {
 
             uint32_t ErrorCount() const { return m_uErrorCount; };
 
-            uint32_t Workers() const { return m_nWorkers; };
+            uint32_t Workers() const { return GetWorkers(); };
             void Workers(uint32_t Value) { SetWorkers(Value); };
 
             bool Master() const { return m_fMaster; };
