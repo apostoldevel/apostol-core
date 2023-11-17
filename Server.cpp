@@ -205,7 +205,7 @@ namespace Apostol {
             m_Server.InitializeBindings();
             m_Server.ActiveLevel(alBinding);
 
-            Log()->Error(APP_LOG_STDERR, 0, "Listening at: %s:%d", Listen.c_str(), Port);
+            Log()->Notice("Listening at: %s:%d", Listen.c_str(), Port);
         }
         //--------------------------------------------------------------------------------------------------------------
 

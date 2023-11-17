@@ -464,12 +464,12 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CApplicationProcess::BeforeRun() {
-            Log()->Error(APP_LOG_STDERR, 0, MSG_PROCESS_START, GetProcessName(), Application()->CmdLine().c_str());
+            Log()->Notice(MSG_PROCESS_START, GetProcessName(), Application()->CmdLine().c_str());
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CApplicationProcess::AfterRun() {
-            Log()->Error(APP_LOG_STDERR, 0, MSG_PROCESS_STOP, GetProcessName());
+            Log()->Notice(MSG_PROCESS_STOP, GetProcessName());
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -637,7 +637,7 @@ namespace Apostol {
         void CProcessSingle::BeforeRun() {
             Application()->Header(Application()->Name() + ": single process " + Application()->CmdLine());
 
-            Log()->Error(APP_LOG_STDERR, 0, MSG_PROCESS_START, GetProcessName(), Application()->Header().c_str());
+            Log()->Notice(MSG_PROCESS_START, GetProcessName(), Application()->Header().c_str());
 
             InitSignals();
 
@@ -719,7 +719,7 @@ namespace Apostol {
         void CProcessMaster::BeforeRun() {
             Application()->Header(Application()->Name() + ": master process " + Application()->CmdLine());
 
-            Log()->Error(APP_LOG_STDERR, 0, MSG_PROCESS_START, GetProcessName(), Application()->Header().c_str());
+            Log()->Notice(MSG_PROCESS_START, GetProcessName(), Application()->Header().c_str());
 
             InitSignals();
         }
@@ -1149,7 +1149,7 @@ namespace Apostol {
         void CProcessWorker::BeforeRun() {
             Application()->Header(Application()->Name() + ": worker process (" + CModuleProcess::ModulesNames() + ")");
 
-            Log()->Error(APP_LOG_STDERR, 0, MSG_PROCESS_START, GetProcessName(), Application()->Header().c_str());
+            Log()->Notice(MSG_PROCESS_START, GetProcessName(), Application()->Header().c_str());
 
             InitSignals();
 
@@ -1251,7 +1251,7 @@ namespace Apostol {
         void CProcessHelper::BeforeRun() {
             Application()->Header(Application()->Name() + ": helper process (" + CModuleProcess::ModulesNames() + ")");
 
-            Log()->Error(APP_LOG_STDERR, 0, MSG_PROCESS_START, GetProcessName(), Application()->Header().c_str());
+            Log()->Notice(MSG_PROCESS_START, GetProcessName(), Application()->Header().c_str());
 
             InitSignals();
 
