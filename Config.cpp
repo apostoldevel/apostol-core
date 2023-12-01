@@ -459,6 +459,52 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
+        void CConfig::SetPostgresEnvironment(const CString &ConfName, CStringList &List) {
+            const auto pg_host = getenv("PGHOST");
+            const auto pg_hostaddr = getenv("PGHOSTADDR");
+            const auto pg_port = getenv("PGPORT");
+            const auto pg_database = getenv("PGDATABASE");
+
+            char *pg_user;
+            char *pg_password;
+
+            if (ConfName == "helper") {
+                pg_user = getenv("PGUSERAPI");
+                pg_password = getenv("PGPASSWORDAPI");
+            } else if (ConfName == "kernel") {
+                pg_user = getenv("PGUSERKERNEL");
+                pg_password = getenv("PGPASSWORDKERNEL");
+            } else {
+                pg_user = getenv("PGUSER");
+                pg_password = getenv("PGPASSWORD");
+            }
+
+            if (pg_host != nullptr) {
+                List.Values("host", pg_host);
+            }
+
+            if (pg_hostaddr != nullptr) {
+                List.Values("hostaddr", pg_hostaddr);
+            }
+
+            if (pg_port != nullptr) {
+                List.Values("port", pg_port);
+            }
+
+            if (pg_database != nullptr) {
+                List.Values("dbname", pg_database);
+            }
+
+            if (pg_user != nullptr) {
+                List.Values("user", pg_user);
+            }
+
+            if (pg_password != nullptr) {
+                List.Values("password", pg_password);
+            }
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
         void CConfig::DefaultCommands() {
 
             Clear();
@@ -631,6 +677,10 @@ namespace Apostol {
             m_pIniFile->ReadSectionValues(_T("postgres/worker"), &worker);
             m_pIniFile->ReadSectionValues(_T("postgres/helper"), &helper);
             m_pIniFile->ReadSectionValues(_T("postgres/kernel"), &kernel);
+
+            SetPostgresEnvironment("worker", worker);
+            SetPostgresEnvironment("helper", helper);
+            SetPostgresEnvironment("kernel", kernel);
 
             if (worker.Count() == 0) {
                 m_pIniFile->ReadSectionValues(_T("postgres/conninfo"), &worker);

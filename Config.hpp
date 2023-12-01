@@ -317,6 +317,8 @@ namespace Apostol {
 
             CConfigFlags m_Flags;
 
+            static void SetPostgresEnvironment(const CString &ConfName, CStringList &List);
+
         protected:
 
             void SetDefault() override;
