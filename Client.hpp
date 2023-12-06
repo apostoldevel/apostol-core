@@ -254,7 +254,7 @@ namespace Apostol {
 
             void SwitchConnection(CWebSocketClientConnection *AConnection);
 
-            void SendMessage(const CWSMessage &Message, bool bSendNow = false);
+            void SendMessage(const CWSMessage &Message);
             void SendMessage(const CWSMessage &Message, COnMessageHandlerEvent &&Handler);
 
             void SendNotSupported(const CString &UniqueId, const CString &ErrorDescription, const CJSON &Payload = {});

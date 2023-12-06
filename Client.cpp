@@ -439,14 +439,14 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CCustomWebSocketClient::SendMessage(const CWSMessage &Message, bool bSendNow) {
+        void CCustomWebSocketClient::SendMessage(const CWSMessage &Message) {
             CString sResponse;
             DoMessage(Message);
             CWSProtocol::Response(Message, sResponse);
             chASSERT(m_pConnection);
             if (m_pConnection != nullptr && m_pConnection->Connected()) {
                 m_pConnection->WSReply().SetPayload(sResponse, (uint32_t) MsEpoch());
-                m_pConnection->SendWebSocket(bSendNow);
+                m_pConnection->SendWebSocket(true);
             }
         }
         //--------------------------------------------------------------------------------------------------------------
@@ -456,7 +456,7 @@ namespace Apostol {
             CWSMessage Message;
             const CString Payload(caWSRequest.Payload());
             CWSProtocol::Request(Payload, Message);
-            AWSConnection->ConnectionStatus(csReplySent);
+            AWSConnection->ConnectionStatus(csRequestOk);
             return Message;
         }
         //--------------------------------------------------------------------------------------------------------------
