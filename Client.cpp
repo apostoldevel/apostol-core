@@ -456,7 +456,7 @@ namespace Apostol {
             CWSMessage Message;
             const CString Payload(caWSRequest.Payload());
             CWSProtocol::Request(Payload, Message);
-            AWSConnection->ConnectionStatus(csRequestOk);
+            AWSConnection->ConnectionStatus(csReplySent);
             return Message;
         }
         //--------------------------------------------------------------------------------------------------------------
