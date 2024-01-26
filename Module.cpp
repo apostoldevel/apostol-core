@@ -360,7 +360,7 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CApostolModule::ReplyError(CHTTPServerConnection *AConnection, CHTTPReply::CStatusType ErrorCode, const CString &Message) {
-            Log()->Error(ErrorCode == CHTTPReply::internal_server_error ? APP_LOG_EMERG : APP_LOG_ERR, 0, _T("ReplyError: %s"), Message.c_str());
+            Log()->Error(ErrorCode == CHTTPReply::internal_server_error ? APP_LOG_ERR : APP_LOG_WARN, 0, _T("ReplyError: %s"), Message.c_str());
 
             if (AConnection == nullptr)
                 return;
