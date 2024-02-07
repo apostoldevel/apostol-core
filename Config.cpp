@@ -462,11 +462,11 @@ namespace Apostol {
         void CConfig::SetPostgresEnvironment(const CString &ConfName, CStringList &List) {
             const auto pg_host = getenv("PGHOST");
             const auto pg_hostaddr = getenv("PGHOSTADDR");
-            const auto pg_port = getenv("PGPORT");
             const auto pg_database = getenv("PGDATABASE");
 
-            char *pg_user;
-            char *pg_password;
+            char *pg_port = nullptr;
+            char *pg_user = nullptr;
+            char *pg_password = nullptr;
 
             if (ConfName == "helper") {
                 pg_user = getenv("PGUSERAPI");
@@ -475,6 +475,7 @@ namespace Apostol {
                 pg_user = getenv("PGUSERKERNEL");
                 pg_password = getenv("PGPASSWORDKERNEL");
             } else {
+                pg_port = getenv("PGPORT");
                 pg_user = getenv("PGUSER");
                 pg_password = getenv("PGPASSWORD");
             }
