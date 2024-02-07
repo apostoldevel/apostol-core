@@ -294,28 +294,18 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 #ifdef WITH_POSTGRESQL
-        CPQClient &CServerProcess::GetPQClient() {
-            return GetPQClient(m_ConfName);
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
-        const CPQClient &CServerProcess::GetPQClient() const {
-            return GetPQClient(m_ConfName);
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
         CPQClient &CServerProcess::GetPQClient(const CString &ConfName) {
-            int index = m_PQClients.IndexOfName(ConfName);
+            int index = m_PQClients.IndexOfName(ConfName.IsEmpty() ? m_ConfName : ConfName);
             if (index == -1)
-                throw Delphi::Exception::ExceptionFrm(NOT_FOUND_CONFIGURATION_NAME, ConfName.c_str());
+                throw Delphi::Exception::ExceptionFrm(NOT_FOUND_CONFIGURATION_NAME, (ConfName.IsEmpty() ? m_ConfName : ConfName).c_str());
             return m_PQClients[index].Value();
         }
         //--------------------------------------------------------------------------------------------------------------
 
         const CPQClient &CServerProcess::GetPQClient(const CString &ConfName) const {
-            int index = m_PQClients.IndexOfName(ConfName);
+            int index = m_PQClients.IndexOfName(ConfName.IsEmpty() ? m_ConfName : ConfName);
             if (index == -1)
-                throw Delphi::Exception::ExceptionFrm(NOT_FOUND_CONFIGURATION_NAME, ConfName.c_str());
+                throw Delphi::Exception::ExceptionFrm(NOT_FOUND_CONFIGURATION_NAME, (ConfName.IsEmpty() ? m_ConfName : ConfName).c_str());
             return m_PQClients[index].Value();
         }
         //--------------------------------------------------------------------------------------------------------------
@@ -376,15 +366,11 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        CPQPollQuery *CServerProcess::GetQuery(CPollConnection *AConnection) {
-            return GetQuery(AConnection, m_ConfName);
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
         CPQPollQuery *CServerProcess::ExecSQL(const CStringList &SQL, CPollConnection *AConnection,
-                COnPQPollQueryExecutedEvent &&OnExecuted, COnPQPollQueryExceptionEvent &&OnException) {
+                COnPQPollQueryExecutedEvent &&OnExecuted, COnPQPollQueryExceptionEvent &&OnException,
+                const CString &ConfName) {
 
-            auto pQuery = GetQuery(AConnection);
+            auto pQuery = GetQuery(AConnection, ConfName);
 
             if (pQuery == nullptr)
                 throw Delphi::Exception::Exception(_T("ExecSQL: Get SQL query failed."));

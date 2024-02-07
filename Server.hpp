@@ -148,9 +148,6 @@ namespace Apostol {
             CString &ConfName() { return m_ConfName; };
             const CString &ConfName() const { return m_ConfName; };
 
-            CPQClient &GetPQClient();
-            const CPQClient &GetPQClient() const;
-
             CPQClient &GetPQClient(const CString& ConfName);
             const CPQClient &GetPQClient(const CString& ConfName) const;
 
@@ -158,11 +155,11 @@ namespace Apostol {
             const CPQClientList &PQClients() const { return m_PQClients; };
 
             virtual CPQPollQuery *GetQuery(CPollConnection *AConnection, const CString &ConfName);
-            virtual CPQPollQuery *GetQuery(CPollConnection *AConnection);
 
             CPQPollQuery *ExecSQL(const CStringList &SQL, CPollConnection *AConnection = nullptr,
                          COnPQPollQueryExecutedEvent && OnExecuted = nullptr,
-                         COnPQPollQueryExceptionEvent && OnException = nullptr);
+                         COnPQPollQueryExceptionEvent && OnException = nullptr,
+                         const CString &ConfName = {});
 #endif
             CHTTPClientItem *GetClient(const CString &Host, uint16_t Port);
 

@@ -70,16 +70,6 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 #ifdef WITH_POSTGRESQL
-        CPQClient &CApostolModule::PQClient() {
-            return m_pModuleProcess->GetPQClient();
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
-        const CPQClient &CApostolModule::PQClient() const {
-            return m_pModuleProcess->GetPQClient();
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
         CPQClient &CApostolModule::PQClient(const CString &ConfName) {
             return m_pModuleProcess->GetPQClient(ConfName);
         }
@@ -658,8 +648,8 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        CPQPollQuery *CApostolModule::GetQuery(CPollConnection *AConnection) {
-            CPQPollQuery *pQuery = m_pModuleProcess->GetQuery(AConnection);
+        CPQPollQuery *CApostolModule::GetQuery(CPollConnection *AConnection, const CString &ConfName) {
+            CPQPollQuery *pQuery = m_pModuleProcess->GetQuery(AConnection, ConfName);
 
             if (Assigned(pQuery)) {
 #if defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE >= 9)
@@ -676,9 +666,10 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         CPQPollQuery *CApostolModule::ExecSQL(const CStringList &SQL, CPollConnection *AConnection,
-                COnPQPollQueryExecutedEvent &&OnExecuted, COnPQPollQueryExceptionEvent &&OnException) {
+                COnPQPollQueryExecutedEvent &&OnExecuted, COnPQPollQueryExceptionEvent &&OnException,
+                const CString &ConfName) {
 
-            auto pQuery = GetQuery(AConnection);
+            auto pQuery = GetQuery(AConnection, ConfName);
 
             if (pQuery == nullptr)
                 throw Delphi::Exception::Exception(_T("ExecSQL: Get SQL query failed."));
@@ -701,7 +692,8 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         CPQPollQuery *CApostolModule::ExecuteSQL(const CStringList &SQL, CHTTPServerConnection *AConnection,
-                COnApostolModuleSuccessEvent &&OnSuccess, COnApostolModuleFailEvent &&OnFail) {
+                COnApostolModuleSuccessEvent &&OnSuccess, COnApostolModuleFailEvent &&OnFail,
+                const CString &ConfName) {
 
             auto OnExecuted = [OnSuccess](CPQPollQuery *APollQuery) {
                 auto pConnection = dynamic_cast<CHTTPServerConnection *> (APollQuery->Binding());
@@ -720,7 +712,7 @@ namespace Apostol {
             CPQPollQuery *pQuery = nullptr;
 
             try {
-                pQuery = ExecSQL(SQL, AConnection, OnExecuted, OnException);
+                pQuery = ExecSQL(SQL, AConnection, OnExecuted, OnException, ConfName);
             } catch (Delphi::Exception::Exception &E) {
                 OnFail(AConnection, E);
             }

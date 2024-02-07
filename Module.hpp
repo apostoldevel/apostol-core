@@ -175,22 +175,21 @@ namespace Apostol {
             CHTTPServer &Server();
             const CHTTPServer &Server() const;
 #ifdef WITH_POSTGRESQL
-            CPQClient &PQClient();
-            const CPQClient &PQClient() const;
-
             CPQClient &PQClient(const CString &ConfName);
             const CPQClient &PQClient(const CString &ConfName) const;
 
-            virtual CPQPollQuery *GetQuery(CPollConnection *AConnection);
+            virtual CPQPollQuery *GetQuery(CPollConnection *AConnection, const CString &ConfName);
 
             static void EnumQuery(CPQResult *APQResult, CPQueryResult& AResult);
             static void QueryToResults(CPQPollQuery *APollQuery, CPQueryResults& AResults);
 
             CPQPollQuery *ExecSQL(const CStringList &SQL, CPollConnection *AConnection = nullptr,
-                COnPQPollQueryExecutedEvent && OnExecuted = nullptr, COnPQPollQueryExceptionEvent && OnException = nullptr);
+                COnPQPollQueryExecutedEvent && OnExecuted = nullptr, COnPQPollQueryExceptionEvent && OnException = nullptr,
+                const CString &ConfName = {});
 
             CPQPollQuery *ExecuteSQL(const CStringList &SQL, CHTTPServerConnection *AConnection,
-                COnApostolModuleSuccessEvent && OnSuccess, COnApostolModuleFailEvent && OnFail = nullptr);
+                COnApostolModuleSuccessEvent && OnSuccess, COnApostolModuleFailEvent && OnFail = nullptr,
+                const CString &ConfName = {});
 
             static void PQResultToList(CPQResult *Result, CStringList &List);
             static void PQResultToJson(CPQResult *Result, CString &Json, const CString &Format = CString(), const CString &ObjectName = CString());
