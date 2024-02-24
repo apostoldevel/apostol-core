@@ -140,10 +140,11 @@ namespace Apostol {
             const CString& ModuleName() const { return m_ModuleName; }
             const CString& SectionName() const { return m_SectionName; }
 
-            CModuleStatus ModuleStatus() { return m_ModuleStatus; }
+            CModuleStatus ModuleStatus() const { return m_ModuleStatus; }
+            CModuleProcess *ModuleProcess() const{ return m_pModuleProcess; }
 
-            const CString& AllowedMethods() { return GetAllowedMethods(); };
-            const CString& AllowedHeaders() { return GetAllowedHeaders(); };
+            const CString& AllowedMethods() const { return GetAllowedMethods(); };
+            const CString& AllowedHeaders() const { return GetAllowedHeaders(); };
 
             virtual bool Enabled() abstract;
             virtual bool CheckLocation(const CLocation &Location);
