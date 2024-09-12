@@ -365,7 +365,7 @@ namespace Apostol {
 
             Reply.Content.Format(R"({"error": {"code": %u, "message": "%s"}})", ErrorCode, Delphi::Json::EncodeJsonString(Message).c_str());
 
-            AConnection->CloseConnection(true);
+            //AConnection->CloseConnection(true);
             AConnection->SendReply(ErrorCode, nullptr, true);
         }
         //--------------------------------------------------------------------------------------------------------------
