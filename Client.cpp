@@ -320,7 +320,7 @@ namespace Apostol {
                 IncErrorCount();
                 AHandler->Stop();
                 SwitchConnection(nullptr);
-                throw ESocketError(E.ErrorCode(), "Connection failed ");
+                throw ESocketError(E.ErrorCode(), "Connection failed");
             }
         }
         //--------------------------------------------------------------------------------------------------------------
