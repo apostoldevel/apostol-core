@@ -38,7 +38,7 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         CWebSocketMessageHandler::CWebSocketMessageHandler(CWebSocketMessageHandlerManager *AManager,
-                                                           const CWSMessage &Message, COnMessageHandlerEvent &&Handler): CCollectionItem(AManager), m_Handler(Handler) {
+                const CWSMessage &Message, COnMessageHandlerEvent &&Handler): CCollectionItem(AManager), m_Handler(Handler) {
             m_Message = Message;
         }
         //--------------------------------------------------------------------------------------------------------------
@@ -60,16 +60,16 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CWebSocketMessageHandlerManager::Set(int Index, CWebSocketMessageHandler *Value) {
+        void CWebSocketMessageHandlerManager::Set(const int Index, CWebSocketMessageHandler *Value) {
             inherited::SetItem(Index, Value);
         }
         //--------------------------------------------------------------------------------------------------------------
 
         CWebSocketMessageHandler *CWebSocketMessageHandlerManager::Add(CWebSocketConnection *AConnection,
-                                                                       const CWSMessage &Message, COnMessageHandlerEvent &&Handler, uint32_t Key) {
+                const CWSMessage &Message, COnMessageHandlerEvent &&Handler, const uint32_t Key) {
 
             if (AConnection != nullptr && AConnection->Connected() && !AConnection->ClosedGracefully()) {
-                auto pHandler = new CWebSocketMessageHandler(this, Message, static_cast<COnMessageHandlerEvent &&> (Handler));
+                const auto pHandler = new CWebSocketMessageHandler(this, Message, static_cast<COnMessageHandlerEvent &&> (Handler));
 
                 CString sResult;
                 CWSProtocol::Response(Message, sResult);
@@ -89,10 +89,8 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         CWebSocketMessageHandler *CWebSocketMessageHandlerManager::FindMessageById(const CString &Value) const {
-            CWebSocketMessageHandler *pHandler;
-
             for (int i = 0; i < Count(); ++i) {
-                pHandler = Get(i);
+                const auto pHandler = Get(i);
                 if (pHandler->Message().UniqueId == Value)
                     return pHandler;
             }
@@ -225,7 +223,7 @@ namespace Apostol {
         void CCustomWebSocketClient::DoTimer(CPollEventHandler *AHandler) {
             uint64_t exp;
 
-            auto pTimer = dynamic_cast<CEPollTimer *> (AHandler->Binding());
+            const auto pTimer = dynamic_cast<CEPollTimer *> (AHandler->Binding());
             pTimer->Read(&exp, sizeof(uint64_t));
 
             Heartbeat(AHandler->TimeStamp());
@@ -233,14 +231,14 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CCustomWebSocketClient::DoDebugWait(CObject *Sender) {
-            auto pConnection = dynamic_cast<CWebSocketClientConnection *> (Sender);
+            const auto pConnection = dynamic_cast<CWebSocketClientConnection *> (Sender);
             if (Assigned(pConnection))
                 DebugRequest(pConnection->Request());
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CCustomWebSocketClient::DoDebugRequest(CObject *Sender) {
-            auto pConnection = dynamic_cast<CWebSocketClientConnection *> (Sender);
+            const auto pConnection = dynamic_cast<CWebSocketClientConnection *> (Sender);
             if (Assigned(pConnection)) {
                 if (pConnection->Protocol() == pHTTP) {
                     DebugRequest(pConnection->Request());
@@ -252,7 +250,7 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CCustomWebSocketClient::DoDebugReply(CObject *Sender) {
-            auto pConnection = dynamic_cast<CWebSocketClientConnection *> (Sender);
+            const auto pConnection = dynamic_cast<CWebSocketClientConnection *> (Sender);
             if (Assigned(pConnection)) {
                 if (pConnection->Protocol() == pHTTP) {
                     DebugReply(pConnection->Reply());
@@ -291,7 +289,7 @@ namespace Apostol {
             }
 
             try {
-                auto pIOHandler = (CIOHandlerSocket *) pConnection->IOHandler();
+                const auto pIOHandler = dynamic_cast<CIOHandlerSocket *>(pConnection->IOHandler());
 
                 if (pIOHandler->Binding()->CheckConnection()) {
                     ClearErrorCount();
@@ -335,7 +333,6 @@ namespace Apostol {
             WSReply.Clear();
 
             CWSMessage jmRequest;
-            CWSMessage jmResponse;
 
             const CString csRequest(caWSRequest.Payload());
 
@@ -343,11 +340,11 @@ namespace Apostol {
 
             try {
                 if (jmRequest.MessageTypeId == WSProtocol::mtCall) {
+                    CWSMessage jmResponse;
                     int i;
-                    CWebSocketClientActionHandler *pHandler;
                     for (i = 0; i < m_Actions.Count(); ++i) {
-                        pHandler = (CWebSocketClientActionHandler *) m_Actions.Objects(i);
-                        if (pHandler->Allow()) {
+                        const auto pHandler = (CWebSocketClientActionHandler *) m_Actions.Objects(i);
+                        if (pHandler != nullptr && pHandler->Allow()) {
                             const auto &action = m_Actions.Strings(i);
                             if (action == jmRequest.Action) {
                                 CWSProtocol::PrepareResponse(jmRequest, jmResponse);
@@ -362,7 +359,7 @@ namespace Apostol {
                         SendNotSupported(jmRequest.UniqueId, CString().Format("Action %s not supported.", jmRequest.Action.c_str()));
                     }
                 } else {
-                    auto pHandler = m_Messages.FindMessageById(jmRequest.UniqueId);
+                    const auto pHandler = m_Messages.FindMessageById(jmRequest.UniqueId);
                     if (Assigned(pHandler)) {
                         jmRequest.Action = pHandler->Message().Action;
                         DoMessage(jmRequest);
@@ -392,7 +389,7 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         bool CCustomWebSocketClient::DoExecute(CTCPConnection *AConnection) {
-            auto pConnection = dynamic_cast<CHTTPClientConnection *> (AConnection);
+            const auto pConnection = dynamic_cast<CHTTPClientConnection *> (AConnection);
             if (pConnection->Protocol() == pWebSocket) {
                 DoWebSocket(pConnection);
             } else {
@@ -443,9 +440,8 @@ namespace Apostol {
             CString sResponse;
             DoMessage(Message);
             CWSProtocol::Response(Message, sResponse);
-            chASSERT(m_pConnection);
             if (m_pConnection != nullptr && m_pConnection->Connected()) {
-                m_pConnection->WSReply().SetPayload(sResponse, (uint32_t) MsEpoch());
+                m_pConnection->WSReply().SetPayload(sResponse, static_cast<uint32_t>(MsEpoch()));
                 m_pConnection->SendWebSocket(true);
             }
         }
