@@ -271,6 +271,39 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
+        bool CApostolModule::AllowedLocation(const CString &Patch, const CStringList &List) {
+            CStringList Paths;
+            SplitColumns(Patch, Paths, '/');
+
+            for (int i = 0; i < List.Count(); i++) {
+                CStringList EndPoints;
+                SplitColumns(List[i], EndPoints, '/');
+
+                if (Paths.Count() < EndPoints.Count())
+                    continue;
+
+                int index = 0;
+                while (index < EndPoints.Count()) {
+                    if (EndPoints[index] == "*") {
+                        return true;
+                    }
+
+                    if (Paths[index] != EndPoints[index]) {
+                        break;
+                    }
+
+                    index++;
+                }
+
+                if (index == EndPoints.Count() && index == Paths.Count()) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
         void CApostolModule::ExceptionToJson(int ErrorCode, const std::exception &e, CString& Json) {
             Json.Format(R"({"error": {"code": %u, "message": "%s"}})", ErrorCode, Delphi::Json::EncodeJsonString(e.what()).c_str());
         }

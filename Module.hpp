@@ -167,6 +167,8 @@ namespace Apostol {
             static CString GetRealIP(CHTTPServerConnection *AConnection);
             static CString GetHost(CHTTPServerConnection *AConnection);
 
+            static bool AllowedLocation(const CString &Patch, const CStringList &List);
+
             CString GetRoot(const CString &Host) const;
             const CString& GetSiteRoot(const CString &Host) const;
             const CStringList& GetSiteConfig(const CString &Host) const;
