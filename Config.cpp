@@ -460,24 +460,42 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CConfig::SetPostgresEnvironment(const CString &ConfName, CStringList &List) {
-            const auto pg_host = getenv("PGHOST");
-            const auto pg_hostaddr = getenv("PGHOSTADDR");
             const auto pg_database = getenv("PGDATABASE");
-
-            char *pg_port = nullptr;
-            char *pg_user = nullptr;
-            char *pg_password = nullptr;
+            char *pg_host = getenv("PGHOST");
+            char *pg_hostaddr = getenv("PGHOSTADDR");
+            char *pg_port = getenv("PGPORT");
+            char *pg_user = getenv("PGUSER");
+            char *pg_password = getenv("PGPASSWORD");
+            char *pg_temp = nullptr;
 
             if (ConfName == "helper") {
-                pg_user = getenv("PGUSERAPI");
-                pg_password = getenv("PGPASSWORDAPI");
+                pg_temp = getenv("PGHOSTAPI");
+                if (pg_temp != nullptr)
+                    pg_host = pg_temp;
+
+                pg_temp = getenv("PGHOSTADDR");
+                if (pg_temp != nullptr)
+                    pg_hostaddr = pg_temp;
+
+                pg_temp = getenv("PGPORTAPI");
+                if (pg_temp != nullptr)
+                    pg_port = pg_temp;
+
+                pg_temp = getenv("PGUSERAPI");
+                if (pg_temp != nullptr)
+                    pg_user = pg_temp;
+
+                pg_temp = getenv("PGPASSWORDAPI");
+                if (pg_temp != nullptr)
+                    pg_password = pg_temp;
             } else if (ConfName == "kernel") {
-                pg_user = getenv("PGUSERKERNEL");
-                pg_password = getenv("PGPASSWORDKERNEL");
-            } else {
-                pg_port = getenv("PGPORT");
-                pg_user = getenv("PGUSER");
-                pg_password = getenv("PGPASSWORD");
+                pg_temp = getenv("PGUSERKERNEL");
+                if (pg_temp != nullptr)
+                    pg_user = pg_temp;
+
+                pg_temp = getenv("PGPASSWORDKERNEL");
+                if (pg_temp != nullptr)
+                    pg_password = pg_temp;
             }
 
             if (pg_host != nullptr) {
