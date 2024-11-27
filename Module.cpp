@@ -271,9 +271,9 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        bool CApostolModule::AllowedLocation(const CString &Patch, const CStringList &List) {
+        bool CApostolModule::AllowedLocation(const CString &Path, const CStringList &List) {
             CStringList Paths;
-            SplitColumns(Patch, Paths, '/');
+            SplitColumns(Path, Paths, '/');
 
             for (int i = 0; i < List.Count(); i++) {
                 CStringList EndPoints;
