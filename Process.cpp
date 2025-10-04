@@ -29,39 +29,40 @@ Author:
 //----------------------------------------------------------------------------------------------------------------------
 
 void signal_error(int signo, siginfo_t *siginfo, void *ucontext) {
-    void*       addr;
+    void*       rip = nullptr;
     void*       trace[BT_BUF_SIZE];
-    int         i;
-    int         count;
-    char      **msg;
+    int         trace_size;
+    char**      trace_symbols = nullptr;
 
     GLog->Error(APP_LOG_CRIT, 0, "-----BEGIN BACKTRACE LOG-----");
-    GLog->Error(APP_LOG_CRIT, 0, "Signal: %d (%s)", signo, strsignal(signo));
-    GLog->Error(APP_LOG_CRIT, 0, "Addr  : %p", siginfo->si_addr);
+    GLog->Error(APP_LOG_CRIT, 0, "Signal             : %d (%s)", signo, strsignal(signo));
+    GLog->Error(APP_LOG_CRIT, 0, "Fault address      : %p", siginfo->si_addr);
 
-#ifdef __x86_64__
-
-#if __WORDSIZE == 64
-    addr = (void*)((ucontext_t*)ucontext)->uc_mcontext.gregs[REG_RIP];
-#else
-    addr = (void*)((ucontext_t*)ucontext)->uc_mcontext.gregs[REG_EIP];
+#if defined(__x86_64__)
+    rip = (void*)((ucontext_t*)ucontext)->uc_mcontext.gregs[REG_RIP];
+#elif defined(__i386__)
+    rip = (void*)((ucontext_t*)ucontext)->uc_mcontext.gregs[REG_EIP];
 #endif
-    GLog->Error(APP_LOG_CRIT, 0, "addr  : %p", addr);
 
-    count = backtrace(trace, BT_BUF_SIZE);
+    if (rip) {
+        GLog->Error(APP_LOG_CRIT, 0, "Instruction pointer: %p", rip);
+    }
 
-    GLog->Error(APP_LOG_CRIT, 0, "Count : %d", count);
+    trace_size = backtrace(trace, BT_BUF_SIZE);
 
-    msg = backtrace_symbols(trace, count);
-    if (msg) {
-        for (i = 0; i < count; ++i) {
-            GLog->Error(APP_LOG_CRIT, 0, "%s", msg[i]);
+    GLog->Error(APP_LOG_CRIT, 0, "Trace size         : %d", trace_size);
+
+    trace_symbols = backtrace_symbols(trace, trace_size);
+    if (trace_symbols) {
+        for (int i = 0; i < trace_size; ++i) {
+            GLog->Error(APP_LOG_CRIT, 0, "%s", trace_symbols[i]);
         }
 
-        free(msg);
+        free(trace_symbols);
     }
+
     GLog->Error(APP_LOG_CRIT, 0, "-----END BACKTRACE LOG-----");
-#endif
+
     exit(3);
 }
 //----------------------------------------------------------------------------------------------------------------------
@@ -262,6 +263,8 @@ namespace Apostol {
                 AddSignal(SIGSEGV, "SIGSEGV", nullptr, signal_error);
 
                 AddSignal(SIGBUS, "SIGBUS", nullptr, signal_error);
+
+                AddSignal(SIGABRT, "SIGABRT", nullptr, signal_error);
             }
         }
         //--------------------------------------------------------------------------------------------------------------
