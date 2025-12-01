@@ -1124,9 +1124,8 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CProcessWorker::Init() {
-            InitSignals();
-
             const auto pParent = dynamic_cast<CServerProcess *>(Parent());
+
             if (pParent != nullptr) {
                 Server() = pParent->Server();
 #ifdef WITH_STREAM_SERVER
@@ -1148,6 +1147,8 @@ namespace Apostol {
             Application()->Header(Application()->Name() + ": worker process (" + ModulesNames() + ")");
 
             Log()->Notice(MSG_PROCESS_START, GetProcessName(), Application()->Header().c_str());
+
+            InitSignals();
 
             SetLimitNoFile(Config()->LimitNoFile());
 
