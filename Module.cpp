@@ -50,16 +50,38 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         CApostolModule::CApostolModule(CModuleProcess *AProcess, const CString& ModuleName, const CString& SectionName):
-            CCollectionItem(AProcess), CGlobalComponent(), m_pModuleProcess(AProcess), m_ModuleName(ModuleName),
-            m_SectionName(SectionName) {
+            CCollectionItem(AProcess), m_ModuleName(ModuleName), m_SectionName(SectionName),
+            m_pModuleProcess(AProcess) {
 
             m_ModuleStatus = msUnknown;
-
+#ifndef APOSTOL_SERVER_TYPE_TCP
             m_Headers.Add("Content-Type");
             m_Headers.Add("X-Requested-With");
+#endif
+        }
+        //--------------------------------------------------------------------------------------------------------------
+#ifdef WITH_STREAM_SERVER
+        CUDPAsyncServer &CApostolModule::StreamServer() {
+            return m_pModuleProcess->StreamServer();
         }
         //--------------------------------------------------------------------------------------------------------------
 
+        const CUDPAsyncServer &CApostolModule::StreamServer() const {
+            return m_pModuleProcess->StreamServer();
+        }
+        //--------------------------------------------------------------------------------------------------------------
+#endif
+#ifdef APOSTOL_SERVER_TYPE_TCP
+        CTCPAsyncServer &CApostolModule::Server() {
+            return m_pModuleProcess->Server();
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        const CTCPAsyncServer &CApostolModule::Server() const {
+            return m_pModuleProcess->Server();
+        }
+        //--------------------------------------------------------------------------------------------------------------
+#else
         CHTTPServer &CApostolModule::Server() {
             return m_pModuleProcess->Server();
         }
@@ -69,6 +91,7 @@ namespace Apostol {
             return m_pModuleProcess->Server();
         }
         //--------------------------------------------------------------------------------------------------------------
+#endif
 #ifdef WITH_POSTGRESQL
         CPQClient &CApostolModule::PQClient(const CString &ConfName) {
             return m_pModuleProcess->GetPQClient(ConfName);
@@ -78,13 +101,43 @@ namespace Apostol {
         const CPQClient &CApostolModule::PQClient(const CString &ConfName) const {
             return m_pModuleProcess->GetPQClient(ConfName);
         }
+        //--------------------------------------------------------------------------------------------------------------
 #endif
+        CString CApostolModule::GetHostName() {
+            CString sResult;
+            sResult.SetLength(NI_MAXHOST);
+            if (GStack->GetHostName(sResult.Data(), sResult.Size())) {
+                sResult.Truncate();
+            }
+            return sResult;
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        CString CApostolModule::GetIPByHostName(const CString &HostName) {
+            CString sResult;
+            if (!HostName.IsEmpty()) {
+                sResult.SetLength(16);
+                GStack->GetIPByName(HostName.c_str(), sResult.Data(), sResult.Size());
+            }
+            return sResult;
+        }
+        //--------------------------------------------------------------------------------------------------------------
+#ifdef WITH_STREAM_SERVER
+        bool CApostolModule::Execute(CUDPAsyncServer *AServer, CSocketHandle *ASocket, CManagedBuffer &ABuffer) {
+            return true;
+        }
+#endif
+#ifdef APOSTOL_SERVER_TYPE_TCP
+        bool CApostolModule::Execute(CTCPServerConnection *AConnection) {
+            DebugConnection(AConnection);
+            return true;
+        }
+#else
         const CString &CApostolModule::GetAllowedMethods() const {
             if (m_AllowedMethods.IsEmpty()) {
                 if (m_Methods.Count() > 0) {
-                    CMethodHandler *pHandler;
                     for (int i = 0; i < m_Methods.Count(); ++i) {
-                        pHandler = (CMethodHandler *) m_Methods.Objects(i);
+                        const auto pHandler = (CMethodHandler *) m_Methods.Objects(i);
                         if (pHandler->Allow()) {
                             if (m_AllowedMethods.IsEmpty())
                                 m_AllowedMethods = m_Methods.Strings(i);
@@ -186,7 +239,7 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         const CString &CApostolModule::GetSiteRoot(const CString &Host) const {
-            auto Index = m_Sites.IndexOfName(Host);
+            const auto Index = m_Sites.IndexOfName(Host);
             if (Index == -1)
                 return m_Sites["*"];
             return m_Sites[Index].Value();
@@ -194,35 +247,15 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         const CStringList &CApostolModule::GetSiteConfig(const CString &Host) const {
-            auto Index = m_Sites.IndexOfName(Host);
+            const auto Index = m_Sites.IndexOfName(Host);
             if (Index == -1)
                 return m_Sites.Pairs("*").Data();
             return m_Sites[Index].Data();
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        CString CApostolModule::GetHostName() {
-            CString sResult;
-            sResult.SetLength(NI_MAXHOST);
-            if (GStack->GetHostName(sResult.Data(), sResult.Size())) {
-                sResult.Truncate();
-            }
-            return sResult;
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
-        CString CApostolModule::GetIPByHostName(const CString &HostName) {
-            CString sResult;
-            if (!HostName.IsEmpty()) {
-                sResult.SetLength(16);
-                GStack->GetIPByName(HostName.c_str(), sResult.Data(), sResult.Size());
-            }
-            return sResult;
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
         CString CApostolModule::GetUserAgent(CHTTPServerConnection *AConnection) {
-            auto pServer = dynamic_cast<CHTTPServer *> (AConnection->Server());
+            const auto pServer = dynamic_cast<CHTTPServer *> (AConnection->Server());
             const auto &caRequest = AConnection->Request();
             const auto &agent = caRequest.Headers[_T("User-Agent")];
             return agent.IsEmpty() ? pServer->ServerName() : agent;
@@ -271,9 +304,9 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        bool CApostolModule::AllowedLocation(const CString &Path, const CStringList &List) {
+        bool CApostolModule::AllowedLocation(const CString &Patch, const CStringList &List) {
             CStringList Paths;
-            SplitColumns(Path, Paths, '/');
+            SplitColumns(Patch, Paths, '/');
 
             for (int i = 0; i < List.Count(); i++) {
                 CStringList EndPoints;
@@ -382,7 +415,7 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CApostolModule::ReplyError(CHTTPServerConnection *AConnection, CHTTPReply::CStatusType ErrorCode, const CString &Message) {
+        void CApostolModule::ReplyError(CHTTPServerConnection *AConnection, const CHTTPReply::CStatusType ErrorCode, const CString &Message) {
             Log()->Error(ErrorCode == CHTTPReply::internal_server_error ? APP_LOG_ERR : APP_LOG_WARN, 0, _T("ReplyError: %s"), Message.c_str());
 
             if (AConnection == nullptr)
@@ -451,7 +484,6 @@ namespace Apostol {
         bool CApostolModule::SendResource(CHTTPServerConnection *AConnection, const CString &Path,
                 LPCTSTR AContentType, bool SendNow, const CStringList& TryFiles, bool SendNotFound) const {
 
-            const auto &caRequest = AConnection->Request();
             auto &Reply = AConnection->Reply();
 
             const CString sRoot(GetRoot(GetHost(AConnection)));
@@ -472,7 +504,7 @@ namespace Apostol {
                 AContentType = Mapping::ExtToType(sFileExt.c_str());
             }
 
-            auto sModified = StrWebTime(FileAge(sResource.c_str()), szBuffer, sizeof(szBuffer));
+            const auto sModified = StrWebTime(FileAge(sResource.c_str()), szBuffer, sizeof(szBuffer));
             if (sModified != nullptr) {
                 Reply.AddHeader(_T("Last-Modified"), sModified);
             }
@@ -590,10 +622,53 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        CHTTPClient *CApostolModule::GetClient(const CString &Host, uint16_t Port) {
+        CHTTPClient *CApostolModule::GetClient(const CString &Host, uint16_t Port) const
+        {
             return m_pModuleProcess->GetClient(Host, Port);
         }
         //--------------------------------------------------------------------------------------------------------------
+
+        bool CApostolModule::Execute(CHTTPServerConnection *AConnection) {
+            const auto pServer = dynamic_cast<CHTTPServer *> (AConnection->Server());
+            if (pServer == nullptr)
+                return false;
+
+            const auto &caRequest = AConnection->Request();
+            auto &Reply = AConnection->Reply();
+
+            if (!CheckLocation(caRequest.Location))
+                return false;
+
+            if (m_Sites.Count() == 0)
+                InitSites(pServer->Sites());
+#ifdef _DEBUG
+            DebugConnection(AConnection);
+#endif
+            Reply.Clear();
+            Reply.ContentType = CHTTPReply::html;
+
+            int i;
+            for (i = 0; i < m_Methods.Count(); ++i) {
+                const auto pHandler = (CMethodHandler *) m_Methods.Objects(i);
+
+                if (pHandler->Allow()) {
+                    const CString& Method = m_Methods.Strings(i);
+                    if (Method == caRequest.Method) {
+                        CORS(AConnection);
+                        pHandler->Handler(AConnection);
+                        break;
+                    }
+                }
+            }
+
+            if (i == m_Methods.Count()) {
+                AConnection->SendStockReply(CHTTPReply::not_implemented, false, GetRoot(GetHost(AConnection)));
+            }
+
+            return true;
+        }
+        //--------------------------------------------------------------------------------------------------------------
+#endif
 #ifdef WITH_POSTGRESQL
         void CApostolModule::PQResultToList(CPQResult *Result, CStringList &List) {
             for (int row = 0; row < Result->nTuples(); ++row) {
@@ -668,11 +743,10 @@ namespace Apostol {
 
         void CApostolModule::QueryToResults(CPQPollQuery *APollQuery, CPQueryResults& AResults) {
             CPQResult *pResult = nullptr;
-            int Index;
             for (int i = 0; i < APollQuery->ResultCount(); ++i) {
                 pResult = APollQuery->Results(i);
                 if (pResult->ExecStatus() == PGRES_TUPLES_OK || pResult->ExecStatus() == PGRES_SINGLE_TUPLE) {
-                    Index = AResults.Add(CPQueryResult());
+                    const int Index = AResults.Add(CPQueryResult());
                     EnumQuery(pResult, AResults[Index]);
                 } else {
                     throw Delphi::Exception::EDBError(pResult->GetErrorMessage());
@@ -702,7 +776,7 @@ namespace Apostol {
                 COnPQPollQueryExecutedEvent &&OnExecuted, COnPQPollQueryExceptionEvent &&OnException,
                 const CString &ConfName) {
 
-            auto pQuery = GetQuery(AConnection, ConfName);
+            const auto pQuery = GetQuery(AConnection, ConfName);
 
             if (pQuery == nullptr)
                 throw Delphi::Exception::Exception(_T("ExecSQL: Get SQL query failed."));
@@ -729,14 +803,14 @@ namespace Apostol {
                 const CString &ConfName) {
 
             auto OnExecuted = [OnSuccess](CPQPollQuery *APollQuery) {
-                auto pConnection = dynamic_cast<CHTTPServerConnection *> (APollQuery->Binding());
+                const auto pConnection = dynamic_cast<CHTTPServerConnection *> (APollQuery->Binding());
                 if (pConnection != nullptr && pConnection->Connected()) {
                     OnSuccess(pConnection, APollQuery);
                 }
             };
 
             auto OnException = [OnFail](CPQPollQuery *APollQuery, const Delphi::Exception::Exception &E) {
-                auto pConnection = dynamic_cast<CHTTPServerConnection *> (APollQuery->Binding());
+                const auto pConnection = dynamic_cast<CHTTPServerConnection *> (APollQuery->Binding());
                 if (pConnection != nullptr && pConnection->Connected()) {
                     OnFail(pConnection, E);
                 }
@@ -760,11 +834,11 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CApostolModule::DoPostgresQueryExecuted(CPQPollQuery *APollQuery) {
-
-            auto pConnection = dynamic_cast<CHTTPServerConnection *> (APollQuery->Binding());
+#ifndef APOSTOL_SERVER_TYPE_TCP
+            const auto pConnection = dynamic_cast<CHTTPServerConnection *> (APollQuery->Binding());
 
             auto &Reply = pConnection->Reply();
-            auto pResult = APollQuery->Results(0);
+            const auto pResult = APollQuery->Results(0);
 
             CHTTPReply::CStatusType status = CHTTPReply::internal_server_error;
 
@@ -780,62 +854,23 @@ namespace Apostol {
             }
 
             pConnection->SendReply(status, nullptr, true);
+#endif
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CApostolModule::DoPostgresQueryException(CPQPollQuery *APollQuery, const Delphi::Exception::Exception &E) {
-
-            auto pConnection = dynamic_cast<CHTTPServerConnection *> (APollQuery->Binding());
+#ifndef APOSTOL_SERVER_TYPE_TCP
+            const auto pConnection = dynamic_cast<CHTTPServerConnection *> (APollQuery->Binding());
             auto &Reply = pConnection->Reply();
 
             CHTTPReply::CStatusType status = CHTTPReply::internal_server_error;
-
             ExceptionToJson(status, E, Reply.Content);
             pConnection->SendStockReply(status, true, GetRoot(GetHost(pConnection)));
-
+#endif
             Log()->Error(APP_LOG_ERR, 0, "%s", E.what());
         }
         //--------------------------------------------------------------------------------------------------------------
 #endif
-        bool CApostolModule::Execute(CHTTPServerConnection *AConnection) {
-
-            auto pServer = dynamic_cast<CHTTPServer *> (AConnection->Server());
-            const auto &caRequest = AConnection->Request();
-            auto &Reply = AConnection->Reply();
-
-            if (!CheckLocation(caRequest.Location))
-                return false;
-
-            if (m_Sites.Count() == 0)
-                InitSites(pServer->Sites());
-#ifdef _DEBUG
-            DebugConnection(AConnection);
-#endif
-            Reply.Clear();
-            Reply.ContentType = CHTTPReply::html;
-
-            int i;
-            CMethodHandler *pHandler;
-            for (i = 0; i < m_Methods.Count(); ++i) {
-                pHandler = (CMethodHandler *) m_Methods.Objects(i);
-                if (pHandler->Allow()) {
-                    const CString& Method = m_Methods.Strings(i);
-                    if (Method == caRequest.Method) {
-                        CORS(AConnection);
-                        pHandler->Handler(AConnection);
-                        break;
-                    }
-                }
-            }
-
-            if (i == m_Methods.Count()) {
-                AConnection->SendStockReply(CHTTPReply::not_implemented, false, GetRoot(GetHost(AConnection)));
-            }
-
-            return true;
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
         bool CApostolModule::CheckLocation(const CLocation &Location) {
             return !Location.pathname.IsEmpty();
         }
@@ -846,8 +881,8 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CApostolModule::DoVerbose(CSocketEvent *Sender, CTCPConnection *AConnection, LPCTSTR AFormat, va_list args) {
-            Log()->Debug(APP_LOG_DEBUG_CORE, AFormat, args);
+        void CApostolModule::DoVerbose(CSocketEvent *Sender, LPCTSTR AFormat, va_list args) {
+            Log()->Stream(AFormat, args);
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -862,18 +897,13 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CApostolModule::DoNoCommandHandler(CSocketEvent *Sender, const CString &Data, CTCPConnection *AConnection) {
-            Log()->Error(APP_LOG_ERR, 0, "No command handler: %s", Data.IsEmpty() ? "(null)" : Data.c_str());
+            Log()->Error(APP_LOG_ERR, 0, "No command handler: %s", Data.IsEmpty() ? static_cast<LPCSTR> ("(null)") : Data.c_str());
         }
 
         //--------------------------------------------------------------------------------------------------------------
 
         //-- CModuleProcess --------------------------------------------------------------------------------------------
 
-        //--------------------------------------------------------------------------------------------------------------
-
-        CModuleProcess::CModuleProcess(): CServerProcess(), CModuleManager() {
-
-        }
         //--------------------------------------------------------------------------------------------------------------
 
         void CModuleProcess::DoInitialization(CApostolModule *AModule) {
@@ -899,7 +929,7 @@ namespace Apostol {
         void CModuleProcess::DoTimer(CPollEventHandler *AHandler) {
             uint64_t exp;
 
-            auto pTimer = dynamic_cast<CEPollTimer *> (AHandler->Binding());
+            const auto pTimer = dynamic_cast<CEPollTimer *> (AHandler->Binding());
             pTimer->Read(&exp, sizeof(uint64_t));
 
             try {
@@ -909,9 +939,25 @@ namespace Apostol {
             }
         }
         //--------------------------------------------------------------------------------------------------------------
-
+#ifdef WITH_STREAM_SERVER
+        void CModuleProcess::DoExecuteStream(CUDPAsyncServer *AServer, CSocketHandle *ASocket, CManagedBuffer &ABuffer) {
+            try {
+                ExecuteStreamModules(AServer, ASocket, ABuffer);
+            } catch (Delphi::Exception::Exception &E) {
+                DoServerException(AServer, E);
+            }
+        }
+        //--------------------------------------------------------------------------------------------------------------
+#endif
         bool CModuleProcess::DoExecute(CTCPConnection *AConnection) {
-            auto pConnection = dynamic_cast<CHTTPServerConnection *> (AConnection);
+#ifdef APOSTOL_SERVER_TYPE_TCP
+            const auto pConnection = dynamic_cast<CTCPServerConnection *> (AConnection);
+#else
+            const auto pConnection = dynamic_cast<CHTTPServerConnection *> (AConnection);
+#endif
+            if (pConnection == nullptr) {
+                return false;
+            }
 
             try {
                 ExecuteModules(pConnection);
@@ -950,7 +996,7 @@ namespace Apostol {
 
         void CModuleManager::Initialization() {
             for (int i = 0; i < ModuleCount(); i++) {
-                auto Module = Modules(i);
+                const auto Module = Modules(i);
                 if (Module->Enabled())
                     DoInitialization(Module);
             }
@@ -959,21 +1005,21 @@ namespace Apostol {
 
         void CModuleManager::Finalization() {
             for (int i = 0; i < ModuleCount(); i++) {
-                auto Module = Modules(i);
+                const auto Module = Modules(i);
                 if (Module->Enabled())
                     DoFinalization(Module);
             }
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        CString CModuleManager::ModulesNames() {
+        CString CModuleManager::ModulesNames() const {
             if (ModuleCount() == 0)
                 return "empty";
 
             CString Names;
             int Count = 0;
             for (int i = 0; i < ModuleCount(); i++) {
-                auto Module = Modules(i);
+                const auto Module = Modules(i);
                 if (Module->Enabled()) {
                     if (Count > 0)
                         Names << ", ";
@@ -986,15 +1032,55 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CModuleManager::HeartbeatModules(CDateTime Datetime) {
+        void CModuleManager::HeartbeatModules(CDateTime Datetime) const {
             for (int i = 0; i < ModuleCount(); i++) {
-                auto Module = Modules(i);
+                const auto Module = Modules(i);
                 if (Module->Enabled())
                     Module->Heartbeat(Datetime);
             }
         }
         //--------------------------------------------------------------------------------------------------------------
+#ifdef WITH_STREAM_SERVER
+        bool CModuleManager::ExecuteStreamModule(CUDPAsyncServer *AServer, CSocketHandle *ASocket, CManagedBuffer &ABuffer, CApostolModule *AModule) {
+            bool Result = AModule->Enabled();
+            if (Result) {
+                Result = AModule->Execute(AServer, ASocket, ABuffer);
+            }
+            return Result;
+        }
+        //--------------------------------------------------------------------------------------------------------------
 
+        void CModuleManager::ExecuteStreamModules(CUDPAsyncServer *AServer, CSocketHandle *ASocket, CManagedBuffer &ABuffer) {
+            int Index = 0;
+            while (Index < ModuleCount() && !ExecuteStreamModule(AServer, ASocket, ABuffer, Modules(Index))) {
+                Index++;
+            }
+        }
+#endif
+#ifdef APOSTOL_SERVER_TYPE_TCP
+        bool CModuleManager::ExecuteModule(CTCPServerConnection *AConnection, CApostolModule *AModule) {
+            bool Result = AModule->Enabled();
+            if (Result) {
+                DoBeforeExecuteModule(AModule);
+                Result = AModule->Execute(AConnection);
+                DoAfterExecuteModule(AModule);
+            }
+            return Result;
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CModuleManager::ExecuteModules(CTCPConnection *AConnection) {
+            const auto pConnection = dynamic_cast<CTCPServerConnection *> (AConnection);
+
+            if (pConnection == nullptr)
+                return;
+
+            int Index = 0;
+            while (Index < ModuleCount() && !ExecuteModule(pConnection, Modules(Index))) {
+                Index++;
+            }
+        }
+#else
         bool CModuleManager::ExecuteModule(CHTTPServerConnection *AConnection, CApostolModule *AModule) {
             bool Result = AModule->Enabled();
             if (Result) {
@@ -1011,8 +1097,8 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CModuleManager::ExecuteModules(CTCPConnection *AConnection) {
+            const auto pConnection = dynamic_cast<CHTTPServerConnection *> (AConnection);
 
-            auto pConnection = dynamic_cast<CHTTPServerConnection *> (AConnection);
             if (pConnection == nullptr)
                 return;
 
@@ -1025,7 +1111,7 @@ namespace Apostol {
                 pConnection->SendStockReply(CHTTPReply::not_implemented);
             }
         }
-
+#endif
     }
 }
 }

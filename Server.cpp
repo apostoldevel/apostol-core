@@ -38,20 +38,76 @@ namespace Apostol {
 
         //--------------------------------------------------------------------------------------------------------------
 
-        CServerProcess::CServerProcess(): CObject(), CGlobalComponent() {
+        CServerProcess::CServerProcess() {
             m_pTimer = nullptr;
             m_TimerInterval = 0;
 
             m_EventHandlers.PollStack().TimeOut(Config()->TimeOut());
 
             m_Server.AllocateEventHandlers(&m_EventHandlers);
-            InitializeServerHandlers();
+#ifdef WITH_STREAM_SERVER
+            m_StreamServer.AllocateEventHandlers(&m_EventHandlers);
+#endif
 #ifdef WITH_POSTGRESQL
             m_ConfName = "worker";
 #endif
         }
         //--------------------------------------------------------------------------------------------------------------
 
+        void CServerProcess::InitializeServerHandlers() {
+#if defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE >= 9)
+            m_Server.OnExecute([this](auto && AConnection) { return DoExecute(AConnection); });
+
+            m_Server.OnVerbose([this](auto && Sender, auto && AFormat, auto && args) { DoVerbose(Sender, AFormat, args); });
+            m_Server.OnAccessLog([this](auto && AConnection) { DoAccessLog(AConnection); });
+
+            m_Server.OnException([this](auto && ASender, auto && AException) { DoServerException(ASender, AException); });
+            m_Server.OnListenException([this](auto && ASender, auto && AException) { DoServerListenException(ASender, AException); });
+
+            m_Server.OnEventHandlerException([this](auto && AHandler, auto && AException) { DoServerEventHandlerException(AHandler, AException); });
+
+            m_Server.OnConnected([this](auto && Sender) { DoServerConnected(Sender); });
+            m_Server.OnDisconnected([this](auto && Sender) { DoServerDisconnected(Sender); });
+
+            m_Server.OnNoCommandHandler([this](auto && Sender, auto && AData, auto && AConnection) { DoNoCommandHandler(Sender, AData, AConnection); });
+#ifdef WITH_STREAM_SERVER
+            m_StreamServer.OnVerbose([this](auto && Sender, auto && AFormat, auto && args) { DoVerbose(Sender, AFormat, args); });
+            m_StreamServer.OnRead([this](auto && AServer, auto && ASocket, auto && Buffer) { DoExecuteStream(AServer, ASocket, Buffer); });
+            m_StreamServer.OnException([this](auto && ASender, auto && AException) { DoServerException(ASender, AException); });
+            m_StreamServer.OnEventHandlerException([this](auto && AHandler, auto && AException) { DoServerEventHandlerException(AHandler, AException); });
+#endif
+#else
+            m_Server.OnExecute(std::bind(&CServerProcess::DoExecute, this, _1));
+
+            m_Server.OnVerbose(std::bind(&CServerProcess::DoVerbose, this, _1, _2, _3));
+            m_Server.OnAccessLog(std::bind(&CServerProcess::DoAccessLog, this, _1));
+
+            m_Server.OnException(std::bind(&CServerProcess::DoServerException, this, _1, _2));
+            m_Server.OnListenException(std::bind(&CServerProcess::DoServerListenException, this, _1, _2));
+
+            m_Server.OnEventHandlerException(std::bind(&CServerProcess::DoServerEventHandlerException, this, _1, _2));
+
+            m_Server.OnConnected(std::bind(&CServerProcess::DoServerConnected, this, _1));
+            m_Server.OnDisconnected(std::bind(&CServerProcess::DoServerDisconnected, this, _1));
+
+            m_Server.OnNoCommandHandler(std::bind(&CServerProcess::DoNoCommandHandler, this, _1, _2, _3));
+#ifdef WITH_STREAM_SERVER
+            m_StreamServer.OnVerbose(std::bind(&CServerProcess::DoVerbose, this, _1, _2, _3));
+            m_StreamServer.OnExecute(std::bind(&CServerProcess::DoExecuteStream, this, _1));
+            m_StreamServer.OnException(std::bind(&CServerProcess::DoServerException, this, _1, _2));
+            m_StreamServer.OnEventHandlerException(std::bind(&CServerProcess::DoServerEventHandlerException, this, _1, _2));
+#endif
+#endif
+        }
+        //--------------------------------------------------------------------------------------------------------------
+#ifdef APOSTOL_SERVER_TYPE_TCP
+        void CServerProcess::InitializeCommandHandlers(CCommandHandlers *AHandlers, bool ADisconnect) {
+            if (Assigned(AHandlers)) {
+                AHandlers->ParseParamsDefault(false);
+                AHandlers->DisconnectDefault(ADisconnect);
+            }
+        }
+#else
         void CServerProcess::InitializeCommandHandlers(CCommandHandlers *AHandlers, bool ADisconnect) {
             if (Assigned(AHandlers)) {
                 CCommandHandler *pCommand;
@@ -133,41 +189,7 @@ namespace Apostol {
 #endif
             }
         }
-        //--------------------------------------------------------------------------------------------------------------
-
-        void CServerProcess::InitializeServerHandlers() {
-#if defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE >= 9)
-            m_Server.OnExecute([this](auto && AConnection) { return DoExecute(AConnection); });
-
-            m_Server.OnVerbose([this](auto && Sender, auto && AConnection, auto && AFormat, auto && args) { DoVerbose(Sender, AConnection, AFormat, args); });
-            m_Server.OnAccessLog([this](auto && AConnection) { DoAccessLog(AConnection); });
-
-            m_Server.OnException([this](auto && AConnection, auto && AException) { DoServerException(AConnection, AException); });
-            m_Server.OnListenException([this](auto && AConnection, auto && AException) { DoServerListenException(AConnection, AException); });
-
-            m_Server.OnEventHandlerException([this](auto && AHandler, auto && AException) { DoServerEventHandlerException(AHandler, AException); });
-
-            m_Server.OnConnected([this](auto && Sender) { DoServerConnected(Sender); });
-            m_Server.OnDisconnected([this](auto && Sender) { DoServerDisconnected(Sender); });
-
-            m_Server.OnNoCommandHandler([this](auto && Sender, auto && AData, auto && AConnection) { DoNoCommandHandler(Sender, AData, AConnection); });
-#else
-            m_Server.OnExecute(std::bind(&CServerProcess::DoExecute, this, _1));
-
-            m_Server.OnVerbose(std::bind(&CServerProcess::DoVerbose, this, _1, _2, _3, _4));
-            m_Server.OnAccessLog(std::bind(&CServerProcess::DoAccessLog, this, _1));
-
-            m_Server.OnException(std::bind(&CServerProcess::DoServerException, this, _1, _2));
-            m_Server.OnListenException(std::bind(&CServerProcess::DoServerListenException, this, _1, _2));
-
-            m_Server.OnEventHandlerException(std::bind(&CServerProcess::DoServerEventHandlerException, this, _1, _2));
-
-            m_Server.OnConnected(std::bind(&CServerProcess::DoServerConnected, this, _1));
-            m_Server.OnDisconnected(std::bind(&CServerProcess::DoServerDisconnected, this, _1));
-
-            m_Server.OnNoCommandHandler(std::bind(&CServerProcess::DoNoCommandHandler, this, _1, _2, _3));
 #endif
-        }
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::SetTimerInterval(int Value) {
@@ -198,14 +220,28 @@ namespace Apostol {
 
             m_Server.DefaultIP() = Listen;
             m_Server.DefaultPort(Port);
-
+#ifndef APOSTOL_SERVER_TYPE_TCP
             LoadSites(m_Server.Sites());
             LoadProviders(m_Server.Providers());
-
+#endif
             m_Server.InitializeBindings();
             m_Server.ActiveLevel(alBinding);
+#ifdef APOSTOL_SERVER_TYPE_TCP
+            Log()->Notice("[TCP] Listening at: %s:%d", Listen.c_str(), Port);
+#else
+            Log()->Notice("[HTTP] Listening at: %s:%d", Listen.c_str(), Port);
+#endif
+#ifdef WITH_STREAM_SERVER
+            m_StreamServer.ServerName() = Title;
 
-            Log()->Notice("Listening at: %s:%d", Listen.c_str(), Port);
+            m_StreamServer.DefaultIP() = Listen;
+            m_StreamServer.DefaultPort(Port);
+
+            m_StreamServer.InitializeBindings();
+            m_StreamServer.ActiveLevel(alBinding);
+
+            Log()->Notice("[UDP] Listening at: %s:%d", Listen.c_str(), Port);
+#endif
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -265,7 +301,7 @@ namespace Apostol {
                 PQClient.ConnInfo().ApplicationName() = "'" + Title + "'";
                 PQClient.ConnInfo().SetParameters(caPostgresConnInfo.Value());
 
-                PQClient.AllocateEventHandlers(&m_EventHandlers);
+                PQClient.AllocateEventHandlers(Server());
                 InitializePQClientHandlers(PQClient);
             }
         }
@@ -273,29 +309,39 @@ namespace Apostol {
 #endif
         void CServerProcess::ServerStart() {
             m_Server.ActiveLevel(alActive);
+#ifdef WITH_STREAM_SERVER
+            m_StreamServer.ActiveLevel(alActive);
+#endif
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::ServerStop() {
+#ifdef WITH_STREAM_SERVER
+            m_StreamServer.ActiveLevel(alBinding);
+#endif
             m_Server.ActiveLevel(alBinding);
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::ServerShutDown() {
+#ifdef WITH_STREAM_SERVER
+            m_StreamServer.ActiveLevel(alShutDown);
+#endif
             m_Server.ActiveLevel(alShutDown);
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::Reload() {
             Config()->Reload();
-
+#ifndef APOSTOL_SERVER_TYPE_TCP
             LoadSites(m_Server.Sites());
             LoadProviders(m_Server.Providers());
+#endif
         }
         //--------------------------------------------------------------------------------------------------------------
 #ifdef WITH_POSTGRESQL
         CPQClient &CServerProcess::GetPQClient(const CString &ConfName) {
-            int index = m_PQClients.IndexOfName(ConfName.IsEmpty() ? m_ConfName : ConfName);
+            const int index = m_PQClients.IndexOfName(ConfName.IsEmpty() ? m_ConfName : ConfName);
             if (index == -1)
                 throw Delphi::Exception::ExceptionFrm(NOT_FOUND_CONFIGURATION_NAME, (ConfName.IsEmpty() ? m_ConfName : ConfName).c_str());
             return m_PQClients[index].Value();
@@ -370,7 +416,7 @@ namespace Apostol {
                 COnPQPollQueryExecutedEvent &&OnExecuted, COnPQPollQueryExceptionEvent &&OnException,
                 const CString &ConfName) {
 
-            auto pQuery = GetQuery(AConnection, ConfName);
+            const auto pQuery = GetQuery(AConnection, ConfName);
 
             if (pQuery == nullptr)
                 throw Delphi::Exception::Exception(_T("ExecSQL: Get SQL query failed."));
@@ -559,7 +605,7 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoPQConnect(CObject *Sender) {
-            auto pConnection = dynamic_cast<CPQConnection *>(Sender);
+            const auto pConnection = dynamic_cast<CPQConnection *>(Sender);
             if (pConnection != nullptr) {
                 const auto& conInfo = pConnection->ConnInfo();
                 if (!conInfo.ConnInfo().IsEmpty()) {
@@ -572,7 +618,7 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoPQDisconnect(CObject *Sender) {
-            auto pConnection = dynamic_cast<CPQConnection *>(Sender);
+            const auto pConnection = dynamic_cast<CPQConnection *>(Sender);
             if (pConnection != nullptr) {
                 const auto& conInfo = pConnection->ConnInfo();
                 if (!conInfo.ConnInfo().IsEmpty()) {
@@ -596,37 +642,12 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 #endif
-        CHTTPClientItem *CServerProcess::GetClient(const CString &Host, uint16_t Port) {
-            auto pClient = m_ClientManager.Add(Host.c_str(), Port);
-
-            pClient->ClientName() = m_Server.ServerName();
-
-            pClient->AllocateEventHandlers(&m_EventHandlers);
-#if defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE >= 9)
-            pClient->OnVerbose([this](auto && Sender, auto && AConnection, auto && AFormat, auto && args) { DoVerbose(Sender, AConnection, AFormat, args); });
-            pClient->OnException([this](auto && AConnection, auto && AException) { DoServerException(AConnection, AException); });
-            pClient->OnEventHandlerException([this](auto && AHandler, auto && AException) { DoServerEventHandlerException(AHandler, AException); });
-            pClient->OnConnected([this](auto && Sender) { DoClientConnected(Sender); });
-            pClient->OnDisconnected([this](auto && Sender) { DoClientDisconnected(Sender); });
-            pClient->OnNoCommandHandler([this](auto && Sender, auto && AData, auto && AConnection) { DoNoCommandHandler(Sender, AData, AConnection); });
-#else
-            pClient->OnVerbose(std::bind(&CServerProcess::DoVerbose, this, _1, _2, _3, _4));
-            pClient->OnException(std::bind(&CServerProcess::DoServerException, this, _1, _2));
-            pClient->OnEventHandlerException(std::bind(&CServerProcess::DoServerEventHandlerException, this, _1, _2));
-            pClient->OnConnected(std::bind(&CServerProcess::DoClientConnected, this, _1));
-            pClient->OnDisconnected(std::bind(&CServerProcess::DoClientDisconnected, this, _1));
-            pClient->OnNoCommandHandler(std::bind(&CServerProcess::DoNoCommandHandler, this, _1, _2, _3));
-#endif
-            return pClient;
+        void CServerProcess::DoVerbose(CSocketEvent *Sender, LPCTSTR AFormat, va_list args) {
+            Log()->Debug(APP_LOG_DEBUG_CORE, AFormat, args);
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CServerProcess::DoServerListenException(CSocketEvent *Sender, const Delphi::Exception::Exception &E) {
-            Log()->Error(APP_LOG_ERR, 0, "ServerListenException: %s", E.what());
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
-        void CServerProcess::DoServerException(CTCPConnection *AConnection, const Delphi::Exception::Exception &E) {
+        void CServerProcess::DoServerException(CObject *Sender, const Delphi::Exception::Exception &E) {
             Log()->Error(APP_LOG_ERR, 0, "ServerException: %s", E.what());
         }
         //--------------------------------------------------------------------------------------------------------------
@@ -636,12 +657,17 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
+        void CServerProcess::DoServerListenException(CSocketEvent *Sender, const Delphi::Exception::Exception &E) {
+            Log()->Error(APP_LOG_ERR, 0, "ServerListenException: %s", E.what());
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
         void CServerProcess::DoServerConnected(CObject *Sender) {
-            auto pConnection = dynamic_cast<CHTTPServerConnection *>(Sender);
+            const auto pConnection = dynamic_cast<CTCPServerConnection *>(Sender);
             if (pConnection != nullptr) {
-                auto pSocket = pConnection->Socket();
+                const auto pSocket = pConnection->Socket();
                 if (pSocket != nullptr) {
-                    auto pHandle = pSocket->Binding();
+                    const auto pHandle = pSocket->Binding();
                     if (pHandle != nullptr) {
                         Log()->Notice(_T("[%s:%d] Connected."), pHandle->PeerIP(), pHandle->PeerPort());
                     } else {
@@ -653,11 +679,11 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoServerDisconnected(CObject *Sender) {
-            auto pConnection = dynamic_cast<CHTTPServerConnection *>(Sender);
+            const auto pConnection = dynamic_cast<CTCPServerConnection *>(Sender);
             if (pConnection != nullptr) {
-                auto pSocket = pConnection->Socket();
+                const auto pSocket = pConnection->Socket();
                 if (pSocket != nullptr) {
-                    auto pHandle = pSocket->Binding();
+                    const auto pHandle = pSocket->Binding();
                     if (pHandle != nullptr) {
                         Log()->Notice(_T("[%s:%d] Disconnected."), pHandle->PeerIP(), pHandle->PeerPort());
                     } else {
@@ -669,11 +695,11 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoClientConnected(CObject *Sender) {
-            auto pConnection = dynamic_cast<CHTTPClientConnection *>(Sender);
+            const auto pConnection = dynamic_cast<CHTTPClientConnection *>(Sender);
             if (pConnection != nullptr) {
-                auto pSocket = pConnection->Socket();
+                const auto pSocket = pConnection->Socket();
                 if (pSocket != nullptr) {
-                    auto pHandle = pSocket->Binding();
+                    const auto pHandle = pSocket->Binding();
                     if (pHandle != nullptr) {
                         Log()->Notice(_T("[%s:%d] Client connected."), pHandle->PeerIP(), pHandle->PeerPort());
                     } else {
@@ -685,11 +711,11 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoClientDisconnected(CObject *Sender) {
-            auto pConnection = dynamic_cast<CHTTPClientConnection *>(Sender);
+            const auto pConnection = dynamic_cast<CHTTPClientConnection *>(Sender);
             if (pConnection != nullptr) {
-                auto pSocket = pConnection->Socket();
+                const auto pSocket = pConnection->Socket();
                 if (pSocket != nullptr) {
-                    auto pHandle = pSocket->Binding();
+                    const auto pHandle = pSocket->Binding();
                     if (pHandle != nullptr) {
                         Log()->Notice(_T("[%s:%d] Client disconnected."), pHandle->PeerIP(), pHandle->PeerPort());
                     } else {
@@ -700,14 +726,8 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        void CServerProcess::DoVerbose(CSocketEvent *Sender, CTCPConnection *AConnection, LPCTSTR AFormat, va_list args) {
-            Log()->Debug(APP_LOG_DEBUG_CORE, AFormat, args);
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
         void CServerProcess::DoAccessLog(CTCPConnection *AConnection) {
-
-            auto pConnection = dynamic_cast<CHTTPServerConnection *> (AConnection);
+            const auto pConnection = dynamic_cast<CHTTPServerConnection *> (AConnection);
 
             if (pConnection == nullptr)
                 return;
@@ -720,17 +740,17 @@ namespace Apostol {
 
             TCHAR szTime[PATH_MAX / 4] = {0};
 
-            time_t wtime = time(nullptr);
-            struct tm *wtm = localtime(&wtime);
+            const time_t wtime = time(nullptr);
+            const tm *wtm = localtime(&wtime);
 
-            if ((wtm != nullptr) && (strftime(szTime, sizeof(szTime), "%d/%b/%Y:%T %z", wtm) != 0)) {
+            if (wtm != nullptr && strftime(szTime, sizeof(szTime), "%d/%b/%Y:%T %z", wtm) != 0) {
 
                 const auto& referer = caRequest.Headers[_T("Referer")];
                 const auto& user_agent = caRequest.Headers[_T("User-Agent")];
 
-                auto pSocket = pConnection->Socket();
+                const auto pSocket = pConnection->Socket();
                 if (pSocket != nullptr) {
-                    auto pHandle = pSocket->Binding();
+                    const auto pHandle = pSocket->Binding();
                     if (pHandle != nullptr) {
                         Log()->Access(_T("%s %d %.3f [%s] \"%s %s HTTP/%d.%d\" %d %d \"%s\" \"%s\"\r\n"),
                                       pHandle->PeerIP(), pHandle->PeerPort(),
@@ -747,10 +767,34 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CServerProcess::DoNoCommandHandler(CSocketEvent *Sender, const CString &Data, CTCPConnection *AConnection) {
-            Log()->Error(APP_LOG_ERR, 0, "No command handler: %s", Data.IsEmpty() ? "(null)" : Data.c_str());
+            Log()->Error(APP_LOG_ERR, 0, "No command handler: %s", Data.IsEmpty() ? CString("(null)").c_str() : Data.c_str());
         }
         //--------------------------------------------------------------------------------------------------------------
+#ifndef APOSTOL_SERVER_TYPE_TCP
+        CHTTPClientItem *CServerProcess::GetClient(const CString &Host, uint16_t Port) {
+            const auto pClient = m_ClientManager.Add(Host.c_str(), Port);
 
+            pClient->ClientName() = m_Server.ServerName();
+
+            pClient->AllocateEventHandlers(&m_EventHandlers);
+#if defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE >= 9)
+            pClient->OnVerbose([this](auto && Sender, auto && AFormat, auto && args) { DoVerbose(Sender, AFormat, args); });
+            pClient->OnException([this](auto && AConnection, auto && AException) { DoServerException(AConnection, AException); });
+            pClient->OnEventHandlerException([this](auto && AHandler, auto && AException) { DoServerEventHandlerException(AHandler, AException); });
+            pClient->OnConnected([this](auto && Sender) { DoClientConnected(Sender); });
+            pClient->OnDisconnected([this](auto && Sender) { DoClientDisconnected(Sender); });
+            pClient->OnNoCommandHandler([this](auto && Sender, auto && AData, auto && AConnection) { DoNoCommandHandler(Sender, AData, AConnection); });
+#else
+            pClient->OnVerbose(std::bind(&CServerProcess::DoVerbose, this, _1, _2, _3));
+            pClient->OnException(std::bind(&CServerProcess::DoServerException, this, _1, _2));
+            pClient->OnEventHandlerException(std::bind(&CServerProcess::DoServerEventHandlerException, this, _1, _2));
+            pClient->OnConnected(std::bind(&CServerProcess::DoClientConnected, this, _1));
+            pClient->OnDisconnected(std::bind(&CServerProcess::DoClientDisconnected, this, _1));
+            pClient->OnNoCommandHandler(std::bind(&CServerProcess::DoNoCommandHandler, this, _1, _2, _3));
+#endif
+            return pClient;
+        }
+        //--------------------------------------------------------------------------------------------------------------
         void CServerProcess::DoGet(CCommand *ACommand) {
 
         }
@@ -883,7 +927,7 @@ namespace Apostol {
                     }
 
                     if (FileExists(configFile.c_str())) {
-                        int Index = Sites.AddPair(siteName, CJSON());
+                        const int Index = Sites.AddPair(siteName, CJSON());
                         auto& Config = Sites[Index].Value();
                         Config.LoadFromFile(configFile.c_str());
                         if (siteName == "default" || siteName == "*")
@@ -912,8 +956,6 @@ namespace Apostol {
         void CServerProcess::LoadOAuth2(const CString &FileName, const CString &ProviderName,
                 const CString &ApplicationName, CProviders &Providers) {
 
-            int index;
-
             const auto& pathOAuth2 = Config()->Prefix() + "oauth2/";
             CString configFile(FileName);
 
@@ -925,7 +967,7 @@ namespace Apostol {
                 CJSONObject Json;
                 Json.LoadFromFile(configFile.c_str());
 
-                index = Providers.IndexOfName(ProviderName);
+                int index = Providers.IndexOfName(ProviderName);
                 if (index == -1)
                     index = Providers.AddPair(ProviderName, CProvider(ProviderName));
                 auto& Provider = Providers[index].Value();
@@ -935,7 +977,7 @@ namespace Apostol {
             }
         }
         //--------------------------------------------------------------------------------------------------------------
-
+#endif
     }
 }
 

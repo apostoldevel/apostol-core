@@ -88,17 +88,21 @@ namespace Apostol {
 
         auto OnException = [](CTCPConnection *Sender, const Delphi::Exception::Exception &E) {
 
-            auto pConnection = dynamic_cast<CHTTPClientConnection *> (Sender);
-            auto pClient = dynamic_cast<CHTTPClient *> (pConnection->Client());
+            const auto pConnection = dynamic_cast<CHTTPClientConnection *> (Sender);
 
-            DebugReply(pConnection->Reply());
+            if (pConnection != nullptr) {
+                const auto pClient = dynamic_cast<CHTTPClient *> (pConnection->Client());
+                if (pClient != nullptr) {
+                    DebugReply(pConnection->Reply());
 
-            Log()->Error(APP_LOG_ERR, 0, "[%s:%d] %s", pClient->Host().c_str(), pClient->Port(), E.what());
+                    Log()->Error(APP_LOG_ERR, 0, "[%s:%d] %s", pClient->Host().c_str(), pClient->Port(), E.what());
+                }
+            }
         };
 
-        CLocation token_uri(URI);
+        const CLocation token_uri(URI);
 
-        auto pClient = OnClient(token_uri);
+        const auto pClient = OnClient(token_uri);
 
         pClient->Data().Values("token_uri", token_uri.pathname);
         pClient->Data().Values("assertion", Assertion);
@@ -144,17 +148,21 @@ namespace Apostol {
 
         auto OnException = [](CTCPConnection *Sender, const Delphi::Exception::Exception &E) {
 
-            auto pConnection = dynamic_cast<CHTTPClientConnection *> (Sender);
-            auto pClient = dynamic_cast<CHTTPClient *> (pConnection->Client());
+            const auto pConnection = dynamic_cast<CHTTPClientConnection *> (Sender);
 
-            DebugReply(pConnection->Reply());
+            if (pConnection != nullptr) {
+                const auto pClient = dynamic_cast<CHTTPClient *> (pConnection->Client());
+                if (pClient != nullptr) {
+                    DebugReply(pConnection->Reply());
 
-            Log()->Error(APP_LOG_ERR, 0, "[%s:%d] %s", pClient->Host().c_str(), pClient->Port(), E.what());
+                    Log()->Error(APP_LOG_ERR, 0, "[%s:%d] %s", pClient->Host().c_str(), pClient->Port(), E.what());
+                }
+            }
         };
 
-        CLocation token_uri(URI);
+        const CLocation token_uri(URI);
 
-        auto pClient = OnClient(token_uri);
+        const auto pClient = OnClient(token_uri);
 
         pClient->Data().Values("token_uri", token_uri.pathname);
         pClient->Data().Values("client_id", ClientId);

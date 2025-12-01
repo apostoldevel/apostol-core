@@ -42,8 +42,8 @@ namespace Apostol {
 
         //--------------------------------------------------------------------------------------------------------------
 
-        CApplication::CApplication(int argc, char *const *argv): CProcessManager(),
-            CApplicationProcess(nullptr, this, ptMain, "application"), CCustomApplication(argc, argv) {
+        CApplication::CApplication(const int argc, char *const *argv):
+                CCustomApplication(argc, argv), CApplicationProcess(nullptr, this, ptMain, "application") {
             GApplication = this;
             m_ProcessType = ptSingle;
         }
@@ -70,7 +70,7 @@ namespace Apostol {
 #else
             Log()->DebugLevel(APP_LOG_DEBUG_CORE);
 #endif
-            u_int level;
+            u_int level = APP_LOG_STDERR;
             for (int i = 0; i < Config()->LogFiles().Count(); ++i) {
                 const auto &key = Config()->LogFiles().Names(i);
                 const auto &value = Config()->LogFiles().Values(key);
@@ -104,9 +104,6 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CApplication::Daemonize() {
-
-            int  fd;
-
             switch (fork()) {
                 case -1:
                     throw EOSError(errno, "fork() failed");
@@ -130,7 +127,7 @@ namespace Apostol {
                 throw EOSError(errno, "chdir(\"/\") failed");
             }
 
-            fd = open("/dev/null", O_RDWR);
+            const int fd = open("/dev/null", O_RDWR);
             if (fd == -1) {
                 throw EOSError(errno, "open(\"/dev/null\") failed");
             }
@@ -353,7 +350,7 @@ namespace Apostol {
 
                     Log()->UseStdErr(false);
                     Log()->RedirectStdErr();
-                };
+                }
             }
 
             if (m_ProcessType == ptCustom) {
@@ -432,7 +429,7 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        class CSignalProcess *CApplicationProcess::Create(CCustomProcess *AParent, CApplication *AApplication, CProcessType AType) {
+        CSignalProcess *CApplicationProcess::Create(CCustomProcess *AParent, CApplication *AApplication, CProcessType AType) {
             switch (AType) {
                 case ptSingle:
                     return new CProcessSingle(AParent, AApplication);
@@ -484,7 +481,7 @@ namespace Apostol {
                 pProcess->Data(Data);
             }
 
-            pid_t pid = fork();
+            const pid_t pid = fork();
 
             switch (pid) {
 
@@ -600,10 +597,6 @@ namespace Apostol {
         CProcessSingle::CProcessSingle(CCustomProcess *AParent, CApplication *AApplication):
                 inherited(AParent, AApplication, ptSingle, "single"), CModuleProcess() {
 
-            InitializeServer(AApplication->Title());
-#ifdef WITH_POSTGRESQL
-            InitializePQClients(AApplication->Title());
-#endif
             if (Config()->Helper()) {
                 CreateHelpers(this);
             } else {
@@ -639,12 +632,17 @@ namespace Apostol {
 
             Log()->Notice(MSG_PROCESS_START, GetProcessName(), Application()->Header().c_str());
 
+            SetLimitNoFile(Config()->LimitNoFile());
+
             InitSignals();
 
-            SetLimitNoFile(Config()->LimitNoFile());
+            InitializeServer(Application()->Title());
+            InitializeServerHandlers();
 
             ServerStart();
 #ifdef WITH_POSTGRESQL
+            InitializePQClients(Application()->Title());
+
             if (Config()->Helper()) {
                 PQClientStart("helper");
             } else {
@@ -713,6 +711,7 @@ namespace Apostol {
                 inherited(AParent, AApplication, ptMaster, "master"), CModuleProcess() {
 
             InitializeServer(AApplication->Title());
+            InitializeServerHandlers();
         }
         //--------------------------------------------------------------------------------------------------------------
 
@@ -758,8 +757,6 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CProcessMaster::StartCustomProcesses(int Flag) {
-            CCustomProcess *pProcess;
-
             int i = 0;
             if (Flag == PROCESS_JUST_RESPAWN) {
                 i = Application()->ProcessCount() - 1;
@@ -767,7 +764,7 @@ namespace Apostol {
             }
 
             for (; i < Application()->ProcessCount(); ++i) {
-                pProcess = Application()->Processes(i);
+                const auto pProcess = Application()->Processes(i);
                 if (pProcess->Type() == ptCustom)
                     StartProcess(ptCustom, i, Flag);
             }
@@ -775,11 +772,8 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CProcessMaster::SignalToProcess(CProcessType Type, int SigNo) {
-            int err;
-            CCustomProcess *pProcess;
-
             for (int i = 0; i < Application()->ProcessCount(); ++i) {
-                pProcess = Application()->Processes(i);
+                const auto pProcess = Application()->Processes(i);
 
                 if (pProcess->Type() != Type)
                     continue;
@@ -810,7 +804,7 @@ namespace Apostol {
                 Log()->Debug(APP_LOG_DEBUG_CORE, "kill (%P, %d)", pProcess->Pid(), SigNo);
 
                 if (kill(pProcess->Pid(), SigNo) == -1) {
-                    err = errno;
+                    const int err = errno;
                     Log()->Error(APP_LOG_ALERT, err, "kill(%P, %d) failed", pProcess->Pid(), SigNo);
 
                     if (err == ESRCH) {
@@ -844,13 +838,10 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         bool CProcessMaster::ReapChildren() {
-
             bool live = false;
-            CSignalProcess *pProcess;
 
             for (int i = 0; i < Application()->ProcessCount(); ++i) {
-
-                pProcess = Application()->Processes(i);
+                const auto pProcess = Application()->Processes(i);
 
                 if (pProcess->Type() == ptMain)
                     continue;
@@ -911,7 +902,6 @@ namespace Apostol {
             int sigio;
             sigset_t set {};
             struct itimerval itv = {};
-            bool live;
             uint_t delay;
 
             CreatePidFile();
@@ -925,9 +915,8 @@ namespace Apostol {
             delay = 0;
             sigio = 0;
 
-            CSignalProcess *pProcess;
             for (int i = 0; i < Application()->ProcessCount(); ++i) {
-                pProcess = Application()->Processes(i);
+                const auto pProcess = Application()->Processes(i);
 
                 Log()->Debug(APP_LOG_DEBUG_EVENT, _T("process: %i %P:%P\texiting: %d\texited: %d\tdetached: %d\trespawn: %d\tjustSpawn: %d\tname: %s"),
                               i,
@@ -942,7 +931,7 @@ namespace Apostol {
                 );
             }
 
-            live = true;
+            bool live = true;
             while (!(live && (sig_terminate || sig_quit))) {
 
                 if (delay) {
@@ -1038,7 +1027,7 @@ namespace Apostol {
 
                     Log()->Debug(APP_LOG_DEBUG_EVENT, _T("reopening logs"));
 
-                    Application()->CreateLogFiles();
+                    CApplication::CreateLogFiles();
 
                     SignalToProcesses(signal_value(SIG_REOPEN_SIGNAL));
                 }
@@ -1066,12 +1055,10 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CProcessSignaller::SignalToProcess(pid_t pid) {
-
-            CSignal *Signal;
             LPCTSTR lpszSignal = Config()->Signal().c_str();
 
             for (int i = 0; i < SignalsCount(); ++i) {
-                Signal = Signals(i);
+                const auto Signal = Signals(i);
                 if (SameText(lpszSignal, Signal->Name())) {
                     if (kill(pid, Signal->SigNo()) == -1) {
                         Log()->Error(APP_LOG_ALERT, errno, _T("kill(%P, %d) failed"), pid, Signal->SigNo());
@@ -1119,7 +1106,7 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CProcessNewBinary::Run() {
-            auto pContext = (CExecuteContext *) Data();
+            const auto pContext = (CExecuteContext *) Data();
             Application()->Header(pContext->name);
             ExecuteProcess(pContext);
         }
@@ -1131,29 +1118,40 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         CProcessWorker::CProcessWorker(CCustomProcess *AParent, CApplication *AApplication) :
-                inherited(AParent, AApplication, ptWorker, "worker"), CWorkerProcess() {
+                inherited(AParent, AApplication, ptWorker, "worker") {
 
-            auto pParent = dynamic_cast<CServerProcess *>(AParent);
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CProcessWorker::Init() {
+            InitSignals();
+
+            const auto pParent = dynamic_cast<CServerProcess *>(Parent());
             if (pParent != nullptr) {
                 Server() = pParent->Server();
-                Log()->Debug(APP_LOG_DEBUG_EVENT, _T("worker process: http server assigned by parent"));
+#ifdef WITH_STREAM_SERVER
+                StreamServer() = pParent->StreamServer();
+#endif
+                Log()->Debug(APP_LOG_DEBUG_EVENT, _T("worker process: server assigned by parent"));
             } else {
-                InitializeServer(AApplication->Title());
+                InitializeServer(Application()->Title());
             }
+
+            InitializeServerHandlers();
 #ifdef WITH_POSTGRESQL
-            InitializePQClients(AApplication->Title());
+            InitializePQClients(Application()->Title());
 #endif
         }
         //--------------------------------------------------------------------------------------------------------------
 
         void CProcessWorker::BeforeRun() {
-            Application()->Header(Application()->Name() + ": worker process (" + CModuleProcess::ModulesNames() + ")");
+            Application()->Header(Application()->Name() + ": worker process (" + ModulesNames() + ")");
 
             Log()->Notice(MSG_PROCESS_START, GetProcessName(), Application()->Header().c_str());
 
-            InitSignals();
-
             SetLimitNoFile(Config()->LimitNoFile());
+
+            Init();
 
             ServerStart();
 #ifdef WITH_POSTGRESQL
@@ -1176,7 +1174,7 @@ namespace Apostol {
             Log()->Debug(APP_LOG_DEBUG_EVENT, _T("worker process: postgres clients stopped"));
 #endif
             ServerStop();
-            Log()->Debug(APP_LOG_DEBUG_EVENT, _T("worker process: http server stopped"));
+            Log()->Debug(APP_LOG_DEBUG_EVENT, _T("worker process: server stopped"));
 
             CApplicationProcess::AfterRun();
         }
@@ -1214,7 +1212,7 @@ namespace Apostol {
 
                 if (sig_reopen) {
                     sig_reopen = 0;
-                    Log()->Debug(APP_LOG_DEBUG_EVENT, _T("reopening logs"));
+                    //Log()->Debug(APP_LOG_DEBUG_EVENT, _T("reopening logs"));
                     //ReopenFiles(-1);
                 }
             }
@@ -1230,15 +1228,26 @@ namespace Apostol {
         CProcessHelper::CProcessHelper(CCustomProcess *AParent, CApplication *AApplication) :
                 inherited(AParent, AApplication, ptHelper, "helper"), CHelperProcess() {
 
-            auto pParent = dynamic_cast<CServerProcess *>(AParent);
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        void CProcessHelper::Init() {
+            InitSignals();
+
+            const auto pParent = dynamic_cast<CServerProcess *>(Parent());
             if (pParent != nullptr) {
                 Server() = pParent->Server();
-                Log()->Debug(APP_LOG_DEBUG_EVENT, _T("helper process: http server assigned by parent"));
+#ifdef WITH_STREAM_SERVER
+                StreamServer() = pParent->StreamServer();
+#endif
+                Log()->Debug(APP_LOG_DEBUG_EVENT, _T("helper process: server assigned by parent"));
             } else {
-                InitializeServer(AApplication->Title());
+                InitializeServer(Application()->Title());
             }
+
+            InitializeServerHandlers();
 #ifdef WITH_POSTGRESQL
-            InitializePQClients(AApplication->Title());
+            InitializePQClients(Application()->Title());
 #endif
         }
         //--------------------------------------------------------------------------------------------------------------
@@ -1253,9 +1262,10 @@ namespace Apostol {
 
             Log()->Notice(MSG_PROCESS_START, GetProcessName(), Application()->Header().c_str());
 
-            InitSignals();
-
             SetLimitNoFile(Config()->LimitNoFile());
+
+            Init();
+
 #ifdef WITH_POSTGRESQL
             PQClientStart("helper");
 #endif
@@ -1308,7 +1318,7 @@ namespace Apostol {
 
                 if (sig_reopen) {
                     sig_reopen = 0;
-                    Log()->Debug(APP_LOG_DEBUG_EVENT, _T("reopening logs"));
+                    //Log()->Debug(APP_LOG_DEBUG_EVENT, _T("reopening logs"));
                     //ReopenFiles(-1);
                 }
             }

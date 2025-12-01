@@ -272,7 +272,7 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CCustomWebSocketClient::DoConnectStart(CIOHandlerSocket *AIOHandler, CPollEventHandler *AHandler) {
-            auto pConnection = new CWebSocketClientConnection(this);
+            const auto pConnection = new CWebSocketClientConnection(this);
             pConnection->IOHandler(AIOHandler);
             pConnection->AutoFree(false);
             AHandler->Binding(pConnection);
@@ -281,7 +281,7 @@ namespace Apostol {
         //--------------------------------------------------------------------------------------------------------------
 
         void CCustomWebSocketClient::DoConnect(CPollEventHandler *AHandler) {
-            auto pConnection = dynamic_cast<CWebSocketClientConnection *> (AHandler->Binding());
+            const auto pConnection = dynamic_cast<CWebSocketClientConnection *> (AHandler->Binding());
 
             if (pConnection == nullptr) {
                 AHandler->Stop();
@@ -291,7 +291,7 @@ namespace Apostol {
             try {
                 const auto pIOHandler = dynamic_cast<CIOHandlerSocket *>(pConnection->IOHandler());
 
-                if (pIOHandler->Binding()->CheckConnection()) {
+                if (pIOHandler != nullptr && pIOHandler->Binding()->CheckConnection()) {
                     ClearErrorCount();
 #if defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE >= 9)
                     pConnection->OnDisconnected([this](auto &&Sender) { DoDisconnected(Sender); });
@@ -481,13 +481,6 @@ namespace Apostol {
         void CCustomWebSocketClient::DoHeartbeat() {
             if (m_OnHeartbeat != nullptr) {
                 m_OnHeartbeat(this);
-            }
-        }
-        //--------------------------------------------------------------------------------------------------------------
-
-        void CCustomWebSocketClient::DoTimeOut() {
-            if (m_OnTimeOut != nullptr) {
-                m_OnTimeOut(this);
             }
         }
         //--------------------------------------------------------------------------------------------------------------

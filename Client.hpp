@@ -189,7 +189,6 @@ namespace Apostol {
             int m_TimerInterval;
 
             CNotifyEvent m_OnHeartbeat;
-            CNotifyEvent m_OnTimeOut;
 
             COnWebSocketClientMessage m_OnMessage;
             COnWebSocketClientError m_OnError;
@@ -232,7 +231,6 @@ namespace Apostol {
             virtual void Heartbeat(CDateTime Now);
 
             void DoHeartbeat();
-            void DoTimeOut();
 
             virtual void DoMessage(const CWSMessage &Message);
             virtual void DoError(int Code, const CString &Message);
@@ -268,7 +266,7 @@ namespace Apostol {
 
             static CWSMessage RequestToMessage(CWebSocketConnection *AWSConnection);
 
-            CWebSocketClientConnection *Connection() { return m_pConnection; };
+            CWebSocketClientConnection *Connection() const { return m_pConnection; };
 
             CWebSocketMessageHandlerManager &Messages() { return m_Messages; };
             const CWebSocketMessageHandlerManager &Messages() const { return m_Messages; };
@@ -294,8 +292,8 @@ namespace Apostol {
             const CNotifyEvent &OnHeartbeat() const { return m_OnHeartbeat; }
             void OnHeartbeat(CNotifyEvent && Value) { m_OnHeartbeat = Value; }
 
-            const CNotifyEvent &OnTimeOut() const { return m_OnTimeOut; }
-            void OnTimeOut(CNotifyEvent && Value) { m_OnTimeOut = Value; }
+            const COnSocketConnectionEvent &OnTimeOut() const override { return m_OnTimeOut; }
+            void OnTimeOut(COnSocketConnectionEvent && Value) override { m_OnTimeOut = Value; }
 
             const COnWebSocketClientMessage &OnMessage() const { return m_OnMessage; }
             void OnMessage(COnWebSocketClientMessage && Value) { m_OnMessage = Value; }

@@ -91,20 +91,22 @@ namespace Apostol {
             /// Ini file section name
             CString m_SectionName;
 
+#ifndef APOSTOL_SERVER_TYPE_TCP
             CStringPairs m_Sites;
 
             mutable CString m_AllowedMethods;
             mutable CString m_AllowedHeaders;
+#endif
 
         protected:
-
-            CStringList m_Headers;
-
-            CStringList m_Methods { true };
 
             CModuleStatus m_ModuleStatus;
 
             CModuleProcess *m_pModuleProcess;
+#ifndef APOSTOL_SERVER_TYPE_TCP
+            CStringList m_Headers;
+
+            CStringList m_Methods { true };
 
             virtual void InitMethods() abstract;
 
@@ -120,12 +122,11 @@ namespace Apostol {
 
             const CString& GetAllowedMethods() const;
             const CString& GetAllowedHeaders() const;
-
-            virtual void DoVerbose(CSocketEvent *Sender, CTCPConnection *AConnection, LPCTSTR AFormat, va_list args);
+#endif
+            virtual void DoVerbose(CSocketEvent *Sender, LPCTSTR AFormat, va_list args);
             virtual void DoException(CTCPConnection *AConnection, const Delphi::Exception::Exception &E);
             virtual void DoEventHandlerException(CPollEventHandler *AHandler, const Delphi::Exception::Exception &E);
             virtual void DoNoCommandHandler(CSocketEvent *Sender, const CString &Data, CTCPConnection *AConnection);
-
 #ifdef WITH_POSTGRESQL
             virtual void DoPostgresNotify(CPQConnection *AConnection, PGnotify *ANotify);
             virtual void DoPostgresQueryExecuted(CPQPollQuery *APollQuery);
@@ -143,9 +144,6 @@ namespace Apostol {
             CModuleStatus ModuleStatus() const { return m_ModuleStatus; }
             CModuleProcess *ModuleProcess() const{ return m_pModuleProcess; }
 
-            const CString& AllowedMethods() const { return GetAllowedMethods(); };
-            const CString& AllowedHeaders() const { return GetAllowedHeaders(); };
-
             virtual bool Enabled() abstract;
             virtual bool CheckLocation(const CLocation &Location);
 
@@ -156,10 +154,25 @@ namespace Apostol {
             virtual void AfterExecute(CModuleProcess *AProcess) {};
 
             virtual void Heartbeat(CDateTime Datetime);
-            virtual bool Execute(CHTTPServerConnection *AConnection);
 
             static CString GetHostName();
             static CString GetIPByHostName(const CString &HostName);
+#ifdef WITH_STREAM_SERVER
+            virtual bool Execute(CUDPAsyncServer *AServer, CSocketHandle *ASocket, CManagedBuffer &ABuffer);
+
+            CUDPAsyncServer &StreamServer();
+            const CUDPAsyncServer &StreamServer() const;
+#endif
+#ifdef APOSTOL_SERVER_TYPE_TCP
+            virtual bool Execute(CTCPServerConnection *AConnection);
+
+            CTCPAsyncServer &Server();
+            const CTCPAsyncServer &Server() const;
+#else
+            virtual bool Execute(CHTTPServerConnection *AConnection);
+
+            CHTTPServer &Server();
+            const CHTTPServer &Server() const;
 
             static CString GetUserAgent(CHTTPServerConnection *AConnection);
             static CString GetOrigin(CHTTPServerConnection *AConnection);
@@ -167,16 +180,36 @@ namespace Apostol {
             static CString GetRealIP(CHTTPServerConnection *AConnection);
             static CString GetHost(CHTTPServerConnection *AConnection);
 
-            static bool AllowedLocation(const CString &Path, const CStringList &List);
+            static bool AllowedLocation(const CString &Patch, const CStringList &List);
 
             CString GetRoot(const CString &Host) const;
             const CString& GetSiteRoot(const CString &Host) const;
             const CStringList& GetSiteConfig(const CString &Host) const;
 
-            CHTTPClient *GetClient(const CString &Host, uint16_t Port);
+            CHTTPClient *GetClient(const CString &Host, uint16_t Port) const;
 
-            CHTTPServer &Server();
-            const CHTTPServer &Server() const;
+            CStringList &Methods() { return m_Methods; };
+            const CStringList &Methods() const { return m_Methods; };
+
+            const CString& AllowedMethods() const { return GetAllowedMethods(); };
+            const CString& AllowedHeaders() const { return GetAllowedHeaders(); };
+            static void ContentToJson(const CHTTPRequest &Request, CJSON &Json);
+
+            static void ListToJson(const CStringList &List, CString &Json, bool DataArray = false, const CString &ObjectName = CString());
+
+            static void ExceptionToJson(int ErrorCode, const std::exception &e, CString& Json);
+
+            static void ReplyError(CHTTPServerConnection *AConnection, CHTTPReply::CStatusType ErrorCode, const CString &Message);
+
+            void Redirect(CHTTPServerConnection *AConnection, const CString& Location, bool SendNow = false) const;
+
+            static CString TryFiles(const CString &Root, const CStringList &uris, const CString &Location);
+
+            static bool ResourceExists(CString &Resource, const CString &Root, const CString &Path, const CStringList &TryFiles = CStringList());
+
+            bool SendResource(CHTTPServerConnection *AConnection, const CString &Path, LPCTSTR AContentType = nullptr,
+                bool SendNow = false, const CStringList& TryFiles = CStringList(), bool SendNotFound = true) const;
+#endif
 #ifdef WITH_POSTGRESQL
             CPQClient &PQClient(const CString &ConfName);
             const CPQClient &PQClient(const CString &ConfName) const;
@@ -197,25 +230,6 @@ namespace Apostol {
             static void PQResultToList(CPQResult *Result, CStringList &List);
             static void PQResultToJson(CPQResult *Result, CString &Json, const CString &Format = CString(), const CString &ObjectName = CString());
 #endif
-            CStringList &Methods() { return m_Methods; };
-            const CStringList &Methods() const { return m_Methods; };
-
-            static void ContentToJson(const CHTTPRequest &Request, CJSON &Json);
-            static void ListToJson(const CStringList &List, CString &Json, bool DataArray = false, const CString &ObjectName = CString());
-
-            static void ExceptionToJson(int ErrorCode, const std::exception &e, CString& Json);
-
-            static void ReplyError(CHTTPServerConnection *AConnection, CHTTPReply::CStatusType ErrorCode, const CString &Message);
-
-            void Redirect(CHTTPServerConnection *AConnection, const CString& Location, bool SendNow = false) const;
-
-            static CString TryFiles(const CString &Root, const CStringList &uris, const CString &Location);
-
-            static bool ResourceExists(CString &Resource, const CString &Root, const CString &Path, const CStringList &TryFiles) ;
-
-            bool SendResource(CHTTPServerConnection *AConnection, const CString &Path, LPCTSTR AContentType = nullptr,
-                bool SendNow = false, const CStringList& TryFiles = CStringList(), bool SendNotFound = true) const;
-
         };
 
         //--------------------------------------------------------------------------------------------------------------
@@ -228,9 +242,14 @@ namespace Apostol {
             typedef CCollection inherited;
 
         private:
-
+#ifdef WITH_STREAM_SERVER
+            bool ExecuteStreamModule(CUDPAsyncServer *AServer, CSocketHandle *ASocket, CManagedBuffer &ABuffer, CApostolModule *AModule);
+#endif
+#ifdef APOSTOL_SERVER_TYPE_TCP
+            bool ExecuteModule(CTCPServerConnection *AConnection, CApostolModule *AModule);
+#else
             bool ExecuteModule(CHTTPServerConnection *AConnection, CApostolModule *AModule);
-
+#endif
         protected:
 
             virtual void DoInitialization(CApostolModule *AModule) abstract;
@@ -243,22 +262,24 @@ namespace Apostol {
 
             explicit CModuleManager(): CCollection(this) {
 
-            };
+            }
 
-            CString ModulesNames();
+            CString ModulesNames() const;
 
             void Initialization();
             void Finalization();
 
-            void HeartbeatModules(CDateTime Datetime);
-
+            void HeartbeatModules(CDateTime Datetime) const;
+#ifdef WITH_STREAM_SERVER
+            void ExecuteStreamModules(CUDPAsyncServer *Server, CSocketHandle *Socket, CManagedBuffer &Buffer);
+#endif
             void ExecuteModules(CTCPConnection *AConnection);
 
             int ModuleCount() const { return inherited::Count(); }
-            void DeleteModule(int Index) { inherited::Delete(Index); }
+            void DeleteModule(const int Index) { inherited::Delete(Index); }
 
-            CApostolModule *Modules(int Index) { return (CApostolModule *) inherited::GetItem(Index); }
-            void Modules(int Index, CApostolModule *Value) { inherited::SetItem(Index, (CCollectionItem *) Value); }
+            CApostolModule *Modules(const int Index) const { return dynamic_cast<CApostolModule *> (inherited::GetItem(Index)); }
+            void Modules(const int Index, CApostolModule *Value) { inherited::SetItem(Index, Value); }
         };
 
         //--------------------------------------------------------------------------------------------------------------
@@ -267,7 +288,7 @@ namespace Apostol {
 
         //--------------------------------------------------------------------------------------------------------------
 
-        class CModuleProcess: public CServerProcess, public CModuleManager {
+        class CModuleProcess: public CModuleManager, public CServerProcess {
         protected:
 
             void DoInitialization(CApostolModule *AModule) override;
@@ -277,11 +298,14 @@ namespace Apostol {
             void DoAfterExecuteModule(CApostolModule *AModule) override;
 
             void DoTimer(CPollEventHandler *AHandler) override;
+#ifdef WITH_STREAM_SERVER
+            void DoExecuteStream(CUDPAsyncServer *Server, CSocketHandle *Socket, CManagedBuffer &Buffer) override;
+#endif
             bool DoExecute(CTCPConnection *AConnection) override;
 
         public:
 
-            CModuleProcess();
+            CModuleProcess() = default;
 
             ~CModuleProcess() override = default;
 

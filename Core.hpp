@@ -92,7 +92,7 @@ public:
 
             for (int i = 0; i < Sections.Count(); i++) {
                 const auto& Section = Sections[i];
-                int Index = Profiles.AddPair(Section, CStringList());
+                const int Index = Profiles.AddPair(Section, CStringList());
                 auto& Config = Profiles[Index].Value();
                 OnInitConfig(IniFile, Section, Config);
             }
@@ -147,9 +147,9 @@ public:
 #ifdef _DEBUG
         if (AConnection != nullptr) {
 
-            auto pSocket = AConnection->Socket();
+            const auto pSocket = AConnection->Socket();
             if (pSocket != nullptr) {
-                auto pHandle = pSocket->Binding();
+                const auto pHandle = pSocket->Binding();
                 if (pHandle != nullptr) {
                     DebugMessage(_T("\n[%p] [%s:%d] [%d] [WebSocket] [OnRequest] "), AConnection,
                                  pHandle->PeerIP(), pHandle->PeerPort(), pHandle->Handle());
@@ -159,11 +159,11 @@ public:
             WSDebug(AConnection->WSRequest());
 
             static auto OnRequest = [](CObject *Sender) {
-                auto pConnection = dynamic_cast<CWebSocketConnection *> (Sender);
+                const auto pConnection = dynamic_cast<CWebSocketConnection *> (Sender);
                 if (pConnection != nullptr) {
-                    auto pSocket = pConnection->Socket();
+                    const auto pSocket = pConnection->Socket();
                     if (pSocket != nullptr) {
-                        auto pHandle = pSocket->Binding();
+                        const auto pHandle = pSocket->Binding();
                         if (pHandle != nullptr) {
                             DebugMessage(_T("\n[%p] [%s:%d] [%d] [WebSocket] [OnRequest] "), pConnection,
                                          pHandle->PeerIP(), pHandle->PeerPort(), pHandle->Handle());
@@ -175,11 +175,11 @@ public:
             };
 
             static auto OnWaitRequest = [](CObject *Sender) {
-                auto pConnection = dynamic_cast<CWebSocketConnection *> (Sender);
+                const auto pConnection = dynamic_cast<CWebSocketConnection *> (Sender);
                 if (pConnection != nullptr) {
-                    auto pSocket = pConnection->Socket();
+                    const auto pSocket = pConnection->Socket();
                     if (pSocket != nullptr) {
-                        auto pHandle = pSocket->Binding();
+                        const auto pHandle = pSocket->Binding();
                         if (pHandle != nullptr) {
                             DebugMessage(_T("\n[%p] [%s:%d] [%d] [WebSocket] [OnWaitRequest] "), pConnection,
                                          pHandle->PeerIP(), pHandle->PeerPort(), pHandle->Handle());
@@ -191,11 +191,11 @@ public:
             };
 
             static auto OnReply = [](CObject *Sender) {
-                auto pConnection = dynamic_cast<CWebSocketConnection *> (Sender);
+                const auto pConnection = dynamic_cast<CWebSocketConnection *> (Sender);
                 if (pConnection != nullptr) {
-                    auto pSocket = pConnection->Socket();
+                    const auto pSocket = pConnection->Socket();
                     if (pSocket != nullptr) {
-                        auto pHandle = pSocket->Binding();
+                        const auto pHandle = pSocket->Binding();
                         if (pHandle != nullptr) {
                             DebugMessage(_T("\n[%p] [%s:%d] [%d] [WebSocket] [OnReply] "), pConnection,
                                          pHandle->PeerIP(), pHandle->PeerPort(), pHandle->Handle());
@@ -241,13 +241,49 @@ public:
 #endif
     }
     //------------------------------------------------------------------------------------------------------------------
+#ifdef APOSTOL_SERVER_TYPE_TCP
+    static void DebugConnection(CTCPServerConnection *AConnection) {
+#ifdef _DEBUG
+        if (AConnection != nullptr) {
+            const auto pSocket = AConnection->Socket();
+            if (pSocket != nullptr) {
+                const auto pHandle = pSocket->Binding();
+                if (pHandle != nullptr) {
+                    if (pHandle->HandleAllocated()) {
+                        DebugMessage(_T("\n[%p] [%s:%d] [%d] "), AConnection,
+                                     pHandle->PeerIP(), pHandle->PeerPort(), pHandle->Handle());
+                    }
+                }
+            }
 
+            static auto OnReply = [](CObject *Sender) {
+                const auto pConnection = dynamic_cast<CTCPServerConnection *> (Sender);
+
+                if (pConnection != nullptr) {
+                    const auto pReplySocket = pConnection->Socket();
+                    if (pReplySocket != nullptr) {
+                        const auto pHandle = pReplySocket->Binding();
+                        if (pHandle != nullptr) {
+                            if (pHandle->HandleAllocated()) {
+                                DebugMessage(_T("\n[%p] [%s:%d] [%d] "), pConnection, pHandle->PeerIP(),
+                                             pHandle->PeerPort(), pHandle->Handle());
+                            }
+                        }
+                    }
+                }
+            };
+
+            AConnection->OnReply(OnReply);
+        }
+#endif
+    }
+#else
     static void DebugConnection(CHTTPServerConnection *AConnection) {
 #ifdef _DEBUG
         if (AConnection != nullptr) {
-            auto pSocket = AConnection->Socket();
+            const auto pSocket = AConnection->Socket();
             if (pSocket != nullptr) {
-                auto pHandle = pSocket->Binding();
+                const auto pHandle = pSocket->Binding();
                 if (pHandle != nullptr) {
                     if (pHandle->HandleAllocated()) {
                         DebugMessage(_T("\n[%p] [%s:%d] [%d] "), AConnection,
@@ -259,13 +295,12 @@ public:
             DebugRequest(AConnection->Request());
 
             static auto OnReply = [](CObject *Sender) {
-
-                auto pConnection = dynamic_cast<CHTTPServerConnection *> (Sender);
+                const auto pConnection = dynamic_cast<CHTTPServerConnection *> (Sender);
 
                 if (pConnection != nullptr) {
-                    auto pSocket = pConnection->Socket();
-                    if (pSocket != nullptr) {
-                        auto pHandle = pSocket->Binding();
+                    const auto pReplySocket = pConnection->Socket();
+                    if (pReplySocket != nullptr) {
+                        const auto pHandle = pReplySocket->Binding();
                         if (pHandle != nullptr) {
                             if (pHandle->HandleAllocated()) {
                                 DebugMessage(_T("\n[%p] [%s:%d] [%d] "), pConnection, pHandle->PeerIP(),
@@ -282,6 +317,7 @@ public:
         }
 #endif
     }
+#endif
     //------------------------------------------------------------------------------------------------------------------
 #ifdef WITH_POSTGRESQL
     static void DebugNotify(CPQConnection *AConnection, PGnotify *ANotify) {

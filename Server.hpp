@@ -44,10 +44,16 @@ namespace Apostol {
 #endif
         //--------------------------------------------------------------------------------------------------------------
 
-        class CServerProcess: public CObject, public CGlobalComponent {
+        class CServerProcess: public CGlobalComponent {
         private:
-
+#ifdef WITH_STREAM_SERVER
+            CUDPAsyncServer m_StreamServer;
+#endif
+#ifdef APOSTOL_SERVER_TYPE_TCP
+            CTCPAsyncServer m_Server;
+#else
             CHTTPServer m_Server;
+#endif
 #ifdef WITH_POSTGRESQL
             CString m_ConfName;
             CPQClientList m_PQClients;
@@ -58,20 +64,48 @@ namespace Apostol {
 
             CPollEventHandlers m_EventHandlers;
 
-            CHTTPClientManager m_ClientManager;
-
             CEPollTimer *m_pTimer;
 
             int m_TimerInterval;
 
             void SetTimerInterval(int Value);
 
-            void InitializeCommandHandlers(CCommandHandlers *AHandlers, bool ADisconnect = false);
+            void InitializeServerHandlers();
 
             void InitializeServer(const CString &Title, const CString &Listen = Config()->Listen(), u_short Port = Config()->Port());
 #ifdef WITH_POSTGRESQL
             void InitializePQClients(const CString &Title, u_int Min = Config()->PostgresPollMin(), u_int Max = Config()->PostgresPollMax());
 #endif
+            virtual void DoVerbose(CSocketEvent *Sender, LPCTSTR AFormat, va_list args);
+
+            virtual void DoServerEventHandlerException(CPollEventHandler *AHandler, const Delphi::Exception::Exception &E);
+            virtual void DoServerException(CObject *Sender, const Delphi::Exception::Exception &E);
+
+            virtual void DoTimer(CPollEventHandler *AHandler) abstract;
+#ifdef WITH_STREAM_SERVER
+            virtual void DoExecuteStream(CUDPAsyncServer *AServer, CSocketHandle *ASocket, CManagedBuffer &ABuffer) abstract;
+#endif
+#ifdef APOSTOL_SERVER_TYPE_TCP
+            void InitializeCommandHandlers(CCommandHandlers *AHandlers, bool ADisconnect = false);
+
+            virtual bool DoExecute(CTCPConnection *AConnection) abstract;
+
+            virtual void DoAccessLog(CTCPConnection *AConnection);
+
+            virtual void DoServerListenException(CSocketEvent *Sender, const Delphi::Exception::Exception &E);
+
+            virtual void DoServerConnected(CObject *Sender);
+            virtual void DoServerDisconnected(CObject *Sender);
+
+            virtual void DoClientConnected(CObject *Sender);
+            virtual void DoClientDisconnected(CObject *Sender);
+
+            virtual void DoNoCommandHandler(CSocketEvent *Sender, const CString &Data, CTCPConnection *AConnection);
+#else
+            CHTTPClientManager m_ClientManager;
+
+            void InitializeCommandHandlers(CCommandHandlers *AHandlers, bool ADisconnect = false);
+
             virtual void DoOptions(CCommand *ACommand);
             virtual void DoGet(CCommand *ACommand);
             virtual void DoHead(CCommand *ACommand);
@@ -82,15 +116,11 @@ namespace Apostol {
             virtual void DoTrace(CCommand *ACommand);
             virtual void DoConnect(CCommand *ACommand);
 
-            virtual void DoTimer(CPollEventHandler *AHandler) abstract;
             virtual bool DoExecute(CTCPConnection *AConnection) abstract;
 
-            virtual void DoVerbose(CSocketEvent *Sender, CTCPConnection *AConnection, LPCTSTR AFormat, va_list args);
             virtual void DoAccessLog(CTCPConnection *AConnection);
 
             virtual void DoServerListenException(CSocketEvent *Sender, const Delphi::Exception::Exception &E);
-            virtual void DoServerException(CTCPConnection *AConnection, const Delphi::Exception::Exception &E);
-            virtual void DoServerEventHandlerException(CPollEventHandler *AHandler, const Delphi::Exception::Exception &E);
 
             virtual void DoServerConnected(CObject *Sender);
             virtual void DoServerDisconnected(CObject *Sender);
@@ -99,8 +129,7 @@ namespace Apostol {
             virtual void DoClientDisconnected(CObject *Sender);
 
             virtual void DoNoCommandHandler(CSocketEvent *Sender, const CString &Data, CTCPConnection *AConnection);
-
-            void InitializeServerHandlers();
+#endif
 #ifdef WITH_POSTGRESQL
             void InitializePQClientHandlers(CPQClient &PQClient);
 
@@ -136,8 +165,31 @@ namespace Apostol {
 
             virtual void Reload();
 
+            const CPollEventHandlers &EventHandlers() const { return m_EventHandlers; }
+
+            int TimerInterval() const { return m_TimerInterval; }
+            void TimerInterval(const int Value) { SetTimerInterval(Value); }
+#ifdef WITH_STREAM_SERVER
+            CUDPAsyncServer &StreamServer() { return m_StreamServer; };
+            const CUDPAsyncServer &StreamServer() const { return m_StreamServer; };
+#endif
+#ifdef APOSTOL_SERVER_TYPE_TCP
+            CTCPAsyncServer &Server() { return m_Server; };
+            const CTCPAsyncServer &Server() const { return m_Server; };
+#else
             CHTTPServer &Server() { return m_Server; };
             const CHTTPServer &Server() const { return m_Server; };
+
+            static void LoadProviders(CProviders &Providers);
+            static void LoadSites(CSites &Sites);
+            static void LoadOAuth2(const CString &FileName, const CString &ProviderName, const CString &ApplicationName,
+                CProviders &Providers);
+
+            CHTTPClientItem *GetClient(const CString &Host, uint16_t Port);
+
+            CHTTPClientManager &ClientManager() { return m_ClientManager; };
+            const CHTTPClientManager &ClientManager() const { return m_ClientManager; };
+#endif
 #ifdef WITH_POSTGRESQL
             CPQClient &PQClientStart(const CString& ConfName);
             CPQClient &PQClientStart(const CString& ConfName, const CEPoll &EPoll);
@@ -161,20 +213,6 @@ namespace Apostol {
                          COnPQPollQueryExceptionEvent && OnException = nullptr,
                          const CString &ConfName = {});
 #endif
-            CHTTPClientItem *GetClient(const CString &Host, uint16_t Port);
-
-            CHTTPClientManager &ClientManager() { return m_ClientManager; };
-            const CHTTPClientManager &ClientManager() const { return m_ClientManager; };
-
-            const CPollEventHandlers &EventHandlers() const { return m_EventHandlers; }
-
-            int TimerInterval() const { return m_TimerInterval; }
-            void TimerInterval(int Value) { SetTimerInterval(Value); }
-
-            static void LoadProviders(CProviders &Providers);
-            static void LoadSites(CSites &Sites);
-            static void LoadOAuth2(const CString &FileName, const CString &ProviderName, const CString &ApplicationName,
-                CProviders &Providers);
         };
     }
 }

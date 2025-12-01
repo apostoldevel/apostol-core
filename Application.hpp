@@ -70,11 +70,11 @@ namespace Apostol {
 
             ~CApplicationProcess() override = default;
 
-            static class CSignalProcess *Create(CCustomProcess *AParent, CApplication *AApplication, CProcessType AType);
+            static CSignalProcess *Create(CCustomProcess *AParent, CApplication *AApplication, CProcessType AType);
 
             void Assign(CCustomProcess *AProcess) override;
 
-            CApplication *Application() { return m_pApplication; };
+            CApplication *Application() const { return m_pApplication; };
 
             pid_t ExecProcess(CExecuteContext *AContext);
 
@@ -270,6 +270,8 @@ namespace Apostol {
 
         private:
 
+            void Init();
+
             void BeforeRun() override;
             void AfterRun() override;
 
@@ -297,6 +299,8 @@ namespace Apostol {
             typedef CApplicationProcess inherited;
 
         private:
+
+            void Init();
 
             void BeforeRun() override;
             void AfterRun() override;
