@@ -216,7 +216,11 @@ public:
 
     static void DebugRequest(const CHTTPRequest &Request) {
 #ifdef _DEBUG
-        DebugMessage(_T("[%p] Request:\n%s %s HTTP/%d.%d\n"), &Request, Request.Method.c_str(), Request.URI.c_str(), Request.VMajor, Request.VMinor);
+        if (Request.Params.Count() == 0) {
+            DebugMessage(_T("[%p] Request:\n%s %s HTTP/%d.%d\n"), &Request, Request.Method.c_str(), Request.URI.c_str(), Request.VMajor, Request.VMinor);
+        } else {
+            DebugMessage(_T("[%p] Request:\n%s %s?%s HTTP/%d.%d\n"), &Request, Request.Method.c_str(), Request.URI.c_str(), Request.Params.GetText().c_str(), Request.VMajor, Request.VMinor);
+        }
 
         for (int i = 0; i < Request.Headers.Count(); i++)
             DebugMessage(_T("%s: %s\n"), Request.Headers[i].Name().c_str(), Request.Headers[i].Value().c_str());

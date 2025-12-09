@@ -242,7 +242,7 @@ namespace Apostol {
             if (Assigned(pConnection)) {
                 if (pConnection->Protocol() == pHTTP) {
                     DebugRequest(pConnection->Request());
-                } else {
+                } else if (pConnection->Protocol() == pWebSocket) {
                     WSDebug(pConnection->WSRequest());
                 }
             }
@@ -254,7 +254,7 @@ namespace Apostol {
             if (Assigned(pConnection)) {
                 if (pConnection->Protocol() == pHTTP) {
                     DebugReply(pConnection->Reply());
-                } else {
+                } else if (pConnection->Protocol() == pWebSocket) {
                     WSDebug(pConnection->WSReply());
                 }
             }

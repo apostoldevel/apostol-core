@@ -594,7 +594,7 @@ namespace Apostol {
         void CApostolModule::DoGet(CHTTPServerConnection *AConnection) {
             const auto &caRequest = AConnection->Request();
 
-            CString sPath(caRequest.Location.pathname);
+            const CString sPath(caRequest.Location.pathname);
 
             // Request sPath must be absolute and not contain "..".
             if (sPath.empty() || sPath.front() != '/' || sPath.find(_T("..")) != CString::npos) {
@@ -622,8 +622,7 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
-        CHTTPClient *CApostolModule::GetClient(const CString &Host, uint16_t Port) const
-        {
+        CHTTPClient *CApostolModule::GetClient(const CString &Host, uint16_t Port) const {
             return m_pModuleProcess->GetClient(Host, Port);
         }
         //--------------------------------------------------------------------------------------------------------------
