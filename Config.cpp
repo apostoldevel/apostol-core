@@ -459,6 +459,18 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
+        void CConfig::SetServerEnvironment() {
+            const auto listen = getenv("LISTEN");
+            const auto port = getenv("PORT");
+
+            if (listen != nullptr)
+                m_sListen = listen;
+
+            if (port != nullptr)
+                m_nPort = StrToInt(port);
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
         void CConfig::SetPostgresEnvironment(const CString &ConfName, CStringList &List) {
             const auto pg_database = getenv("PGDATABASE");
             char *pg_host = getenv("PGHOST");
@@ -528,8 +540,8 @@ namespace Apostol {
 
             Clear();
 #if defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE >= 9)
-            Add(new CConfigCommand(_T("main"), _T("user"), m_sUser.c_str(), [this](auto && AValue) { SetUser(AValue); }));
-            Add(new CConfigCommand(_T("main"), _T("group"), m_sGroup.c_str(), [this](auto && AValue) { SetGroup(AValue); }));
+            Add(new CConfigCommand(_T("main"), _T("user"), m_sUser.c_str(), [this](const auto & AValue) { SetUser(AValue); }));
+            Add(new CConfigCommand(_T("main"), _T("group"), m_sGroup.c_str(), [this](const auto & AValue) { SetGroup(AValue); }));
 
             Add(new CConfigCommand(_T("main"), _T("limitnofile"), &m_nLimitNoFile));
 
@@ -539,22 +551,22 @@ namespace Apostol {
 
             Add(new CConfigCommand(_T("main"), _T("master"), &m_fMaster));
             Add(new CConfigCommand(_T("main"), _T("helper"), &m_fHelper));
-            Add(new CConfigCommand(_T("main"), _T("locale"), m_sLocale.c_str(), [this](auto && AValue) { SetLocale(AValue); }));
+            Add(new CConfigCommand(_T("main"), _T("locale"), m_sLocale.c_str(), [this](const auto & AValue) { SetLocale(AValue); }));
 
             Add(new CConfigCommand(_T("daemon"), _T("daemon"), &m_fDaemon));
-            Add(new CConfigCommand(_T("daemon"), _T("pid"), m_sPidFile.c_str(), [this](auto && AValue) { SetPidFile(AValue); }));
+            Add(new CConfigCommand(_T("daemon"), _T("pid"), m_sPidFile.c_str(), [this](const auto & AValue) { SetPidFile(AValue); }));
 
-            Add(new CConfigCommand(_T("server"), _T("listen"), m_sListen.c_str(), [this](auto && AValue) { SetListen(AValue); }));
+            Add(new CConfigCommand(_T("server"), _T("listen"), m_sListen.c_str(), [this](const auto & AValue) { SetListen(AValue); }));
             Add(new CConfigCommand(_T("server"), _T("port"), &m_nPort));
             Add(new CConfigCommand(_T("server"), _T("timeout"), &m_nTimeOut));
-            Add(new CConfigCommand(_T("server"), _T("root"), m_sDocRoot.c_str(), [this](auto && AValue) { SetDocRoot(AValue); }));
+            Add(new CConfigCommand(_T("server"), _T("root"), m_sDocRoot.c_str(), [this](const auto & AValue) { SetDocRoot(AValue); }));
 
-            Add(new CConfigCommand(_T("cache"), _T("prefix"), m_sCachePrefix.c_str(), [this](auto && AValue) { SetCachePrefix(AValue); }));
+            Add(new CConfigCommand(_T("cache"), _T("prefix"), m_sCachePrefix.c_str(), [this](const auto & AValue) { SetCachePrefix(AValue); }));
 
-            Add(new CConfigCommand(_T("log"), _T("error"), m_sErrorLog.c_str(), [this](auto && AValue) { SetErrorLog(AValue); }));
-            Add(new CConfigCommand(_T("stream"), _T("log"), m_sStreamLog.c_str(), [this](auto && AValue) { SetStreamLog(AValue); }));
-            Add(new CConfigCommand(_T("server"), _T("log"), m_sAccessLog.c_str(), [this](auto && AValue) { SetAccessLog(AValue); }));
-            Add(new CConfigCommand(_T("postgres"), _T("log"), m_sPostgresLog.c_str(), [this](auto && AValue) { SetPostgresLog(AValue); }));
+            Add(new CConfigCommand(_T("log"), _T("error"), m_sErrorLog.c_str(), [this](const auto & AValue) { SetErrorLog(AValue); }));
+            Add(new CConfigCommand(_T("stream"), _T("log"), m_sStreamLog.c_str(), [this](const auto & AValue) { SetStreamLog(AValue); }));
+            Add(new CConfigCommand(_T("server"), _T("log"), m_sAccessLog.c_str(), [this](const auto & AValue) { SetAccessLog(AValue); }));
+            Add(new CConfigCommand(_T("postgres"), _T("log"), m_sPostgresLog.c_str(), [this](const auto & AValue) { SetPostgresLog(AValue); }));
 
             Add(new CConfigCommand(_T("postgres"), _T("connect"), &m_fPostgresConnect));
             Add(new CConfigCommand(_T("postgres"), _T("notice"), &m_fPostgresNotice));
@@ -639,7 +651,7 @@ namespace Apostol {
             }
 
 #if defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE >= 9)
-            m_pIniFile->OnIniFileParseError([this](auto && Sender, auto && lpszSectionName, auto && lpszKeyName, auto && lpszValue, auto && lpszDefault, auto && Line) {
+            m_pIniFile->OnIniFileParseError([this](const auto & Sender, const auto & lpszSectionName, const auto & lpszKeyName, const auto & lpszValue, const auto & lpszDefault, const auto & Line) {
                 OnIniFileParseError(Sender, lpszSectionName, lpszKeyName, lpszValue, lpszDefault, Line);
             });
 #else
@@ -677,6 +689,8 @@ namespace Apostol {
 
                 command->Value(var);
             }
+
+            SetServerEnvironment();
 
             m_LogFiles.Clear();
             m_pIniFile->ReadSectionValues(_T("log"), &m_LogFiles);

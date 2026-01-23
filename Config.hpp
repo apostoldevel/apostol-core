@@ -63,10 +63,10 @@ namespace Apostol {
 
         protected:
 
-            CCommandType GetType() { return m_Type; };
+            CCommandType GetType() const { return m_Type; };
 
-            LPCTSTR GetSection() { return m_lpszSection; };
-            LPCTSTR GetIdent() { return m_lpszIdent; };
+            LPCTSTR GetSection() const { return m_lpszSection; };
+            LPCTSTR GetIdent() const { return m_lpszIdent; };
 
             const CVariant &GetDefault() { return m_Default; };
 
@@ -105,9 +105,9 @@ namespace Apostol {
                         break;
                 }
 
-            };
+            }
 
-            Pointer GetPtr() { return m_pPtr; };
+            Pointer GetPtr() const { return m_pPtr; };
             void SetPtr(Pointer Value) { m_pPtr = Value; };
 
         public:
@@ -119,7 +119,7 @@ namespace Apostol {
                 m_Default = Default;
                 m_Value = Default;
                 m_pPtr = Ptr;
-            };
+            }
 
             CConfigCommand(LPCTSTR Section, LPCTSTR Ident, int *Value): CObject() {
                 m_Type = ctInteger;
@@ -128,7 +128,7 @@ namespace Apostol {
                 m_Default = *Value;
                 m_Value = *Value;
                 m_pPtr = (Pointer) Value;
-            };
+            }
 
             CConfigCommand(LPCTSTR Section, LPCTSTR Ident, uint32_t *Value): CObject() {
                 m_Type = ctUInteger;
@@ -137,7 +137,7 @@ namespace Apostol {
                 m_Default = *Value;
                 m_Value = *Value;
                 m_pPtr = (Pointer) Value;
-            };
+            }
 
             CConfigCommand(LPCTSTR Section, LPCTSTR Ident, const double *Value): CObject() {
                 m_Type = ctDouble;
@@ -146,7 +146,7 @@ namespace Apostol {
                 m_Default = *Value;
                 m_Value = *Value;
                 m_pPtr = (Pointer) Value;
-            };
+            }
 
             CConfigCommand(LPCTSTR Section, LPCTSTR Ident, bool *Value): CObject() {
                 m_Type = ctBoolean;
@@ -155,7 +155,7 @@ namespace Apostol {
                 m_Default = *Value;
                 m_Value = *Value;
                 m_pPtr = (Pointer) Value;
-            };
+            }
 
             CConfigCommand(LPCTSTR Section, LPCTSTR Ident, CDateTime *Value): CObject() {
                 m_Type = ctDateTime;
@@ -164,24 +164,23 @@ namespace Apostol {
                 m_Default = *Value;
                 m_Value = *Value;
                 m_pPtr = (Pointer) Value;
-            };
+            }
 
-            CConfigCommand(LPCTSTR Section, LPCTSTR Ident, LPCTSTR Default, COnConfigSetEvent && OnSetEvent): CObject() {
+            CConfigCommand(LPCTSTR Section, LPCTSTR Ident, LPCTSTR Default, COnConfigSetEvent && OnSetEvent): CObject(), m_OnSetString(OnSetEvent) {
                 m_Type = ctString;
                 m_lpszSection = Section;
                 m_lpszIdent = Ident;
                 m_Default = Default;
                 m_Value = Default;
                 m_pPtr = nullptr;
-                m_OnSetString = OnSetEvent;
-            };
+            }
 
             ~CConfigCommand() override = default;
 
-            CCommandType Type() { return GetType(); };
+            CCommandType Type() const { return GetType(); };
 
-            LPCTSTR Section() { return GetSection(); };
-            LPCTSTR Ident() { return GetIdent(); };
+            LPCTSTR Section() const { return GetSection(); };
+            LPCTSTR Ident() const { return GetIdent(); };
 
             const CVariant &Default() { return GetDefault(); };
             const CVariant &Value() { return GetValue(); };
@@ -228,7 +227,7 @@ namespace Apostol {
 
             virtual int Count() { return GetCount(); };
 
-            CStringList *CommandList() { return m_pCommands; };
+            CStringList *CommandList() const { return m_pCommands; };
 
             CConfigCommand *Commands(int Index) { return Get(Index); };
             void Commands(int Index, CConfigCommand *Value) { return Put(Index, Value); };
@@ -317,6 +316,7 @@ namespace Apostol {
 
             CConfigFlags m_Flags;
 
+            void SetServerEnvironment();
             static void SetPostgresEnvironment(const CString &ConfName, CStringList &List);
 
         protected:
