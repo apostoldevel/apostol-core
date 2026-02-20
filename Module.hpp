@@ -96,6 +96,12 @@ namespace Apostol {
 
             mutable CString m_AllowedMethods;
             mutable CString m_AllowedHeaders;
+
+            CStringList m_AllowedOrigins;
+            bool m_AllowedOriginsLoaded;
+
+            void LoadAllowedOrigins();
+            bool IsOriginAllowed(const CString &Origin);
 #endif
 
         protected:

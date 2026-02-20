@@ -55,6 +55,7 @@ namespace Apostol {
 
             m_ModuleStatus = msUnknown;
 #ifndef APOSTOL_SERVER_TYPE_TCP
+            m_AllowedOriginsLoaded = false;
             m_Headers.Add("Content-Type");
             m_Headers.Add("X-Requested-With");
 #endif
@@ -606,6 +607,33 @@ namespace Apostol {
         }
         //--------------------------------------------------------------------------------------------------------------
 
+        void CApostolModule::LoadAllowedOrigins() {
+            const auto& Providers = Server().Providers();
+            for (int i = 0; i < Providers.Count(); i++) {
+                const auto& Provider = Providers[i].Value();
+                const auto& Apps = Provider.Applications();
+                for (int j = 0; j < Apps.Count(); j++) {
+                    const CString AppName = Apps.Members(j).String();
+                    CStringList Origins;
+                    Provider.JavaScriptOrigins(AppName, Origins);
+                    for (int k = 0; k < Origins.Count(); k++) {
+                        if (m_AllowedOrigins.IndexOf(Origins[k]) == -1)
+                            m_AllowedOrigins.Add(Origins[k]);
+                    }
+                }
+            }
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
+        bool CApostolModule::IsOriginAllowed(const CString &Origin) {
+            if (!m_AllowedOriginsLoaded) {
+                LoadAllowedOrigins();
+                m_AllowedOriginsLoaded = true;
+            }
+            return m_AllowedOrigins.IndexOfName(Origin) != -1;
+        }
+        //--------------------------------------------------------------------------------------------------------------
+
         void CApostolModule::CORS(CHTTPServerConnection *AConnection) {
             const auto &caRequest = AConnection->Request();
             auto &Reply = AConnection->Reply();
@@ -614,10 +642,12 @@ namespace Apostol {
             auto &ReplyHeaders = Reply.Headers;
 
             const auto& caOrigin = caRequestHeaders[_T("origin")];
-            if (!caOrigin.IsEmpty()) {
+            if (!caOrigin.IsEmpty() && IsOriginAllowed(caOrigin)) {
                 ReplyHeaders.AddPair(_T("Access-Control-Allow-Origin"), caOrigin);
                 ReplyHeaders.AddPair(_T("Access-Control-Allow-Methods"), AllowedMethods());
                 ReplyHeaders.AddPair(_T("Access-Control-Allow-Headers"), AllowedHeaders());
+                ReplyHeaders.AddPair(_T("Access-Control-Allow-Credentials"), _T("true"));
+                ReplyHeaders.AddPair(_T("Vary"), _T("Origin"));
             }
         }
         //--------------------------------------------------------------------------------------------------------------
